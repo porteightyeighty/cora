@@ -114,7 +114,7 @@ public class UsableRulesProcessor implements Processor {
       if (k <= n) {
         Term t = rule.queryRightSide();
         for (; k < n; k++) {
-          Variable x = TermFactory.createVar(t.queryType().subtype(1));
+          Variable x = TermFactory.createVar(t.queryType().querySubtype(1));
           t = t.apply(x);
         }
         todo.add(t);
@@ -150,7 +150,7 @@ public class UsableRulesProcessor implements Processor {
       if (n == k) return rho;
       Term right = rho.queryRightSide();
       for (int i = k+1; i <= n; i++) {
-        Variable x = TermFactory.createVar("arg" + (i+1), left.queryType().subtype(1));
+        Variable x = TermFactory.createVar("arg" + (i+1), left.queryType().querySubtype(1));
         left = left.apply(x);
         right = right.apply(x);
       }

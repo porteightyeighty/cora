@@ -73,12 +73,12 @@ public record Arrow(Type left, Type right) implements Type {
   }
 
   @Override
-  public int numberSubtypes() {
+  public int queryNumberSubtypes() {
     return 2;
   }
 
   @Override
-  public Type subtype(int index) {
+  public Type querySubtype(int index) {
     if (index == 1) return this.left;
     if (index == 2) return this.right;
     throw new IndexOutOfBoundsException("Arrow::subtype given " + index + " (expected 1-2).");

@@ -163,7 +163,7 @@ public class DeductionDisproveRoot extends DeductionStep {
       // check: f has rule arity > n + numargs
       if (context.queryRuleArity(f) <= n + numargs) continue;
       // check: the type of f(a1,...,an) is indeed otype
-      for (int i = 0; i < n; i++) t = t.subtype(2);
+      for (int i = 0; i < n; i++) t = t.querySubtype(2);
       if (t.equals(otype)) return f;
     }
     return null;

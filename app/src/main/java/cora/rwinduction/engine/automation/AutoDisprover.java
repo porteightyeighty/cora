@@ -217,11 +217,11 @@ public final class AutoDisprover {
       int k = t.queryArity();
       if (k < oar) continue;
       int n = k - oar;
-      for (int i = 0; i < n; i++) t = t.subtype(2);
+      for (int i = 0; i < n; i++) t = t.querySubtype(2);
       if (!t.equals(otype)) continue;
       Term term = f;
       for (int i = 0; i < n; i++) {
-        term = term.apply(TermFactory.createVar(term.queryType().subtype(1)));
+        term = term.apply(TermFactory.createVar(term.queryType().querySubtype(1)));
       }
       ret.add(term);
     }

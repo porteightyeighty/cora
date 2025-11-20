@@ -47,7 +47,7 @@ class RuleReducer implements ReduceObject {
     Type mytype = _rule.queryType();
     Type histype = t.queryType();
     int k = 0;
-    for (; mytype.isArrowType() && !mytype.equals(histype); k++) mytype = mytype.subtype(2);
+    for (; mytype.isArrowType() && !mytype.equals(histype); k++) mytype = mytype.querySubtype(2);
     if (mytype.equals(histype)) return k;
     return -1;
   }

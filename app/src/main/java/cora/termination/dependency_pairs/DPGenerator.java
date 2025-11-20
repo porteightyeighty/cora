@@ -106,7 +106,9 @@ public class DPGenerator {
     for (FunctionSymbol f : _trs.queryAlphabet().getSymbols()) types.add(f.queryType());
     for (int i = 0; i < types.size(); i++) {
       if (types.get(i) instanceof Base(String name)) sorts.add(name);
-      for (int j = 1; j <= types.get(i).numberSubtypes(); j++) types.add(types.get(i).subtype(j));
+      for (int j = 1; j <= types.get(i).queryNumberSubtypes(); j++) {
+        types.add(types.get(i).querySubtype(j));
+      }
     }
 
     // choose an unused one!

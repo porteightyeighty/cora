@@ -68,12 +68,12 @@ public sealed interface Type permits
    * For an arrow tpye, this is 2.  For a product type A_1 x ... x A_n, this is n.
    * For a base type, this is 0.
    */
-  int numberSubtypes();
+  int queryNumberSubtypes();
 
   /**
    * If i is between 1 and numberSubtypes(), this returns the corresponding subtype (from left to
    * right) of the type.  Otherwise, an IndexOutOfBoundsException is thrown.
    */
-  Type subtype(int i);
+  Type querySubtype(int i);
 }
 

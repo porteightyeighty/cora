@@ -90,9 +90,9 @@ public class AccessibilityChecker {
       if (!type.isArrowType()) {
         throw new Error("Calling accArg(" + i + ", " + f + "), but f has type " + type + ".");
       }
-      type = type.subtype(2);
+      type = type.querySubtype(2);
     }
-    Type argtype = type.subtype(1);
+    Type argtype = type.querySubtype(1);
     Type output = type.queryOutputType();
     if (output.isBaseType()) return posGeq((Base)output, argtype);
     return SmtFactory.createValue(false); // we do not yet support product types

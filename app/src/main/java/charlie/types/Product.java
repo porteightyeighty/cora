@@ -82,12 +82,12 @@ public record Product(FixedList<Type> types) implements Type {
   }
 
   @Override
-  public int numberSubtypes() {
+  public int queryNumberSubtypes() {
     return this.types.size();
   }
 
   @Override
-  public Type subtype(int index) {
+  public Type querySubtype(int index) {
     if (index <= 0 || index > this.types.size()) {
       throw new IndexOutOfBoundsException("Product::subtype called with index " + index +
         "on tuple type [" + toString() + "] with " + this.types.size() + " elements.");

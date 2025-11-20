@@ -130,7 +130,7 @@ class TermTyper {
   }
 
   private boolean hasInputSort(Base sort, Type type) {
-    return type != null && type.isArrowType() && type.subtype(1).equals(sort);
+    return type != null && type.isArrowType() && type.querySubtype(1).equals(sort);
   }
 
   private Term makeCalculationSymbol(Token token, String name, Type expected) {
@@ -347,10 +347,10 @@ class TermTyper {
                          boolean typeShouldBeDerivable) {
     // handle the correct case first
     if (elems.size() >= 2 && (expected == null ||
-        (expected.isProductType() && expected.numberSubtypes() == elems.size()))) {
+        (expected.isProductType() && expected.queryNumberSubtypes() == elems.size()))) {
       ArrayList<Term> parts = new ArrayList<Term>();
       for (int i = 0; i < elems.size(); i++) {
-        Type exp = expected == null ? null : expected.subtype(i+1);
+        Type exp = expected == null ? null : expected.querySubtype(i+1);
         parts.add(makeTerm(elems.get(i), exp, typeShouldBeDerivable));
       }
       return TermFactory.createTuple(parts);
@@ -415,7 +415,7 @@ class TermTyper {
     }
 
     Type einp = null, eout = null;
-    if (expected != null) { einp = expected.subtype(1); eout = expected.subtype(2); }
+    if (expected != null) { einp = expected.querySubtype(1); eout = expected.querySubtype(2); }
 
     // in all other cases, we either have the type of the binder, or can derive it
     if (vartype == null) vartype = einp;
@@ -466,7 +466,7 @@ class TermTyper {
           if (expected == null || !expected.isArrowType()) {
             return makeOverloadedApplication(t, name, args, expected);
           }
-          Type input = expected.subtype(1);
+          Type input = expected.querySubtype(1);
           if (input.equals(TypeFactory.intSort)) {
             apphead = new CalcSymbol(t, CoraParser.EQUALSINT);
           }
@@ -492,7 +492,7 @@ class TermTyper {
     Term head = makeTerm(apphead, null, true);
     if (head.queryType().queryArity() >= args.size()) {
       for (int i = 0; i < args.size(); i++) {
-        Term arg = makeTerm(args.get(i), head.queryType().subtype(1), true);
+        Term arg = makeTerm(args.get(i), head.queryType().querySubtype(1), true);
         head = head.apply(arg);
       }
       if (expected == null || head.queryType().equals(expected)) return head;

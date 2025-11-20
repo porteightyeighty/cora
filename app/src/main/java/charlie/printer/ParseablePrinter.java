@@ -43,8 +43,8 @@ public class ParseablePrinter extends AsciiPrinter{
       _builder.append("[");
       for (int i = 0; i < x.queryArity(); i++) {
         if (i > 0) _builder.append(", ");
-        _typePrinter.print(type.subtype(1), _builder);
-        type = type.subtype(2);
+        _typePrinter.print(type.querySubtype(1), _builder);
+        type = type.querySubtype(2);
       }
       _builder.append("] -> ");
     }

@@ -459,7 +459,7 @@ public class TRS {
     if (nArgs < 0) return false;
     while (nArgs > 0 && longtype.isArrowType()) {
       nArgs--;
-      longtype = longtype.subtype(2);
+      longtype = longtype.querySubtype(2);
     }
     return longtype.equals(outputtype);
   }

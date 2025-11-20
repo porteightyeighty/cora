@@ -62,16 +62,16 @@ public class CoraTypesParsingTest {
   public void testSimpleArrowType() {
     Type t = CoraParser.readType("xx → yy");
     assertTrue(t.isArrowType());
-    assertTrue(t.subtype(1).toString().equals("xx"));
-    assertTrue(t.subtype(2).toString().equals("yy"));
+    assertTrue(t.querySubtype(1).toString().equals("xx"));
+    assertTrue(t.querySubtype(2).toString().equals("yy"));
   }
 
   @Test
   public void testSimpleArrowTypeWithPlainArrow() {
     Type t = CoraParser.readType("xx -> yy");
     assertTrue(t.isArrowType());
-    assertTrue(t.subtype(1).toString().equals("xx"));
-    assertTrue(t.subtype(2).toString().equals("yy"));
+    assertTrue(t.querySubtype(1).toString().equals("xx"));
+    assertTrue(t.querySubtype(2).toString().equals("yy"));
   }
 
   @Test
@@ -80,55 +80,55 @@ public class CoraTypesParsingTest {
     Type t2 = CoraParser.readType("⦇ xx , yy ,zz ⦈", false, null);
     assertTrue(t1.equals(t2));
     assertTrue(t1.isProductType());
-    assertTrue(t1.numberSubtypes() == 3);
-    assertTrue(t1.subtype(1).toString().equals("xx"));
-    assertTrue(t1.subtype(2).toString().equals("yy"));
-    assertTrue(t1.subtype(3).toString().equals("zz"));
+    assertTrue(t1.queryNumberSubtypes() == 3);
+    assertTrue(t1.querySubtype(1).toString().equals("xx"));
+    assertTrue(t1.querySubtype(2).toString().equals("yy"));
+    assertTrue(t1.querySubtype(3).toString().equals("zz"));
   }
 
   @Test
   public void testRightAssociativeType() {
     Type t = CoraParser.readType("xx -> yy → zz");
     assertTrue(t.isArrowType());
-    assertTrue(t.subtype(1).toString().equals("xx"));
-    assertTrue(t.subtype(2).isArrowType());
-    assertTrue(t.subtype(2).toString().equals("yy → zz"));
+    assertTrue(t.querySubtype(1).toString().equals("xx"));
+    assertTrue(t.querySubtype(2).isArrowType());
+    assertTrue(t.querySubtype(2).toString().equals("yy → zz"));
   }
 
   @Test
   public void testMixedType() {
     Type t = CoraParser.readType("⦇ a , b ⦈ -> (|c,d|)");
     assertTrue(t.isArrowType());
-    assertTrue(t.subtype(1).isProductType());
-    assertTrue(t.subtype(1).toString().equals("⦇ a, b ⦈"));
-    assertTrue(t.subtype(2).isProductType());
-    assertTrue(t.subtype(2).toString().equals("⦇ c, d ⦈"));
+    assertTrue(t.querySubtype(1).isProductType());
+    assertTrue(t.querySubtype(1).toString().equals("⦇ a, b ⦈"));
+    assertTrue(t.querySubtype(2).isProductType());
+    assertTrue(t.querySubtype(2).toString().equals("⦇ c, d ⦈"));
   }
 
   @Test
   public void testHigherArrowType() {
     Type t = CoraParser.readType("(xx -> ⦇ yy, xx|)) -> zz");
     assertTrue(t.isArrowType());
-    assertTrue(t.subtype(1).isArrowType());
-    assertTrue(t.subtype(1).toString().equals("xx → ⦇ yy, xx ⦈"));
-    assertTrue(t.subtype(2).toString().equals("zz"));
+    assertTrue(t.querySubtype(1).isArrowType());
+    assertTrue(t.querySubtype(1).toString().equals("xx → ⦇ yy, xx ⦈"));
+    assertTrue(t.querySubtype(2).toString().equals("zz"));
   }
 
   @Test
   public void testHigherProductType() {
     Type t = CoraParser.readType("(|xx -> (|yy ,xx|), zz|)");
     assertTrue(t.isProductType());
-    assertTrue(t.subtype(1).isArrowType());
-    assertTrue(t.subtype(1).toString().equals("xx → ⦇ yy, xx ⦈"));
-    assertTrue(t.subtype(2).toString().equals("zz"));
+    assertTrue(t.querySubtype(1).isArrowType());
+    assertTrue(t.querySubtype(1).toString().equals("xx → ⦇ yy, xx ⦈"));
+    assertTrue(t.querySubtype(2).toString().equals("zz"));
   }
 
   @Test
   public void testUnnecessaryHigherType() {
     Type t = CoraParser.readType("(a) -> b");
     assertTrue(t.isArrowType());
-    assertTrue(t.subtype(1).toString().equals("a"));
-    assertTrue(t.subtype(2).toString().equals("b"));
+    assertTrue(t.querySubtype(1).toString().equals("a"));
+    assertTrue(t.querySubtype(2).toString().equals("b"));
   }
 
   @Test
@@ -142,8 +142,8 @@ public class CoraTypesParsingTest {
   public void testReadTypeEndingWithBrackets() {
     Type t = CoraParser.readType("(|a,b|) → (c -> d → e)");
     assertTrue(t.isArrowType());
-    assertTrue(t.subtype(1).toString().equals("⦇ a, b ⦈"));
-    assertTrue(t.subtype(2).toString().equals("c → d → e"));
+    assertTrue(t.querySubtype(1).toString().equals("⦇ a, b ⦈"));
+    assertTrue(t.querySubtype(2).toString().equals("c → d → e"));
   }
 
   @Test

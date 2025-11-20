@@ -219,7 +219,7 @@ public class HelperFunctionTransformer {
         Term replacement = cand.main();
         for (int i = 0; i < cand.numArgs(); i++) {
           String varname = "arg." + (j+1) + "." + (i+1);
-          Variable x = TermFactory.createVar(varname, replacement.queryType().subtype(1));
+          Variable x = TermFactory.createVar(varname, replacement.queryType().querySubtype(1));
           replacement = replacement.apply(x);
         }
         Substitution subst = Substitution.of(arg, replacement);
@@ -357,14 +357,14 @@ public class HelperFunctionTransformer {
         Term base = cand.below();
         Type t = base.queryType();
         for (int i = 1; i < cand.argument(); i++) {
-          base.apply(TermFactory.createVar("x{" + i + "}", t.subtype(1)));
-          t = t.subtype(2);
+          base.apply(TermFactory.createVar("x{" + i + "}", t.querySubtype(1)));
+          t = t.querySubtype(2);
         }
         ArrayList<Term> subargs = new ArrayList<Term>();
         Type y = cand.main().queryType();
         for (int i = 1; i <= cand.numArgs(); i++) {
-          subargs.add(TermFactory.createVar("y{" + i + "}", y.subtype(1)));
-          y = y.subtype(2);
+          subargs.add(TermFactory.createVar("y{" + i + "}", y.querySubtype(1)));
+          y = y.querySubtype(2);
         }
         Term original = base.apply(cand.main().apply(subargs));
         Term replacement = base.apply(_renamings.get(cand.main()).apply(subargs));

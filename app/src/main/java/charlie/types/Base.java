@@ -46,12 +46,12 @@ public record Base(String name) implements Type {
   }
 
   @Override
-  public int numberSubtypes() {
+  public int queryNumberSubtypes() {
     return 0;
   }
 
   @Override
-  public Type subtype(int index) {
+  public Type querySubtype(int index) {
     throw new IndexOutOfBoundsException("Base::subtype called (with index " + index + ")");
   }
 

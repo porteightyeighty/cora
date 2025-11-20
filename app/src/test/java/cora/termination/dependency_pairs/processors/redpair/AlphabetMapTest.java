@@ -40,10 +40,10 @@ class AlphabetMapTest {
     
     FunctionSymbol f1 = map.getTranslation(f, 1);
     assertTrue(f1.queryName().equals("f1"));
-    assertTrue(f1.queryType().subtype(1).isBaseType());
-    assertTrue(f1.queryType().subtype(1).toString().equals("[a → b]"));
-    assertTrue(f1.queryType().subtype(2).isBaseType());
-    assertTrue(f1.queryType().subtype(2).toString().equals("[a → b → c]"));
+    assertTrue(f1.queryType().querySubtype(1).isBaseType());
+    assertTrue(f1.queryType().querySubtype(1).toString().equals("[a → b]"));
+    assertTrue(f1.queryType().querySubtype(2).isBaseType());
+    assertTrue(f1.queryType().querySubtype(2).toString().equals("[a → b → c]"));
     assertTrue(map.getTranslation(f, 1) == f1);
 
     FunctionSymbol f3 = map.getTranslation(f, 3);

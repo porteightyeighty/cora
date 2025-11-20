@@ -55,8 +55,8 @@ public class TheoryArgumentsProcessor implements Processor {
     for (FunctionSymbol f : allFns) {
       _targs.put(f, new TreeSet<Integer>());
       Type t = f.queryType();
-      for (int i = 1; t.isArrowType(); i++, t = t.subtype(2)) {
-        Type argtype = t.subtype(1);
+      for (int i = 1; t.isArrowType(); i++, t = t.querySubtype(2)) {
+        Type argtype = t.querySubtype(1);
         if (argtype.isBaseType() && argtype.isTheoryType()) _targs.get(f).add(i);
       }
     }

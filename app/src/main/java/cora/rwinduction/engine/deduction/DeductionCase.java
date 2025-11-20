@@ -151,9 +151,9 @@ public final class DeductionCase extends DeductionStep {
       Type t = c.queryType();
       ArrayList<Term> args = new ArrayList<Term>(t.queryArity());
       while (t.isArrowType()) {
-        Variable x = pcontext.getVariableNamer().chooseDerivative(caseterm, ren, t.subtype(1));
+        Variable x = pcontext.getVariableNamer().chooseDerivative(caseterm, ren, t.querySubtype(1));
         args.add(x);
-        t = t.subtype(2);
+        t = t.querySubtype(2);
       }
       MutableSubstitution subst = new MutableSubstitution();
       subst.extend(caseterm, c.apply(args));
@@ -172,11 +172,11 @@ public final class DeductionCase extends DeductionStep {
                                       ProofContext pcontext,
                                       ArrayList<ExtraInfo> ret) {
     Type type = caseterm.queryType();
-    int n = type.numberSubtypes();
+    int n = type.queryNumberSubtypes();
     ArrayList<Term> parts = new ArrayList<Term>(n);
     MutableRenaming ren = renaming.copy();
     for (int i = 1; i <= n; i++) {
-      Type sub = type.subtype(i);
+      Type sub = type.querySubtype(i);
       Variable x = pcontext.getVariableNamer().chooseDerivative(caseterm, ren, sub);
       parts.add(x);
     }

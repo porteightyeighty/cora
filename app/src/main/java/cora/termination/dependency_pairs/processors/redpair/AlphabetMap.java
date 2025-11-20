@@ -105,8 +105,8 @@ class AlphabetMap {
     Type type = f.queryType();
     ArrayList<Base> args = new ArrayList<Base>(n);
     for (int i = 1; i <= n; i++) {
-      args.add(sortFor(type.subtype(1)));
-      type = type.subtype(2);
+      args.add(sortFor(type.querySubtype(1)));
+      type = type.querySubtype(2);
     }
     Type rettype = TypeFactory.createSortDeclaration(args, sortFor(type));
     FunctionSymbol g = TermFactory.createConstant(name, rettype);
