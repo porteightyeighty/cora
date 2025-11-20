@@ -16,9 +16,9 @@
 package charlie.util;
 
 /**
- * When some Cora runs into an Exception, they may pass it on to the caller, show it to the user in
- * a situation-appropriate way, or work around it.  However, this last option runs the risk of
- * hiding that an error took place.  This handler can be used to log the error to ensure that
+ * When some Cora code runs into an Exception, they may pass it on to the caller, show it to the
+ * user in a situation-appropriate way, or work around it.  However, this last option runs the risk
+ * of hiding that an error took place.  This handler can be used to log the error to ensure that
  * errors are noticed during testing.
  */
 public class ExceptionLogger {

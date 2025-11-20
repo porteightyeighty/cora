@@ -58,8 +58,8 @@ public class FixedSet<T> implements Iterable<T> {
     return new FixedSet<T>(Set.of(arg1));
   }
   public static <T> FixedSet<T> of(T arg1, T arg2) {
-    if (arg1 == null) throw new NullStorageException("FixedSet", "element 1 in biary constructor");
-    if (arg2 == null) throw new NullStorageException("FixedSet", "element 2 in biary constructor");
+    if (arg1 == null) throw new NullStorageException("FixedSet", "element 1 in binary constructor");
+    if (arg2 == null) throw new NullStorageException("FixedSet", "element 2 in binary constructor");
     return new FixedSet<T>(Set.of(arg1, arg2));
   }
   /** Create the set of a given (fixed) series of arguments */

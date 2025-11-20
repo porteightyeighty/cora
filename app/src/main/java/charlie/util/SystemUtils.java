@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024--2025 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop; written by Deivid Vale
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -80,5 +80,5 @@ public class SystemUtils {
     if (IS_OS_WINDOWS)  { return Optional.of(SUPPORTED_OS.WINDOWS); }
     return Optional.empty();
   }
-
 }
+
