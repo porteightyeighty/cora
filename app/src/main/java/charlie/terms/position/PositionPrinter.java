@@ -36,8 +36,8 @@ public class PositionPrinter {
    * 
    * To define your own PositionPrinter, you can either override this method directly -- in which
    * case there is no need to override any of the other methods in the class -- or directly override
-   * (some of) the functions it calls, which are printEmptyPos, printChopPos, printCompositionPos,
-   * printArgumentPos, printLambdaPos, and printMetaPos.
+   * (some of) the functions it calls, which are printEmptyPos, printChopPos, printArgumentPos,
+   * printLambdaPos, printMetaPos and printTail.
    */
   public void print(Position pos, StringBuilder builder) {
     switch (pos) {
@@ -61,7 +61,7 @@ public class PositionPrinter {
 
   /**
    * Override this function to change how empty positions are printed (if print is left unmasked).
-   * The default functionality is to print the unicode symbol ε.
+   * The default functionality is to print the return value of queryEmptyPositionSymbol().
    */
   protected void printEmptyPos(StringBuilder builder) {
     builder.append(queryEmptyPositionSymbol());
@@ -69,8 +69,8 @@ public class PositionPrinter {
 
   /**
    * Override this function to change how the end of a partial position with chop count k is
-   * printed.  The default functionality is to print ☆k.  Note that this is only called for k ≥ 1,
-   * since k = 0 will cause printEmptyPos to be called instead.
+   * printed.  The default functionality is to print <queryChopSymbol>k.  Note that this is only
+   * called for k ≥ 1, since k = 0 will cause printEmptyPos to be called instead.
    */
   protected void printChopPos(int chopcount, StringBuilder builder) {
     builder.append(queryChopSymbol() + chopcount);
@@ -92,7 +92,7 @@ public class PositionPrinter {
   }
 
   /**
-   * For an argument / tuple position <index>.<tail>, this function is called to print the index
+   * For an argument position <index>.<tail>, this function is called to print the index
    * (unless the print function is masked).
    */
   protected void printArgumentPos(int index, StringBuilder builder) {
