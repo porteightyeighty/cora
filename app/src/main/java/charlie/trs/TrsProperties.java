@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -44,7 +44,7 @@ public class TrsProperties {
 
   /** The type level of a TRS indicates the type system used for term formation and rules. */
   public enum TypeLevel {
-    SIMPLE,         // simple types: built from sorts and the arrow operator
+    SIMPLE,         // simple types: built from base types and the arrow operator
     SIMPLEPRODUCTS  // simple types along with products
   }
 

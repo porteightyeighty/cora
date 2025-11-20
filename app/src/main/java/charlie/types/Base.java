@@ -36,8 +36,8 @@ public record Base(String name) implements Type {
   }
 
   @Override
-  public boolean hasProducts() {
-    return false;
+  public boolean isSimple() {
+    return true;
   }
 
   @Override

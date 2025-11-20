@@ -102,7 +102,7 @@ public class RuleTest {
     RuleRestrictions properties = rule.queryProperties();
     assertTrue(properties.queryLevel() == Level.LAMBDA);
     assertFalse(properties.theoriesUsed());
-    assertFalse(properties.productsUsed());
+    assertTrue(properties.simpleTypes());
     assertTrue(properties.patternStatus() == Lhs.PATTERN);
     assertTrue(properties.rootStatus() == Root.FUNCTION);
     assertTrue(properties.rightReplaceablePolicy() == FreshRight.NONE);
@@ -124,7 +124,7 @@ public class RuleTest {
     RuleRestrictions properties = rule.queryProperties();
     assertTrue(properties.queryLevel() == Level.META);
     assertTrue(properties.theoriesUsed());
-    assertTrue(properties.productsUsed());
+    assertFalse(properties.simpleTypes());
     assertTrue(properties.patternStatus() == Lhs.SEMIPATTERN);
     assertTrue(properties.rootStatus() == Root.ANY);
     assertTrue(properties.rightReplaceablePolicy() == FreshRight.NONE);
@@ -144,7 +144,7 @@ public class RuleTest {
     RuleRestrictions properties = rule.queryProperties();
     assertTrue(properties.queryLevel() == Level.META);
     assertTrue(properties.theoriesUsed());
-    assertFalse(properties.productsUsed());
+    assertTrue(properties.simpleTypes());
     assertTrue(properties.patternStatus() == Lhs.NONPATTERN);
     assertTrue(properties.rootStatus() == Root.THEORY);
     assertTrue(properties.rightReplaceablePolicy() == FreshRight.CVARS);

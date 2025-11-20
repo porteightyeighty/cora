@@ -27,7 +27,7 @@ public class RuleRestrictionsTest {
                        TypeLevel.SIMPLE, Lhs.NONPATTERN, Root.ANY, FreshRight.CVARS);
     assertTrue(rest.queryLevel() == Level.APPLICATIVE);
     assertTrue(rest.theoriesUsed());
-    assertFalse(rest.productsUsed());
+    assertTrue(rest.simpleTypes());
     assertTrue(rest.patternStatus() == Lhs.NONPATTERN);
     assertTrue(rest.rootStatus() == Root.ANY);
     assertTrue(rest.rightReplaceablePolicy() == FreshRight.CVARS);
@@ -86,8 +86,8 @@ public class RuleRestrictionsTest {
     assertTrue(d.queryLevel() == Level.META);
     assertTrue(c.theoriesUsed());
     assertTrue(d.theoriesUsed());
-    assertTrue(c.productsUsed());
-    assertTrue(d.productsUsed());
+    assertFalse(c.simpleTypes());
+    assertFalse(d.simpleTypes());
     assertTrue(c.patternStatus() == Lhs.SEMIPATTERN);
     assertTrue(d.patternStatus() == Lhs.SEMIPATTERN);
     assertTrue(c.rootStatus() == Root.ANY);

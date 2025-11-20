@@ -165,7 +165,7 @@ public class TrsTest {
     rules.add(TrsFactory.createRule(TermFactory.createApp(f, x, b), x));
     TRS trs = TrsFactory.createTrs(alf, rules, TrsFactory.CORA);
     assertTrue(trs.theoriesIncluded());
-    assertTrue(trs.productsIncluded());
+    assertFalse(trs.simpleTypes());
     assertFalse(trs.isApplicative());
     assertTrue(trs.verifyProperties(Level.FIRSTORDER, Constrained.NO, TypeLevel.SIMPLE,
                                     Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE, TermLevel.LAMBDA,

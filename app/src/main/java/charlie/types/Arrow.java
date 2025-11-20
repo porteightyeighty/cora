@@ -37,9 +37,9 @@ public record Arrow(Type left, Type right) implements Type {
   @Override
   public boolean isTheoryType() { return this.left.isTheoryType() && this.right.isTheoryType(); }
 
-  /** Returns true if some product type occurs as a subtype of this type. */
+  /** Returns true if both sides of the arrow are simple types. */
   @Override
-  public boolean hasProducts() { return this.left.hasProducts() || this.right.hasProducts(); }
+  public boolean isSimple() { return this.left.isSimple() && this.right.isSimple(); }
 
   @Override
   public boolean equals(Type type) {

@@ -86,7 +86,7 @@ public class TRS {
   private String _trsKind;
   private TermLevel _level;
   private boolean _theoriesIncluded;
-  private boolean _productsIncluded;
+  private boolean _simpleTypes;
   private RuleRestrictions _rulesProperties;
   private HashMap<FunctionSymbol, List<Rule>> _functionRules;
   private LinkedList<Rule> _variableRules;
@@ -97,7 +97,7 @@ public class TRS {
    */
   TRS(Alphabet alphabet, List<Rule> rules, FixedList<RuleScheme> schemes,
       Collection<String> privateSymbols, String trsKindName, TermLevel trsLevel,
-      boolean includeTheories, boolean includeProducts, RuleRestrictions restrictions) {
+      boolean includeTheories, boolean typesSimple, RuleRestrictions restrictions) {
 
     _alphabet = alphabet;
     _rules = FixedList.copy(rules);
@@ -105,7 +105,7 @@ public class TRS {
     if (privateSymbols == null) _private = new TreeSet<String>();
     else _private = new TreeSet<String>(privateSymbols);
 
-    construct(trsKindName, trsLevel, includeTheories, includeProducts, restrictions);
+    construct(trsKindName, trsLevel, includeTheories, typesSimple, restrictions);
   }
 
   /**
@@ -114,7 +114,7 @@ public class TRS {
    */
   TRS(Alphabet alphabet, FixedList<Rule> rules, FixedList<RuleScheme> schemes,
       Collection<String> privateSymbols, String trsKindName, TermLevel trsLevel,
-      boolean includeTheories, boolean includeProducts, RuleRestrictions restrictions) {
+      boolean includeTheories, boolean typesSimple, RuleRestrictions restrictions) {
 
     _alphabet = alphabet;
     _rules = rules;
@@ -122,18 +122,18 @@ public class TRS {
     if (privateSymbols == null) _private = new TreeSet<String>();
     else _private = new TreeSet<String>(privateSymbols);
 
-    construct(trsKindName, trsLevel, includeTheories, includeProducts, restrictions);
+    construct(trsKindName, trsLevel, includeTheories, typesSimple, restrictions);
   }
 
   /** Helper function for the constructors: does all the work for the construction. */
   private void construct(String trsKindName, TermLevel trsLevel, boolean includeTheories,
-                         boolean includeProducts, RuleRestrictions restrictions) {
+                         boolean typesSimple, RuleRestrictions restrictions) {
     if (_alphabet == null) throw new NullStorageException("TRS", "alphabet");
     if (_rules == null) throw new NullStorageException("TRS", "rules");
     if (_schemes == null) throw new NullStorageException("TRS", "rule schemes");
 
     _theoriesIncluded = includeTheories;
-    _productsIncluded = includeProducts;
+    _simpleTypes = typesSimple;
     _level = trsLevel;
     _trsKind = trsKindName;
     _defined = new TreeSet<FunctionSymbol>();
@@ -170,7 +170,7 @@ public class TRS {
         throw new IllegalSymbolException(f, _trsKind, "higher-order symbols cannot occur in a " +
           "first-order TRS.");
       }
-      if (!_productsIncluded && type.hasProducts()) {
+      if (_simpleTypes && !type.isSimple()) {
         throw new IllegalSymbolException(f, _trsKind, "product types cannot occur in a " +
           "product-free TRS.");
       }
@@ -258,8 +258,8 @@ public class TRS {
   }
 
   /** Returns whether tuples and product types are supported in term construction. */
-  public boolean productsIncluded() {
-    return _productsIncluded;
+  public boolean simpleTypes() {
+    return _simpleTypes;
   }
 
   /** Returns whether we are limited to first-order terms in term construction. */
@@ -288,7 +288,7 @@ public class TRS {
    */
   public TRS createDerivative(List<Rule> newrules, Alphabet newAlphabet) {
     return new TRS(newAlphabet, newrules, _schemes, _private, _trsKind, _level, _theoriesIncluded,
-                   _productsIncluded, null);
+                   _simpleTypes, null);
   }
 
   /**
@@ -299,7 +299,7 @@ public class TRS {
    */
   public TRS createDerivative(FixedList<Rule> newrules, Alphabet newAlphabet) {
     return new TRS(newAlphabet, newrules, _schemes, _private, _trsKind, _level, _theoriesIncluded,
-                   _productsIncluded, null);
+                   _simpleTypes, null);
   }
 
   /** 
@@ -309,7 +309,7 @@ public class TRS {
    */
   public TRS createDerivative(List<Rule> newrules) {
     return new TRS(_alphabet, newrules, _schemes, _private, _trsKind, _level, _theoriesIncluded,
-                   _productsIncluded, null);
+                   _simpleTypes, null);
   }
 
   /**
@@ -332,7 +332,7 @@ public class TRS {
                                   Root rootstat, FreshRight fresh,
                                   RuleScheme ...additionalSchemes) {
     if (_theoriesIncluded && theories == Constrained.NO) return false;
-    if (_productsIncluded && types == TypeLevel.SIMPLE) return false;
+    if (!_simpleTypes && types == TypeLevel.SIMPLE) return false;
     if (TrsProperties.translateRuleToTermLevel(lvl).compareTo(_level) < 0) return false;
     if (!schemesIncluded(additionalSchemes)) return false;
     RuleRestrictions rest = new RuleRestrictions(lvl, theories, types, pattern, rootstat, fresh);
@@ -358,7 +358,7 @@ public class TRS {
                                   TermLevel termLevel, Constrained termTheories,
                                   TypeLevel termTypes, RuleScheme ...additionalSchemes) {
     if (_theoriesIncluded && termTheories == Constrained.NO) return false;
-    if (_productsIncluded && termTypes == TypeLevel.SIMPLE) return false;
+    if (!_simpleTypes && termTypes == TypeLevel.SIMPLE) return false;
     if (termLevel.compareTo(_level) < 0) return false;
     if (!schemesIncluded(additionalSchemes)) return false;
     RuleRestrictions rest =
@@ -383,10 +383,10 @@ public class TRS {
     else if (isApplicative()) {
       if (!term.isApplicative()) return false;
     }
-    if (_productsIncluded && _theoriesIncluded) return true;
+    if (!_simpleTypes && _theoriesIncluded) return true;
     return null == term.findSubterm((sub,pos) ->
       ( (!_theoriesIncluded && sub.isFunctionalTerm() && sub.queryRoot().isTheorySymbol()) ||
-        (!_productsIncluded && sub.queryType().hasProducts())
+        (_simpleTypes && !sub.queryType().isSimple())
       )
     );
   }

@@ -37,10 +37,10 @@ public record Product(FixedList<Type> types) implements Type {
     return types.stream().allMatch(Type::isTheoryType);
   }
 
-  /** @return true */
+  /** @return false */
   @Override
-  public boolean hasProducts() {
-    return true;
+  public boolean isSimple() {
+    return false;
   }
 
   @Override

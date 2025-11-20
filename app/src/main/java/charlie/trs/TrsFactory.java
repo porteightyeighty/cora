@@ -119,7 +119,7 @@ public class TrsFactory {
 
     return new TRS(alphabet, rules, newschemes.build(), privateSymbols, kind._name,
                    TrsProperties.translateRuleToTermLevel(kind._restrictions.queryLevel()),
-                   kind._restrictions.theoriesUsed(), kind._restrictions.productsUsed(),
+                   kind._restrictions.theoriesUsed(), kind._restrictions.simpleTypes(),
                    kind._restrictions);
   }
 

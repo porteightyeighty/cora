@@ -44,9 +44,9 @@ public sealed interface Type permits
    */
   boolean isTheoryType();
 
-  /** Returns true if and only if the type has a product type as subtype. */
-  boolean hasProducts();
-  
+  /** Returns true if this type is built exclusively from base types and arrows (so no products). */
+  boolean isSimple();
+
   /** Returns whether the given Type is equal to us. */
   boolean equals(Type type);
 

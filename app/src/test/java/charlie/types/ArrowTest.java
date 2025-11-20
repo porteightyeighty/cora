@@ -54,16 +54,16 @@ class ArrowTest {
   }
 
   @Test
-  public void testHasProducts() {
+  public void testSimple() {
     Type inttype = intType();
     Type booltype = boolType();
     Type tuple = new Product(FixedList.of(inttype, inttype));
     Type t = new Arrow(booltype, booltype);
-    assertFalse(t.hasProducts());
+    assertTrue(t.isSimple());
     t = new Arrow(new Arrow(tuple, booltype), inttype);
-    assertTrue(t.hasProducts());
+    assertFalse(t.isSimple());
     t = new Arrow(inttype, new Arrow(booltype, tuple));
-    assertTrue(t.hasProducts());
+    assertFalse(t.isSimple());
   }
 
   @Test

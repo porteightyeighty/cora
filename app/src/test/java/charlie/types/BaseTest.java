@@ -46,7 +46,7 @@ class BaseTest {
     assertTrue(t.equals(intType()));
     assertFalse(t.equals(boolType()));
     assertTrue(t.queryArity() == 0);
-    assertFalse(t.hasProducts());
+    assertTrue(t.isSimple());
   }
 
   @Test

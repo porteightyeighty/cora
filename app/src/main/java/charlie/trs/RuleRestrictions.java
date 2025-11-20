@@ -34,7 +34,7 @@ import charlie.trs.TrsProperties.*;
 class RuleRestrictions {
   private Level _level;
   private boolean _theories;
-  private boolean _products;
+  private boolean _simple;
   private Lhs _pattern;
   private Root _rootStatus;
   private FreshRight _fresh;
@@ -53,10 +53,10 @@ class RuleRestrictions {
   boolean theoriesUsed() { return _theories; }
 
   /**
-   * Returns whether product types are used in any way (that is, the left-hand side, right-hand
-   * side or the constraint has a subterm whose type contains (or is) a product type.
+   * Returns whether all types are simple (that is, neither the left-hand side, right-hand side or
+   * the constraint has a subterm whose type contains (or is) a product type.
    */
-  boolean productsUsed() { return _products; }
+  boolean simpleTypes() { return _simple; }
 
   /** Returns whether the left-hand side is a pattern, semi-pattern or non-pattern. */
   Lhs patternStatus() { return _pattern; }
@@ -80,7 +80,7 @@ class RuleRestrictions {
   RuleRestrictions() {
     _level = Level.FIRSTORDER;
     _theories = false;
-    _products = false;
+    _simple = true;
     _pattern = Lhs.PATTERN;
     _rootStatus = Root.FUNCTION;
     _fresh = FreshRight.NONE;
@@ -94,7 +94,7 @@ class RuleRestrictions {
                    FreshRight fresh) {
     _level = lvl;
     _theories = (theories == Constrained.YES);
-    _products = (types == TypeLevel.SIMPLEPRODUCTS);
+    _simple = (types == TypeLevel.SIMPLE);
     _pattern = pattern;
     _rootStatus = rootstat;
     _fresh = fresh;
@@ -116,19 +116,19 @@ class RuleRestrictions {
     if (!left.isFunctionalTerm()) _rootStatus = Root.ANY;
     else if (left.queryRoot().isTheorySymbol()) _rootStatus = Root.THEORY;
     else _rootStatus = Root.FUNCTION;
-    // theories and products
+    // theories and simple types
     _theories = false;
-    _products = false;
+    _simple = true;
     List<Pair<Term,Position>> subterms = left.querySubterms();
     subterms.addAll(right.querySubterms());
     if (!constraint.isValue() || !constraint.toValue().getBool()) {
       _theories = true;
       subterms.addAll(constraint.querySubterms());
     }
-    for (int i = 0; i < subterms.size() && !(_theories && _products); i++) {
+    for (int i = 0; i < subterms.size() && (!_theories || _simple); i++) {
       Term sub = subterms.get(i).fst();
       if (sub.isFunctionalTerm() && sub.queryRoot().isTheorySymbol()) _theories = true;
-      if (sub.queryType().hasProducts()) _products = true;
+      if (!sub.queryType().isSimple()) _simple = false;
     }
     // fresh (meta-)variables
     _fresh = FreshRight.NONE;
@@ -182,7 +182,7 @@ class RuleRestrictions {
     if (!_theories && other._theories) {
       return "the use of theory symbols / constraints is not supported.";
     }
-    if (!_products && other._products) {
+    if (_simple && !other._simple) {
       return "the use of tuples (or any occurrence of product types) is not supported.";
     }
     return null;
@@ -200,21 +200,21 @@ class RuleRestrictions {
     Lhs maxpattern = _pattern;
     FreshRight maxfresh = _fresh;
     boolean maxtheories = _theories;
-    boolean maxproducts = _products;
+    boolean maxsimple = _simple;
     if (other._level.compareTo(maxlevel) > 0) maxlevel = other._level;
     if (other._rootStatus.compareTo(maxroot) > 0) maxroot = other._rootStatus;
     if (other._pattern.compareTo(maxpattern) > 0) maxpattern = other._pattern;
     if (other._fresh.compareTo(maxfresh) > 0) maxfresh = other._fresh;
     if (other._theories) maxtheories = true;
-    if (other._products) maxproducts = true;
+    if (!other._simple) maxsimple = false;
     return new RuleRestrictions(maxlevel, maxtheories ? Constrained.YES : Constrained.NO,
-      maxproducts ? TypeLevel.SIMPLEPRODUCTS : TypeLevel.SIMPLE, maxpattern, maxroot,
+      maxsimple ? TypeLevel.SIMPLE : TypeLevel.SIMPLEPRODUCTS, maxpattern, maxroot,
       maxfresh);
   }
 
   /** Used for debugging */
   public String toString() {
-    return "{ " + _level + " ; " + _theories + " ; " + _products + " ; " + _pattern + " ; " +
+    return "{ " + _level + " ; " + _theories + " ; " + _simple + " ; " + _pattern + " ; " +
       _rootStatus + " ; " + _fresh + " }";
   };
 }
