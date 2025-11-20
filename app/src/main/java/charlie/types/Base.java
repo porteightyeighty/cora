@@ -41,6 +41,11 @@ public record Base(String name) implements Type {
   }
 
   @Override
+  public boolean isZeroSort() {
+    return true;
+  }
+
+  @Override
   public String toString() {
     return this.name;
   }

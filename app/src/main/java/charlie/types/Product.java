@@ -43,6 +43,11 @@ public record Product(FixedList<Type> types) implements Type {
     return false;
   }
 
+  /** Returns true if all arguments are first-order. */
+  public boolean isZeroSort() {
+    return types.stream().allMatch(Type::isZeroSort);
+  }
+
   @Override
   public String toString(){
     return (new TypePrinter()).print(this);

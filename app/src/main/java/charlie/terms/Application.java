@@ -250,11 +250,11 @@ class Application extends TermInherit {
 
   /**
    * Returns true if this application is a functional term whose arguments are all first-order
-   * terms, and the output type is a base type.
+   * terms, and the output type is a sort of type order 0.
    */
   public boolean isFirstOrder() {
     return _head.isConstant() &&
-      _outputType.isBaseType() &&
+      _outputType.isZeroSort() &&
       _args.stream().allMatch(Term::isFirstOrder);
   }
 

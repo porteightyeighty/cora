@@ -47,6 +47,12 @@ public sealed interface Type permits
   /** Returns true if this type is built exclusively from base types and arrows (so no products). */
   boolean isSimple();
 
+  /**
+   * Returns true if this type is a sort that is built exclusively exclusively from base types and
+   * the product constructor (so no arrows): a sort with type order 0.
+   */
+  boolean isZeroSort();
+  
   /** Returns whether the given Type is equal to us. */
   boolean equals(Type type);
 

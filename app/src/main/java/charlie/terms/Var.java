@@ -78,9 +78,9 @@ final class Var extends LeafTermInherit implements Variable, MetaVariable {
   /** @return 0 */
   public int queryArity() { return 0; }
 
-  /** @return true if the type is base */
+  /** @return true if the type has order 0 */
   public boolean isFirstOrder() {
-    return queryType().isBaseType();
+    return queryType().isZeroSort();
   }
 
   /** Returns the name this variable was set up with. */

@@ -41,6 +41,10 @@ public record Arrow(Type left, Type right) implements Type {
   @Override
   public boolean isSimple() { return this.left.isSimple() && this.right.isSimple(); }
 
+  /** @return false */
+  @Override
+  public boolean isZeroSort() { return false; }
+
   @Override
   public boolean equals(Type type) {
     return switch (type) {
