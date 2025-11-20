@@ -199,7 +199,7 @@ public final class DeductionEqdelete extends DeductionStep {
       return false;
     }
 
-    if (!left.queryType().isTheoryType() || !left.queryType().isBaseType()) {
+    if (!left.queryType().isBaseTheoryType()) {
       module.ifPresent(o -> o.println("Failed to equate %a and %a: they cannot be moved into " +
         "the constraint because the type %a is not a theory sort.",
         Printer.makePrintable(left, renaming), Printer.makePrintable(right, renaming),

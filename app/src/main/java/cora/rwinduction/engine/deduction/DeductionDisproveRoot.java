@@ -84,8 +84,7 @@ public class DeductionDisproveRoot extends DeductionStep {
 
     Pair<FunctionSymbol,FunctionSymbol> p = checkDifferentSemiconstructors(left, right, context);
     if (p == null) {
-      if (left.isTheoryTerm() && right.isTheoryTerm() && left.queryType().isBaseType() &&
-          left.queryType().isTheoryType()) {
+      if (left.isTheoryTerm() && right.isTheoryTerm() && left.queryType().isBaseTheoryType()) {
         m.ifPresent(o -> o.println("This case should be handled using DISPROVE THEORY rather " +
           "than DISPROVE ROOT."));
       }

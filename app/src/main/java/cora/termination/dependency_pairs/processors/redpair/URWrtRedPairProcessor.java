@@ -74,8 +74,7 @@ public class URWrtRedPairProcessor implements Processor {
    */
   private Term translateTerm(AlphabetMap amap, TreeMap<Variable,Variable> vmap, Term t,
                              Set<Variable> lvar) {
-    if (t.queryType().isBaseType() && t.queryType().isTheoryType() &&
-        t.isTheoryTerm() && t.isFirstOrder()) {
+    if (t.queryType().isBaseTheoryType() && t.isTheoryTerm() && t.isFirstOrder()) {
       boolean ok = true;
       for (Variable x : t.vars()) {
         if (!lvar.contains(x)) { ok = false; break; }
@@ -279,8 +278,7 @@ public class URWrtRedPairProcessor implements Processor {
     if (term.isVariable()) return;
     
     // don't add requirements for theory terms that are going to get normalised to a value
-    if (term.queryType().isBaseType() && term.queryType().isTheoryType() &&
-        term.isTheoryTerm() && term.isFirstOrder()) {
+    if (term.queryType().isBaseTheoryType() && term.isTheoryTerm() && term.isFirstOrder()) {
       boolean ok = true;
       for (Variable x : term.vars()) {
         if (!lvar.contains(x)) { ok = false; break; }

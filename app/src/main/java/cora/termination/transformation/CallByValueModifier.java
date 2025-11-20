@@ -44,7 +44,7 @@ public class CallByValueModifier {
       if (f.isTheorySymbol()) continue;
       if (trs.isDefined(f)) continue;
       Type type = f.queryType().queryOutputType();
-      if (type.isTheoryType() && type.isBaseType()) return false;
+      if (type.isBaseTheoryType()) return false;
     }
     return true;
   }

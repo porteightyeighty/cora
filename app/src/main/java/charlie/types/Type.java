@@ -44,6 +44,9 @@ public sealed interface Type permits
    */
   boolean isTheoryType();
 
+  /** Returns true if this is one of the pre-defined theory base types (e.g., Int, Bool). */
+  default boolean isBaseTheoryType() { return isTheoryType() && isBaseType(); }
+
   /** Returns true if this type is built exclusively from base types and arrows (so no products). */
   boolean isSimple();
 

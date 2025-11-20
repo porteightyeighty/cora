@@ -83,7 +83,7 @@ public final class AutoDisprover {
    */
   public static Substitution findContradictingTheorySubstitution(Term l, Term r, Term c,
                                        Optional<OutputModule> module, Renaming renaming) {
-    if (!l.queryType().isBaseType() || !r.queryType().isBaseType()) {
+    if (!l.queryType().isBaseTheoryType()) {
       module.ifPresent(o -> o.println("Theory disproves can only be done if both sides of the " +
         "equation have base type."));
         return null;

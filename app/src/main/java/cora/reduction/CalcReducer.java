@@ -22,7 +22,7 @@ import charlie.theorytranslation.TermAnalyser;
 /** This class implements the calculation rule scheme. */
 class CalcReducer implements ReduceObject {
   public boolean applicable(Term t) {
-    if (!t.queryType().isBaseType() || !t.queryType().isTheoryType()) return false;
+    if (!t.queryType().isBaseTheoryType()) return false;
     if (!t.isFunctionalTerm()) return false;
     FunctionSymbol root = t.queryRoot();
     if (root == null || !root.isTheorySymbol() || root.isValue()) return false;

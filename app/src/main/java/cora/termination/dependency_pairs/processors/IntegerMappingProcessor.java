@@ -105,7 +105,7 @@ public class IntegerMappingProcessor implements Processor {
       MutableSubstitution subst = new MutableSubstitution();
       for (int i = 1; i <= lhs.numberArguments(); i++) {
         Term argi = lhs.queryArgument(i);
-        if (argi.isVariable() && argi.queryType().isTheoryType() && argi.queryType().isBaseType()) {
+        if (argi.isVariable() && argi.queryType().isBaseTheoryType()) {
           subst.extend(argi.queryVariable(), _fnToFreshVar.get(root).get(i-1));
         }
       }

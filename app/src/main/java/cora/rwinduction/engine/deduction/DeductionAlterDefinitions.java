@@ -106,7 +106,7 @@ public final class DeductionAlterDefinitions extends DeductionStep {
       return false;
     }
     // the variable must be a theory variable
-    if (!x.queryType().isBaseType() || !x.queryType().isTheoryType()) {
+    if (!x.queryType().isBaseTheoryType()) {
       module.ifPresent(o -> o.println("Variable %a has type %a, which is not a theory sort.",
         xname, x.queryType()));
       return false;

@@ -57,7 +57,7 @@ public class TheoryArgumentsProcessor implements Processor {
       Type t = f.queryType();
       for (int i = 1; t.isArrowType(); i++, t = t.querySubtype(2)) {
         Type argtype = t.querySubtype(1);
-        if (argtype.isBaseType() && argtype.isTheoryType()) _targs.get(f).add(i);
+        if (argtype.isBaseTheoryType()) _targs.get(f).add(i);
       }
     }
   }
