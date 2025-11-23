@@ -39,7 +39,7 @@ import java.util.List;
  * Note: all instances of Type must (and can be expected to) be immutable.
  */
 public sealed interface Type permits
-  Base, Arrow, Data, TVar, Product {  // TODO: remove Product
+  Base, Arrow, Data, TVar {
 
   /** Returns true for base types, false for arrow types, data types and type variables. */
   default boolean isBaseType() { return false; }
@@ -53,10 +53,6 @@ public sealed interface Type permits
   /** Returns true for type variables, false for base types, arrow types and data types. */
   default boolean isVariableType() { return false; }
 
-// TODO: remove
-  /** Returns true for product types, false for base types and arrow types. */
-  default boolean isProductType() { return false; }
-
   /** Returns true for base types and data types, false for arrow types and type variables. */
   boolean isSort();
 
@@ -64,8 +60,8 @@ public sealed interface Type permits
   boolean isSimple();
 
   /**
-   * Returns true if this type is a sort that is built exclusively exclusively from base types and
-   * the product constructor (so no arrows or type variables): a sort with full type order 0.
+   * Returns true if this type is a sort that is built exclusively from base types data type
+   * constructors (so no arrows or type variables): a sort with full type order 0.
    */
   boolean isZeroSort();
 
@@ -77,7 +73,7 @@ public sealed interface Type permits
 
   /**
    * Returns true if the type is built entirely from theory sorts and arrows; type variables and
-   * more sophisticated constructors are not permitted.
+   * other base and data types are not permitted.
    * Theory sorts are the base types specifically created as theory, accessible from the type
    * factory.
    */

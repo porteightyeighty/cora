@@ -466,19 +466,5 @@ public class SubstitutionTest {
     // (note that it isn't normalised beyond that)
     assertTrue(gamma.substitute(term).toString().equals("(λx1.a(x1, 1))((λz.h(z, x))(0))"));
   }
-
-  @Test
-  public void testSubstituteTuple() {
-    Term a = constantTerm("a", type("N"));
-    Variable x = TermFactory.createBinder("x", type("N"));
-    Term abs = TermFactory.createAbstraction(x, constantTerm("f", type("N -> M")).apply(x));
-    Variable y = TermFactory.createVar("y", type("P"));
-    Variable z = TermFactory.createVar("z", type("P -> P"));
-    Term fa = constantTerm("f", type("N -> M")).apply(a);
-    Term s = TermFactory.createTuple(a, abs, TermFactory.createTuple(fa, y));
-    Substitution gamma = new MutableSubstitution(y, constantTerm("q", type("P")));
-    Term t = gamma.substitute(s);
-    assertTrue(t.toString().equals("⦇a, λx.f(x), ⦇f(a), q⦈⦈"));
-  }
 }
 

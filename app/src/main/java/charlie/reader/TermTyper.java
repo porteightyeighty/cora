@@ -105,8 +105,6 @@ class TermTyper {
         return makeMeta(t, name, args, expectedType, typeShouldBeDerivable);
       case Lambda(Token t, String varname, Type type, ParserTerm arg):
         return makeAbstraction(t, varname, type, arg, expectedType, typeShouldBeDerivable);
-      case Tup(Token t, FixedList<ParserTerm> args):
-        return makeTuple(t, args, expectedType, typeShouldBeDerivable);
       case Application(Token t, ParserTerm head, FixedList<ParserTerm> args):
         return makeApplication(t, head, args, expectedType, typeShouldBeDerivable);
       case PErr(ParserTerm t):
@@ -336,50 +334,6 @@ class TermTyper {
     if (expected == null) expected = mvar.queryOutputType();
     mvar = TermFactory.createMetaVar(mvar.queryName(), types, expected);
     return TermFactory.createMeta(mvar, args);
-  }
-
-  /**
-   * Turn a ParserTerm representing a tuple into the corresponding term, and check that it matches
-   * the epxected type; if not, then it is wrapped to ensure that the return value has the
-   * expected type. (If expected == null, any type suffices.)
-   */
-  private Term makeTuple(Token token, FixedList<ParserTerm> elems, Type expected,
-                         boolean typeShouldBeDerivable) {
-    // handle the correct case first
-    if (elems.size() >= 2 && (expected == null ||
-        (expected.isProductType() && expected.queryNumberSubtypes() == elems.size()))) {
-      ArrayList<Term> parts = new ArrayList<Term>();
-      for (int i = 0; i < elems.size(); i++) {
-        Type exp = expected == null ? null : expected.querySubtype(i+1);
-        parts.add(makeTerm(elems.get(i), exp, typeShouldBeDerivable));
-      }
-      return TermFactory.createTuple(parts);
-    }
-
-    // handle the error cases!
-    if (elems.size() == 0) {
-      storeError(token, "Illegal empty tuple: tuples should have at least length 2.");
-      return TermFactory.createConstant("⦇⦈", expected == null ? TypeFactory.defaultSort : expected);
-    }
-    if (elems.size() == 1) {
-      storeError(token, "Illegal singleton tuple: tuples should have at least length 2.");
-      return makeTerm(elems.get(0), expected, typeShouldBeDerivable);
-    }
-
-    // now we know expected != null, and there's a type problem
-    if (!expected.isProductType()) {
-      storeError(token, "Type error: expected a term of type ", expected, " but got a " +
-        "tuple, which necessarily has a product type.");
-    }
-    else {
-      storeError(token, "Type error: expected a term of type ", expected, " but got a " +
-        "tuple of length " + elems.size() + ".");
-    }
-
-    ArrayList<Term> parts = new ArrayList<Term>();
-    for (int i = 0; i < elems.size(); i++) parts.add(makeTerm(elems.get(i), null, false));
-    Term ret = TermFactory.createTuple(parts);
-    return TermFactory.createConstant(ret.toString(), expected);
   }
 
   /**

@@ -111,21 +111,6 @@ public class TermFactory {
     return new HigherMetaVar(name, FixedList.of(in1, in2), output);
   }
 
-  /** Creates a tuple with 2 elements */
-  public static Term createTuple(Term a, Term b) {
-    return new Tuple(a, b);
-  }
-
-  /** Creates a tuple with 3 elements. */
-  public static Term createTuple(Term a, Term b, Term c) {
-    return new Tuple(a, b, c);
-  }
-
-  /** Creates a tuple of arbitrary length ≥ 2. */
-  public static Term createTuple(List<Term> elems) {
-    return new Tuple(elems);
-  }
-
   /**
    * Create an application which takes one argument.  Here, head may be anything,
    * including another application.

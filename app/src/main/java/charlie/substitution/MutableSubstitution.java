@@ -150,9 +150,6 @@ public class MutableSubstitution implements Substitution {
     else if (term.isApplication()) {
       return substituteApplication(term.queryHead(), term.queryArguments());
     }
-    else if (term.isTuple()) {
-      return substituteTuple(term.queryTupleArguments());
-    }
     else if (term.isAbstraction()) {
       return substituteAbstraction(term.queryVariable(), term.queryAbstractionSubterm());
     }
@@ -185,11 +182,6 @@ public class MutableSubstitution implements Substitution {
     head = substitute(head);
     for (int i = 0; i < args.size(); i++) args.set(i, substitute(args.get(i)));
     return head.apply(args);
-  }
-
-  private Term substituteTuple(ArrayList<Term> args) {
-    for (int i = 0; i < args.size(); i++) args.set(i, substitute(args.get(i)));
-    return TermFactory.createTuple(args);
   }
 
   private Term substituteAbstraction(Variable binder, Term subterm) {

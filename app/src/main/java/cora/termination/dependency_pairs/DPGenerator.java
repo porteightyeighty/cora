@@ -130,7 +130,7 @@ public class DPGenerator {
   private Type generateDpType(Type ty) {
     return switch(ty) {
       case Arrow(Type left, Type right) -> TypeFactory.createArrow(left, generateDpType(right));
-      case Base(_), Data(_, _), Product(_) -> _dpSort;
+      case Base(_), Data(_, _) -> _dpSort;
       case TVar(_) ->
         throw new IllegalArgumentException("Given a polymorphic type to the DP Generator");
     };

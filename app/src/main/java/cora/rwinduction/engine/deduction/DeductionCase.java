@@ -60,13 +60,8 @@ public final class DeductionCase extends DeductionStep {
     else if (caseterm.queryType().equals(TypeFactory.intSort)) {
       if (!createIntegerCases(caseterm, renaming, module, ret)) return null;
     }
-    else if (!nonTheoryCasesApplicable(caseterm, renaming, module)) return null;
-    else {
-      createConstructorCases(caseterm.queryVariable(), renaming, proof.getContext(), ret);
-      if (caseterm.queryType().isProductType()) {
-        createTupleCase(caseterm.queryVariable(), renaming, proof.getContext(), ret);
-      }
-    }
+    else if (!nonTheoryCaseApplicable(caseterm, renaming, module)) return null;
+    else createConstructorCases(caseterm.queryVariable(), renaming, proof.getContext(), ret);
     return new DeductionCase(state, proof.getContext(), caseterm, ret);
   }
 
@@ -118,18 +113,17 @@ public final class DeductionCase extends DeductionStep {
 
   /**
    * Helper function for createStep: this checks if the given caseterm is a variable of a
-   * non-theory base type, or a tuple type.  If so, true is returned.  If not, false is
-   * returned and an appropriate failure message printed to the given output module.
+   * non-theory type.  If so, true is returned.  If not, false is returned and an appropriate
+   * failure message printed to the given output module.
    */
-  private static boolean nonTheoryCasesApplicable(Term caseterm, Renaming renaming,
-                                                  Optional<OutputModule> module) {
+  private static boolean nonTheoryCaseApplicable(Term caseterm, Renaming renaming,
+                                                 Optional<OutputModule> module) {
     if (!caseterm.isVariable()) {
       module.ifPresent(o -> o.println("Cannot do a case analysis on %a: this term is not a " +
         "constraint or integer theory term, nor a variable (it has type %a).",
         Printer.makePrintable(caseterm, renaming), caseterm.queryType()));
       return false;
     }
-    if (caseterm.queryType().isProductType()) return true;
     if (caseterm.queryType().isTheoryType()) {
       module.ifPresent(o -> o.println("Cannot do a case analysis on a variable of type %a.",
         caseterm.queryType()));
@@ -159,30 +153,6 @@ public final class DeductionCase extends DeductionStep {
       subst.extend(caseterm, c.apply(args));
       ret.add(new ExtraInfo(subst, TheoryFactory.trueValue, ren));
     }
-  }
-
-  /**
-   * Helper function for createStep: given that caseterm is a variable of product type, this
-   * adds the instantiation by a tuple to the return list ret.
-   * 
-   * Note that this adds the new variables to the given renaming, and uses this same Renaming in
-   * ExtraInfo.
-   */
-  private static void createTupleCase(Variable caseterm, Renaming renaming,
-                                      ProofContext pcontext,
-                                      ArrayList<ExtraInfo> ret) {
-    Type type = caseterm.queryType();
-    int n = type.queryNumberSubtypes();
-    ArrayList<Term> parts = new ArrayList<Term>(n);
-    MutableRenaming ren = renaming.copy();
-    for (int i = 1; i <= n; i++) {
-      Type sub = type.querySubtype(i);
-      Variable x = pcontext.getVariableNamer().chooseDerivative(caseterm, ren, sub);
-      parts.add(x);
-    }
-    MutableSubstitution subst = new MutableSubstitution();
-    subst.extend(caseterm, TermFactory.createTuple(parts));
-    ret.add(new ExtraInfo(subst, TheoryFactory.trueValue, ren));
   }
 
   /**

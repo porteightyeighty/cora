@@ -34,7 +34,6 @@ public interface Parser {
    *              | Lambda(token, varname, type, arg) -- where type may be null (if not given)
    *              | Meta(token, name, args)           -- where args may be empty
    *              | Application(token, head, args)    -- where args may be empty
-   *              | Tup(token, args)                  -- where args has length ≥ 1
    *              | BoolVal(token, istrue)            -- for TRUE or FALSE
    *              | IntVal(token, value)              -- for a (possibly negative) integer value
    *              | StringVal(token, escapedvalue)    -- for a string value (so in quotes)
@@ -43,7 +42,7 @@ public interface Parser {
    * This is a data type without dedicated functionality; only a toString() function for debugging,
    * and a function to check if there's an error anywhere inside the term.
    */
-  public sealed interface ParserTerm permits Identifier, Lambda, Meta, Application, Tup,
+  public sealed interface ParserTerm permits Identifier, Lambda, Meta, Application,
                                              BoolVal, IntVal, StringVal, CalcSymbol, PErr {
     /** Indicates whether any errors occurred while parsing this term (e.g., missing commas) */
     boolean hasErrors();
@@ -70,10 +69,6 @@ public interface Parser {
     public boolean hasErrors() {
       return head.hasErrors() || args.stream().anyMatch(ParserTerm::hasErrors);
     }
-  }
-  public record Tup(Token token, FixedList<ParserTerm> args) implements ParserTerm {
-    public String toString() { return "(|" + args.toString() + "|)"; }
-    public boolean hasErrors() { return args.stream().anyMatch(ParserTerm::hasErrors); }
   }
   public record BoolVal(Token token, boolean istrue) implements ParserTerm {
     public String toString() { return istrue ? "TRUE" : "FALSE"; }

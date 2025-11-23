@@ -187,37 +187,6 @@ public class MatcherTest {
   }
 
   @Test
-  public void testTupleMatch() {
-    Variable x = TermFactory.createVar("X", type("A"));
-    Variable y = TermFactory.createVar("Y", type("A"));
-    Term tuple = TermFactory.createTuple(x, y, x);
-
-    Term a = TermFactory.createConstant("a", type("A"));
-    Term b = TermFactory.createConstant("b", type("A"));
-    Term c = TermFactory.createConstant("c", type("A"));
-
-    MutableSubstitution gamma = new MutableSubstitution();
-    assertTrue(Matcher.extendMatch(tuple, a, gamma).toString().equals(
-      "The term a does not instantiate ⦇X, Y, X⦈ as it is not a tuple term."));
-
-    Term m = TermFactory.createTuple(a, TermFactory.createTuple(b, a));
-    gamma = new MutableSubstitution();
-    assertTrue(Matcher.extendMatch(tuple, m, gamma).toString().equals("The term ⦇a, ⦇b, a⦈⦈ " +
-      "does not instantiate ⦇X, Y, X⦈ as the tuple sizes are not the same."));
-
-    m = TermFactory.createTuple(a, b, c);
-    gamma = new MutableSubstitution();
-    assertTrue(Matcher.extendMatch(tuple, m, gamma).toString().equals(
-      "Variable X is mapped both to a and to c."));
-
-    m = TermFactory.createTuple(a, b, a);
-    gamma = new MutableSubstitution();
-    assertTrue(Matcher.extendMatch(tuple, m, gamma) == null);
-    assertTrue(gamma.get(x) == a);
-    assertTrue(gamma.get(y) == b);
-  }
-
-  @Test
   public void testNonPatternDueToNonVariableArg() {
     // F⟨a⟩ matched against a
     MetaVariable f = TermFactory.createMetaVar("F", type("o -> o"), 1);

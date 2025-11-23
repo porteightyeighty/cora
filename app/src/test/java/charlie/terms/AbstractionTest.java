@@ -187,7 +187,7 @@ class AbstractionTest extends TermTestFoundation {
 
   @Test
   public void testSymbols() {
-    // λx.⦇ f(x, λy.y), λy.g(y) ⦈
+    // λx.pair(f(x, λy.y), λy.g(y))
     Variable x = new Binder("x", baseType("a"));
     Variable y = new Binder("y", baseType("b"));
     Constant f =
@@ -195,12 +195,16 @@ class AbstractionTest extends TermTestFoundation {
     Constant g = new Constant("g", arrowType("b", "b"));
     Term abs1 = new Application(f, x, new Abstraction(y, y));
     Term abs2 = new Abstraction(y, new Application(g, y));
-    Term abs = new Abstraction(x, new Tuple(abs1, abs2));
+    Constant pair =
+      new Constant("pair", arrowType(abs1.queryType(), arrowType(abs2.queryType(),
+        TypeFactory.createSort("pair", abs1.queryType(), abs2.queryType()))));
+    Term abs = new Abstraction(x, new Application(pair, abs1, abs2));
     TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
     abs.storeFunctionSymbols(set);
     assertTrue(set.contains(f));
     assertTrue(set.contains(g));
-    assertTrue(set.size() == 2);
+    assertTrue(set.contains(pair));
+    assertTrue(set.size() == 3);
   }
 
   @Test
