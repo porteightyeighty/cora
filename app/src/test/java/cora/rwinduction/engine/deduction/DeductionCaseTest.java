@@ -50,8 +50,6 @@ class DeductionCaseTest {
     "size(nil) -> 0\n" +
     "size(cons(x,xs)) -> size(xs) + 1\n" +
     "f :: String -> Bool\n" +
-    "g :: (| Int , Bool |) -> (| Int, list |)\n" +
-    "h :: (| Int , list |) -> A\n" +
     "map :: (Int -> Int) -> list -> list\n" +
     "map(F, nil) -> nil\n" +
     "map(F, cons(x, xs)) -> cons(F(x), map(F, xs))\n"
@@ -141,41 +139,6 @@ class DeductionCaseTest {
       "append(x, cons(xs1, xs2)) ≈ append(y, ys) , append(ys, cons(xs1, xs2)))"));
     assertTrue(eqs.get(1).toString().equals("E7: (append(nil, ys) , " +
       "append(x, nil) ≈ append(y, ys) , append(ys, nil))"));
-  }
-
-  @Test
-  public void testSuccessfulTupleStep() {
-    OutputModule module = OutputModule.createUnicodeModule(trs);
-    PartialProof pp = setupProof("g(x) = g((| y, true |)) | y > 0", module);
-    Optional<OutputModule> o = Optional.of(module);
-    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
-    Term t = (Variable)renaming.getReplaceable("x");
-    DeductionCase step = DeductionCase.createStep(pp, o, t);
-    assertTrue(step.commandDescription().equals("case x"));
-    assertTrue(step.verifyAndExecute(pp, o));
-    assertTrue(module.toString().equals(""));
-    assertTrue(pp.getProofState().getEquations().size() == 1);
-    assertTrue(pp.getProofState().getTopEquation().toString().equals(
-      "E2: (• , g(⦇x1, x2⦈) ≈ g(⦇y, true⦈) | y > 0 , •)"));
-  }
-
-  @Test
-  public void testSuccessfulTupleConstructorStep() {
-    OutputModule module = OutputModule.createUnicodeModule(trs);
-    PartialProof pp = setupProof("h(x)", "h(x)", "h((| y, zs |))", "y > 0", "h(x)", module);
-    Optional<OutputModule> o = Optional.of(module);
-    Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
-    Term t = (Variable)renaming.getReplaceable("x");
-    DeductionCase step = DeductionCase.createStep(pp, o, t);
-    assertTrue(step.commandDescription().equals("case x"));
-    assertTrue(step.verifyAndExecute(pp, o));
-    assertTrue(module.toString().equals(""));
-    FixedList<EquationContext> eqs = pp.getProofState().getEquations();
-    assertTrue(eqs.size() == 2);
-    assertTrue(eqs.get(0).toString().equals(
-      "E6: (h(g(x1)) , h(g(x1)) ≈ h(⦇y, zs⦈) | y > 0 , h(g(x1)))"));
-    assertTrue(eqs.get(1).toString().equals(
-      "E7: (h(⦇x1, x2⦈) , h(⦇x1, x2⦈) ≈ h(⦇y, zs⦈) | y > 0 , h(⦇x1, x2⦈))"));
   }
 
   @Test

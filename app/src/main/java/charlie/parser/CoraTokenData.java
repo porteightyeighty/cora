@@ -34,8 +34,6 @@ public class CoraTokenData {
   public static final String BRACECLOSE     = "BRACECLOSE";
   public static final String METAOPEN       = "METAOPEN";
   public static final String METACLOSE      = "METACLOSE";
-  public static final String TUPLEOPEN      = "TUPLEOPEN";
-  public static final String TUPLECLOSE     = "TUPLECLOSE";
   public static final String COMMA          = "COMMA";
   public static final String DECLARE        = "DECLARE";
   public static final String LAMBDA         = "LAMBDA";
@@ -76,9 +74,9 @@ public class CoraTokenData {
 
   /** Unconstrained TRSs admit a more broad range of identifiers. */
   private static String[] utokens = new String[] {
-    "([^\\s()\\[\\]⟨⟩\\{\\}⦇⦈\"',:λ×\\.\\*\\\\\\.→/-]|(:(?!:))|(-(?!>))|(/(?!\\*))|(\\*(?!/)))+" , IDENTIFIER,
-      // identifiers are built from any characters other than whitespace, brackets (of any kind),
-      // braces, quotes, commas, colons, lambda, backslash, dot, × or unicode arrows
+    "([^\\s()\\[\\]⟨⟩\\{\\}\"',:λ\\.\\*\\\\\\.→/-]|(:(?!:))|(-(?!>))|(/(?!\\*))|(\\*(?!/)))+" , IDENTIFIER,
+      // identifiers are built from any characters other than whitespace, brackets,
+      // braces, quotes, commas, colons, lambda, backslash, dot or unicode arrows
       // they also may not contain -> or /* or */
     "\"([^\"\\\\]|(\\\\.))*\""                , "ILLEGALSTRING",
   };
@@ -121,9 +119,9 @@ public class CoraTokenData {
     "Int"                                     , INTTYPE,
     "Bool"                                    , BOOLTYPE,
     "String"                                  , STRINGTYPE,
-    "([^\\s()\\[\\]⟨⟩\\{\\}⦇⦈\"',:λ%\\.\\|\\*\\+\\\\\\.><=!≠≥≤→∧∨¬⇔⊻/-]|)+" , IDENTIFIER,
-      // identifiers are now built from any characters other than whitespace, brackets (of any
-      // kind), braces, quotes, colons, lambda, dot, mid, or the operators / relation symbols
+    "([^\\s()\\[\\]⟨⟩\\{\\}\"',:λ%\\.\\|\\*\\+\\\\\\.><=!≠≥≤→∧∨¬⇔⊻/-]|)+" , IDENTIFIER,
+      // identifiers are now built from any characters other than whitespace, brackets,
+      // braces, quotes, colons, lambda, dot, mid, or the operators / relation symbols
       // *, %, -, +, >, =, !, ≠, <, ≥, ≤, /, \, ¬, →, ⇔, ⊻
   };
 
@@ -133,10 +131,6 @@ public class CoraTokenData {
     "\"([^\"\\\\]|(\\\\.))*\\\\$"             , "PARTIALSTRING",
     "\\("                                     , BRACKETOPEN,
     "\\)"                                     , BRACKETCLOSE,
-    "⦇"                                       , TUPLEOPEN,
-    "⦈"                                       , TUPLECLOSE,
-    "\\(\\|"                                  , TUPLEOPEN,
-    "\\|\\)"                                  , TUPLECLOSE,
     "\\{"                                     , BRACEOPEN,
     "\\}"                                     , BRACECLOSE,
     "⟨"                                       , METAOPEN,

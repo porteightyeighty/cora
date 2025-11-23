@@ -27,16 +27,18 @@ import charlie.reader.CoraInputReader;
 
 public class ParseableTermPrinterTest {
   private TRS exampleTrs() {
-    return CoraInputReader.readTrsFromString("f :: Int -> Int -> Int\na::Int -> Int\n" +
-                                             "g :: ((Int -> Int) -> Int) -> (|Int , Bool|) -> A");
+    return CoraInputReader.readTrsFromString(
+      "f :: Int -> Int -> Int\na::Int -> Int\n" +
+      "g :: ((Int -> Int) -> Int) -> pair(Int , Bool) -> A\n" +
+      "p :: Int -> Bool -> pair(Int, Bool)\n");
   }
 
   @Test
   public void testPrintComplexTerm() {
     TRS trs = exampleTrs();
     ParseableTermPrinter p = new ParseableTermPrinter(Set.of("z"));
-    Term term = CoraInputReader.readTerm("g(λx::Int→Int.f(Z⟨x⟩,y), ⦇1,true∧z⦈)", trs);
-    assertTrue(p.print(term).equals("g(\\x :: Int -> Int.f(Z[x], y), (|1, true /\\ z__1|))"));
+    Term term = CoraInputReader.readTerm("g(λx::Int→Int.f(Z⟨x⟩,y), p(1,true∧z))", trs);
+    assertTrue(p.print(term).equals("g(\\x :: Int -> Int.f(Z[x], y), p(1, true /\\ z__1))"));
     Renaming naming = p.generateUniqueNaming(term);
     assertTrue(term.equals(CoraInputReader.readTerm(p.print(term), naming, trs)));
   }

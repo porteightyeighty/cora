@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023-2024 Cynthia Kop
+ Copyright 2023-2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -174,8 +174,6 @@ public class CoraTrsParsingTest {
     assertTrue(rule.vars().size() == 0);
     assertTrue(rule.toString().equals("{ [] } aa -> aa"));
     assertTrue(collector.toString().equals(
-      "1:11: Expected comma or ] or ⟩ but got BRACKETOPEN (().\n" +
-      "1:12: Expected a type (started by a sort identifier or bracket) but got BRACKETCLOSE ()).\n" +
       "1:17: Expected comma or ] or ⟩ but got DECLARE (::).\n"));
   }
 
@@ -207,8 +205,7 @@ public class CoraTrsParsingTest {
     assertTrue(rule.vars().size() == 0);
     assertTrue(rule.toString().equals("{ [] } aa -> aa"));
     assertTrue(collector.toString().equals(
-      "1:5: Expected declare symbol (::) but got COLON (:).\n" +
-      "1:12: Expected declare symbol (::) but got COLON (:).\n"));
+      "1:5: Expected declare symbol (::) but got COLON (:).\n"));
   }
 
   @Test
@@ -382,24 +379,24 @@ public class CoraTrsParsingTest {
   public void testReadDefaultDeclarationFollowedByComma() {
     ErrorCollector collector = new ErrorCollector();
     ParserDeclaration decl = CoraParser.readDeclaration(
-      "g :: a → (b -> c) , test\nhello\nf() -> d ->", true, collector);
+      "g :: a → (b -> c) ,\n z :: [test] -> Int\n", true, collector);
     assertTrue(decl != null);
     assertTrue(decl.type() == null);
     assertTrue(collector.toString().equals(
-      "3:10: Expected end of input but got ARROW (->).\n"));
-    // we recognise that f() -> d is a rule, and continue after that
+      "1:19: Function symbol declaration cannot be followed by comma!\n" +
+      "2:2: Expected end of input but got IDENTIFIER (z).\n"));
   }
 
   @Test
   public void testReadPublicDeclarationFollowedByComma() {
     ErrorCollector collector = new ErrorCollector();
     ParserDeclaration decl = CoraParser.readDeclaration(
-      "public g :: a → (b -> c) , test\nhello\nf() -> d ->", false, collector);
+      "public g :: a → (b -> c) , test\nhello::o->o\nf() -> d ->", false, collector);
     assertTrue(decl != null);
     assertTrue(decl.type() == null);
     assertTrue(collector.toString().equals(
-      "1:26: Function symbol declartion cannot be followed by comma!\n" +
-      "3:10: Expected end of input but got ARROW (->).\n"));
+      "1:26: Function symbol declaration cannot be followed by comma!\n" +
+      "2:1: Expected end of input but got IDENTIFIER (hello).\n"));
   }
 
   @Test
@@ -410,7 +407,7 @@ public class CoraTrsParsingTest {
     assertTrue(decl != null);
     assertTrue(decl.type() != null);
     assertTrue(collector.toString().equals("1:17: Expected a type " +
-      "(started by a sort identifier or bracket) but got BRACKETCLOSE ()).\n"));
+      "(started by a sort constructor or bracket) but got BRACKETCLOSE ()).\n"));
   }
 
   @Test
@@ -420,7 +417,7 @@ public class CoraTrsParsingTest {
     assertTrue(decl != null);
     assertTrue(decl.type() == null);
     assertTrue(collector.toString().equals(
-      "1:6: Expected a type (started by a sort identifier or bracket) but got BRACEOPEN ({).\n"));
+      "1:6: Expected a type (started by a sort constructor or bracket) but got BRACEOPEN ({).\n"));
   }
 
   @Test
@@ -431,7 +428,7 @@ public class CoraTrsParsingTest {
     assertTrue(decl != null);
     assertTrue(decl.type() == null);
     assertTrue(collector.toString().equals(
-      "1:14: Expected a type (started by a sort identifier or bracket) but got DOT (.).\n" +
+      "1:14: Expected a type (started by a sort constructor or bracket) but got DOT (.).\n" +
       "1:20: Expected end of input but got LAMBDA (λ).\n"));
   }
 
@@ -443,7 +440,7 @@ public class CoraTrsParsingTest {
     assertTrue(decl != null);
     assertTrue(decl.type() == null);
     assertTrue(collector.toString().equals(
-      "1:6: Expected a type (started by a sort identifier or bracket) but got BRACKETCLOSE ()).\n" +
+      "1:6: Expected a type (started by a sort constructor or bracket) but got BRACKETCLOSE ()).\n" +
       "1:13: Expected end of input but got IDENTIFIER (aq).\n"));
   }
 
@@ -496,6 +493,7 @@ public class CoraTrsParsingTest {
         "f(x) -> x | x > 0)\n" +
         "f(2) -> 3\n" +
         "- :: Int -> Int -> Int\n" +
+        "f :: Int -> Int\n" +
         "f(3) -> 4 | true \n" +
         "-(x, y) -> x + -1 * y\n");
     }
@@ -506,7 +504,8 @@ public class CoraTrsParsingTest {
           "BRACKETCLOSE ()).\n" +
         "5:3: Expected term, started by an identifier, LAMBDA, string or (, but got " +
           "DECLARE (::).\n" +
-        "7:4: Expected a closing bracket but got COMMA (,).\n"));
+        "6:1: Redeclaration of previously declared function symbol f.\n" +
+        "8:4: Expected a closing bracket but got COMMA (,).\n"));
       return;
     }
     assertTrue(false);

@@ -110,11 +110,13 @@ class DPGeneratorTest {
   }
 
   @Test
-  public void testProductTypeTransformation() {
+  public void testDataTypeTransformation() {
     TRS trs = CoraInputReader.readTrsFromString(
-      "swap :: (| a , b |) -> (| b, a |)\n" +
-      "swap( (| x, y |) ) -> id( (| y, x |) )\n" +
-      "id :: (| b, a |) -> (| b, a |)\n" +
+      "pair1 :: a -> b -> c(a, b)\n" +
+      "pair2 :: b -> a -> c(b, a)\n" +
+      "swap :: c(a,b) -> c(b, a)\n" +
+      "swap(pair1(x, y)) -> id(pair2(y, x))\n" +
+      "id :: c(b, a) -> c(b, a)\n" +
       "id(x) -> x\n"
     );
     DPGenerator generator = new DPGenerator(trs);
@@ -122,7 +124,7 @@ class DPGeneratorTest {
     assertTrue(prob.getDPList().size() == 1);
     FunctionSymbol swapsharp = generator.querySharpSymbolFor(trs.lookupSymbol("swap")).get();
     assertTrue(swapsharp.queryName().equals("swap#"));
-    assertTrue(swapsharp.queryType().toString().equals("⦇ a, b ⦈ → dpsort"));
+    assertTrue(swapsharp.queryType().toString().equals("c(a, b) → dpsort"));
   }
 
   @Test

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -18,47 +18,50 @@ package charlie.types;
 import charlie.util.NullStorageException;
 
 /**
- * A base type is the simplest form of a sort: it takes no arguments, and is uniquely identified by
- * its name.
+ * A type variable is a placeholder that can be instantiated by any other type.
+ * Type variables are uniquely identified by their name; hence, creating multiple variables with
+ * the same name yields instances of the same variable.
  */
-public record Base(String name) implements Type {
-  public Base {
+public record TVar(String name) implements Type {
+  public TVar {
     if (name == null) {
-      throw new NullStorageException("Base", "name");
-    }
+      throw new NullStorageException("TVar", "name");
+    }   
   }
 
   @Override
-  public boolean isBaseType() { return true; }
+  public boolean isVariableType() { return true; }
 
   @Override
-  public boolean isSort() { return true; }
+  public boolean isSort() { return false; }
 
   @Override
-  public boolean isSimple() { return true; }
+  public boolean isSimple() { return false; }
 
   @Override
-  public boolean isZeroSort() { return true; }
+  public boolean isZeroSort() { return false; }
 
   @Override
-  public boolean isMonomorphic() { return true; }
+  public boolean isMonomorphic() { return false; }
 
   @Override
-  public boolean isTheoryType() { return UniqueTypes.isTheoryType(this); }
+  public boolean isTheoryType() { return false; }
 
   @Override
   public int queryNumberSubtypes() { return 0; }
 
   @Override
   public Type querySubtype(int index) {
-    throw new IndexOutOfBoundsException("Base::querySubtype called (with index " + index + ")");
+    throw new IndexOutOfBoundsException("TVar::subtype called (with index " + index + ")");
   }
 
   @Override
-  public int queryFullTypeOrder() { return 0; }
+  public int queryFullTypeOrder() { return Integer.MAX_VALUE; }
 
   @Override
-  public String toString() { return this.name; }
+  public String toString(){
+    return "$" + name;
+  }
 
   @Override
   public int hashCode() { return name.hashCode(); }
@@ -66,7 +69,7 @@ public record Base(String name) implements Type {
   @Override
   public boolean equals(Type type) {
     return switch (type) {
-      case Base(String x) -> this.name.equals(x);
+      case TVar(String othername) -> this.name.equals(othername);
       default -> false;
     };
   }

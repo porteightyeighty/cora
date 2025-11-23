@@ -19,8 +19,8 @@ import java.util.List;
 import charlie.util.FixedList;
 
 /**
- * This static class generates basic types, product types and arrow types, and can be used to
- * access the unique theory types which are tracked by the program.
+ * This static class generates base types, data types, arrow types and type variables, and can be
+ * used to access the unique theory types which are tracked by the program.
  */
 public class TypeFactory {
   /** The theory sort Int, representing the set of integer numbers. */
@@ -36,26 +36,38 @@ public class TypeFactory {
   public static final Base defaultSort = UniqueTypes.defaultSort;
 
   /** Creates a basic (non-theory) type by the given name. */
-  public static Base createSort(String name) { return new Base(name); }
+  public static Base createSort(String name) {
+    return new Base(name);
+  }
+
+  /** Creates a data type built from the given sort constructor and arguments. */
+  public static Data createSort(String name, Type arg, Type ...moreArgs) {
+    FixedList.Builder<Type> builder = new FixedList.Builder<Type>(moreArgs.length+1);
+    builder.add(arg);
+    for (Type t : moreArgs) builder.add(t);
+    return new Data(name, builder.build());
+  }
+
+  /** Creates a base or data type built from the given sort constructor and arguments. */
+  public static Type createSort(String name, List<Type> args) {
+    if (args.isEmpty()) return new Base(name);
+    else return new Data(name, FixedList.copy(args));
+  }
+
+  /** Creates a base or data type built from the given sort constructor and arguments. */
+  public static Type createSort(String name, FixedList<Type> args) {
+    if (args.isEmpty()) return new Base(name);
+    else return new Data(name, args);
+  }
 
   /** Creates a type of the form left → right */
-  public static Type createArrow(Type left, Type right) { return new Arrow(left, right); }
-
-  /** Creates a product type from the given list. */
-  public static Type createProduct(FixedList<Type> types) {
-    if (types.size() == 1) return types.get(0);
-    return new Product(types);
+  public static Type createArrow(Type left, Type right) {
+    return new Arrow(left, right);
   }
 
-  /** Creates a product type using a copy of the given list. */
-  public static Type createProduct(List<Type> types) {
-    if (types.size() == 1) return types.get(0);
-    return new Product(FixedList.copy(types));
-  }
-
-  /** Creates a product type arg1 x ... x argm */
-  public static Type createProduct(Type ...args) {
-    return new Product(FixedList.of(args));
+  /** Creates a type variable by the given name (which should not include the starting $). */
+  public static Type createVariable(String name) {
+    return new TVar(name);
   }
 
   /** Creates a type of the form inp_1 →...→ inp_n → output */

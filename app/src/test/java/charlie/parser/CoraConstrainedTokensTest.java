@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -202,9 +202,8 @@ public class CoraConstrainedTokensTest {
   @Test
   public void testAllBasicTokens() throws LexerException {
     Lexer lexer = createLexer("xx⦈(y){,+#-\\a∀ \\/∃7*Q}():::a[b→b.]>c-+-3|7λ12≥a≤b" +
-      "bae/\\a∧b<=c>=d∨e<f/g!=_Inttest");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "xx");
-    verifyToken(lexer.nextToken(), CoraTokenData.TUPLECLOSE, "⦈");
+      "bae/\\a∧b<=c>=d∨e<f/g!=_Intt$est");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "xx⦈");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETOPEN, "(");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "y");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETCLOSE, ")");
@@ -260,7 +259,7 @@ public class CoraConstrainedTokensTest {
     verifyToken(lexer.nextToken(), CoraTokenData.DIV, "/");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "g");
     verifyToken(lexer.nextToken(), CoraTokenData.UNEQUALINT, "!=_Int");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "test");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "t$est");
     assertTrue(lexer.nextToken().isEof());
   }
 

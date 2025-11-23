@@ -86,21 +86,15 @@ class HorpoSimplifier {
   }
 
   /**
-   * Returns whether or not a and b are equal modulo renaming of base types.
-   * Here, we treat product types as base types.
+   * Returns whether or not a and b are equal modulo renaming of sorts.
    */
   private boolean sameTypeStructure(Type a, Type b) {
-    return switch (a) {
-      case Base _, Product _ -> switch (b) {
-        case Base _, Product _ -> true;
-        case Arrow _ -> false;
-      };
-      case Arrow(Type in1, Type out1) -> switch (b) {
-        case Base _, Product _ -> false;
-        case Arrow(Type in2, Type out2) ->
-          sameTypeStructure(in1, in2) && sameTypeStructure(out1, out2);
-      };
-    };
+    if (a.isSort()) return b.isSort();
+    if (a.isArrowType()) return b.isArrowType() &&
+                                sameTypeStructure(a.querySubtype(1), b.querySubtype(1)) &&
+                                sameTypeStructure(a.querySubtype(2), b.querySubtype(2));
+    // this shouldn't happen since we're supposed to be monomorphic, but whatever
+    return a.equals(b);
   }
 
   /** Helper function for brevity: requires one of the given constraints in the SmtProblem */

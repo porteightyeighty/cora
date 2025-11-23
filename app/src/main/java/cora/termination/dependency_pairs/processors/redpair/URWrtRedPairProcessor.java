@@ -129,12 +129,8 @@ public class URWrtRedPairProcessor implements Processor {
         : TrsFactory.createRule(l, r, TrsFactory.MSTRS);
       storage.add(rho);
 
-      Type sub = switch (lhs.queryType()) {
-        case Arrow(Type in, Type out) -> in;
-        case Base x -> null;
-        case Product x -> null;
-      };
-      if (sub == null) break;
+      if (!lhs.queryType().isArrowType()) break;
+      Type sub = lhs.queryType().querySubtype(1);
       Variable x = TermFactory.createVar("arg" + k, sub);
       lhs = lhs.apply(x);
       rhs = rhs.apply(x);

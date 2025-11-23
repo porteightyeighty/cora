@@ -39,13 +39,15 @@ public class TypePrinter {
    * 
    * To define your own TypePrinter, you can either override this method directly -- in which
    * case there is no need to override any of the other methods in the class -- or override (some
-   * of) the functions it calls, which are printBaseType, printArrowType and printProductType,
-   * directly.
+   * of) the functions it calls, which are printBaseType, printArrowType, printDataType and
+   * printVariableType, directly.
    */
   public void print(Type t, StringBuilder builder) {
     switch (t) {
       case Base(String name): printBaseType(name, builder); break;
       case Arrow(Type left, Type right): printArrowType(left, right, builder); break;
+      case Data(String name, FixedList<Type> args): printDataType(name, args, builder); break;
+      case TVar(String name): printVariableType(name, builder); break;
       case Product(FixedList<Type> elems): printProductType(elems, builder); break;
     }
   }
@@ -74,6 +76,38 @@ public class TypePrinter {
   }
 
   /**
+   * Override this function to change how data types are printed (if printType is left unmasked).
+   * The default functionality is to print the name, followed by the elements in brackets, separated
+   * by commas.
+   */
+  protected void printDataType(String name, FixedList<Type> args, StringBuilder builder) {
+    builder.append(name);
+    builder.append("(");
+    for (int i = 0; i < args.size(); i++) {
+      if (i > 0) builder.append(", ");
+      print(args.get(i), builder);
+    }
+    builder.append(")");
+  }
+
+  /**
+   * Override this function to change how type variables are printed (if printType is left
+   * unmasked).  The default functionality is to print $<name>.
+   * based on the index.
+   */
+  protected void printVariableType(String name, StringBuilder builder) {
+    builder.append("$");
+    builder.append(name);
+  }
+
+  /**
+   * Override this function to change how the type arrow is printed if both printType and
+   * printArrowType are left unmasked.
+   * The default functionality is a unicode arrow.
+   */
+  protected String queryArrowSymbol() { return "→"; }
+
+  /**
    * Override this function to change how product types are printed (if printType is left
    * unmasked).
    * The default functionality is to print queryTupleOpenBracket(), then all all items in the list
@@ -89,13 +123,6 @@ public class TypePrinter {
     }   
     builder.append(" " + queryTupleCloseBracket());
   }
-
-  /**
-   * Override this function to change how the type arrow is printed if both printType and
-   * printArrowType are left unmasked.
-   * The default functionality is a unicode arrow.
-   */
-  protected String queryArrowSymbol() { return "→"; }
 
   /**
    * Override this function to change how the opening bracket for products is printed if both

@@ -123,14 +123,16 @@ public class DPGenerator {
   }
 
   /**
-   * Given a type A1 → ... → An → B with b a sort or product type, this method returns the type
-   * A1 → ... → An → dpSort, where dpSort is the special (otherwise unused) sort we use as the
-   * output type of all dependency pairs.
+   * Given a type A1 → ... → An → B with b a sort, this method returns the type A1 → ... → An →
+   * dpSort, where dpSort is the special (otherwise unused) sort we use as the output type of all
+   * dependency pairs.
    */
   private Type generateDpType(Type ty) {
     return switch(ty) {
-      case Base(_), Product(_) -> _dpSort;
       case Arrow(Type left, Type right) -> TypeFactory.createArrow(left, generateDpType(right));
+      case Base(_), Data(_, _), Product(_) -> _dpSort;
+      case TVar(_) ->
+        throw new IllegalArgumentException("Given a polymorphic type to the DP Generator");
     };
   }
 

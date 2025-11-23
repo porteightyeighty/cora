@@ -38,10 +38,11 @@ class ProofContextTest {
       "iter(x, i, z) -> iter(x, i+1, z+i) | i <= x\n" +
       "o :: nat\n" +
       "s :: nat -> nat\n" +
-      "add :: (| nat , nat |) -> nat\n" +
-      "add( (|x, o|) ) -> x\n" +
-      "add( (|x, s(y) |) ) -> add( (| s(x),y |) )\n" +
-      "something :: Int -> Int -> (| Bool , Int |)\n" +
+      "p :: nat -> nat -> pair(nat, nat)\n" +
+      "add :: pair(nat , nat) -> nat\n" +
+      "add(p(x, o)) -> x\n" +
+      "add(p(x, s(y))) -> add(p(s(x),y))\n" +
+      "something :: Int -> Int -> pair(Bool , Int)\n" +
       "partial :: Int -> Int -> Int\n" +
       "partial(x) -> sum1\n"
     );
@@ -58,7 +59,7 @@ class ProofContextTest {
     assertTrue(funcs.contains(trs.lookupSymbol("o")));
     assertTrue(funcs.contains(trs.lookupSymbol("s")));
     assertFalse(funcs.contains(trs.lookupSymbol("add")));
-    funcs = context.getConstructors(CoraInputReader.readType("(|Bool,Int|)"));
+    funcs = context.getConstructors(CoraInputReader.readType("pair(Bool,Int)"));
     assertTrue(funcs.size() == 1);
   }
 

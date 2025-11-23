@@ -109,6 +109,7 @@ public class RuleTest {
     assertFalse(rule.isConstrained());
   }
 
+/* TODO
   @Test
   public void testPropertiesTwo() {
     // f(λx.Z⟨x⟩) → g( ⦇1,2⦈ ) with f a variable
@@ -130,6 +131,7 @@ public class RuleTest {
     assertTrue(properties.rightReplaceablePolicy() == FreshRight.NONE);
     assertFalse(rule.isConstrained());
   }
+*/
 
   @Test
   public void testPropertiesThree() {

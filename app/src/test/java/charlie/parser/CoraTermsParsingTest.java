@@ -276,7 +276,7 @@ public class CoraTermsParsingTest {
   @Test
   public void testReadAbstractionWithBrokenType() {
     ParserTerm t = readTerm("λx :: a -> .x y", false,
-      "1:12: Expected a type (started by a sort identifier or bracket) but got DOT (.).\n" +
+      "1:12: Expected a type (started by a sort constructor or bracket) but got DOT (.).\n" +
       "1:15: Expected end of input but got IDENTIFIER (y).\n");
     assertTrue(t.toString().equals("LAMBDA x::a.x"));
   }
@@ -284,7 +284,7 @@ public class CoraTermsParsingTest {
   @Test
   public void testReadAbstractionWithMissingType() {
     ParserTerm t = readTerm("λx :: .x y", true,
-      "1:7: Expected a type (started by a sort identifier or bracket) but got DOT (.).\n" +
+      "1:7: Expected a type (started by a sort constructor or bracket) but got DOT (.).\n" +
       "1:10: Expected end of input but got IDENTIFIER (y).\n");
     assertTrue(t.toString().equals("ERR(LAMBDA x.x)"));
   }
@@ -539,41 +539,6 @@ public class CoraTermsParsingTest {
   public void testBadPrefix() {
     ParserTerm t = readTerm("[$]", true, "1:2: Expected infix symbol but got IDENTIFIER ($)\n");
     assertTrue(t.toString().equals("ERR($)"));
-  }
-
-  @Test
-  public void testReadGoodTuple() {
-    ParserTerm t = readTerm("⦇ a, x, f(2) ⦈", false, "");
-    assertTrue(t instanceof Tup);
-    assertTrue(t.toString().equals("(|[a, x, @(f, [2])]|)"));
-  }
-
-  @Test
-  public void testReadEmptyTuple() {
-    ParserTerm t = readTerm("⦇ ⦈", true, "1:1: Empty tuples are not allowed.\n");
-    assertTrue(t.toString().equals("ERR((| |))"));
-  }
-
-  @Test
-  public void testReadSingularTuple() {
-    ParserTerm t = readTerm("⦇ f(a) ⦈", true,
-      "1:1: Tuples of length 1 are not allowed.\n");
-    assertTrue(t.toString().equals("@(f, [a])"));
-  }
-
-  @Test
-  public void testReadTupleWithoutClosingBracket() {
-    ParserTerm t = readTerm("⦇x, 1 { a, b } f -> f", true,
-      "1:7: Expected a comma or tuple closing bracket |) but got BRACEOPEN ({).\n");
-    assertTrue(t.toString().equals("(|[x, ERR(1)]|)"));
-  }
-
-  @Test
-  public void testMissingCommaInTuple() {
-    ParserTerm t = readTerm("⦇x y⦈ -> x", false,
-      "1:4: Expected a comma or tuple closing bracket |) but got IDENTIFIER (y).\n" +
-      "1:7: Expected end of input but got ARROW (->).\n");
-    assertTrue(t.toString().equals("(|[x, ERR(y)]|)"));
   }
 
   private ParserTerm readSymbol(String str, String next) {

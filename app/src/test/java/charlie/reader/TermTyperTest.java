@@ -393,8 +393,8 @@ public class TermTyperTest {
 
   @Test
   public void testAbstractionWithNonArrowTypeExpected() {
-    Term t = readTerm("λx::a.x", "(|b,b|)", false, null,
-      "1:2: Type error: expected subterm of type ⦇ b, b ⦈, but got abstraction, which " +
+    Term t = readTerm("λx::a.x", "pair(b,b)", false, null,
+      "1:2: Type error: expected subterm of type pair(b, b), but got abstraction, which " +
       "necessarily has an arrow type.\n");
     assertTrue(t.toString().equals("abs(λx.x)"));
     assertFalse(t.isAbstraction());
@@ -469,59 +469,9 @@ public class TermTyperTest {
   @Test
   public void testReadAbstractionWithMissingType() {
     Term t = readTerm("λx :: .x y", "o → o", false, null,
-      "1:7: Expected a type (started by a sort identifier or bracket) but got DOT (.).\n" +
+      "1:7: Expected a type (started by a sort constructor or bracket) but got DOT (.).\n" +
       "1:10: Expected end of input but got IDENTIFIER (y).\n");
     assertTrue(t == null);
-  }
-
-  @Test
-  public void testGoodTupleWithoutType() {
-    Term t = readTerm("(| aa, f(x), 4 |)", null, true, null, "");
-    assertTrue(t.isTuple());
-    assertTrue(t.queryType().toString().equals("⦇ a, b → c → d, Int ⦈"));
-    assertTrue(t.toString().equals("⦇aa, f(x), 4⦈"));
-  }
-
-  @Test
-  public void testGoodTupleWithCorrectType() {
-    Term t = readTerm("⦇ x, true, 4 |)", "⦇ a → b, Bool, Int ⦈", true, null, "");
-    assertTrue(t.isTuple());
-  }
-
-  @Test
-  public void testTupleWithIncorrectType() {
-    Term t = readTerm("⦇ aa, true ⦈", "⦇ a → b, Bool ⦈", true, null,
-      "1:3: Expected term of type a → b, but got function symbol aa which has type a.\n");
-    assertTrue(t.isTuple());
-  }
-
-  @Test
-  public void testTupleWithIncorrectLength() {
-    Term t = readTerm("⦇ aa, true ⦈", "⦇ (a → b), Bool, Int ⦈", true, null,
-      "1:1: Type error: expected a term of type ⦇ a → b, Bool, Int ⦈ but got a tuple " +
-      "of length 2.\n");
-    assertFalse(t.isTuple());
-    assertTrue(t.toString().equals("⦇aa, true⦈"));
-    assertTrue(t.queryType().toString().equals("⦇ a → b, Bool, Int ⦈"));
-  }
-
-  @Test
-  public void testTupleWithNonTupleType() {
-    Term t = readTerm("⦇ aa, true ⦈", "a → b", false, null,
-      "1:1: Type error: expected a term of type a → b but got a tuple, which necessarily has " +
-      "a product type.\n");
-    assertFalse(t.isTuple());
-    assertTrue(t.toString().equals("⦇aa, true⦈"));
-    assertTrue(t.queryType().toString().equals("a → b"));
-  }
-
-  @Test
-  public void testTooShortTuples() {
-    Term t = readTerm("(| |)", null, false, null, "1:1: Empty tuples are not allowed.\n");
-    assertTrue(t == null);
-    t = readTerm("(| 12 |)", null, true, null, "1:1: Tuples of length 1 are not allowed.\n");
-    assertTrue(t.isValue());
-    assertTrue(t.toValue().getInt() == 12);
   }
 
   @Test

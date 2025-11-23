@@ -75,11 +75,26 @@ public class CoraTypesParsingTest {
   }
 
   @Test
-  public void testSimpleProductType() {
-    Type t1 = CoraParser.readType("⦇ xx, yy, zz ⦈", true, null);
-    Type t2 = CoraParser.readType("⦇ xx , yy ,zz ⦈", false, null);
+  public void testTypeVariable() {
+    Type t = CoraParser.readType("$alpha");
+    assertTrue(t.isVariableType());
+  }
+
+  @Test
+  public void testTypeVariableWithBrackets() {
+    ErrorCollector collector = new ErrorCollector();
+    Type t = CoraParser.readType("$a() -> b", true, collector);
+    assertTrue(t.toString().equals("$a → b"));
+    assertTrue(collector.toString().equals(
+      "1:3: Unexpected bracket following type variable.\n"));
+  }
+
+  @Test
+  public void testSimpleDataType() {
+    Type t1 = CoraParser.readType("d(xx, yy, zz)", true, null);
+    Type t2 = CoraParser.readType("d(xx , yy ,zz )", false, null);
     assertTrue(t1.equals(t2));
-    assertTrue(t1.isProductType());
+    assertTrue(t1.isDataType());
     assertTrue(t1.queryNumberSubtypes() == 3);
     assertTrue(t1.querySubtype(1).toString().equals("xx"));
     assertTrue(t1.querySubtype(2).toString().equals("yy"));
@@ -97,29 +112,29 @@ public class CoraTypesParsingTest {
 
   @Test
   public void testMixedType() {
-    Type t = CoraParser.readType("⦇ a , b ⦈ -> (|c,d|)");
+    Type t = CoraParser.readType("pair(a , b) -> pair($a,d)");
     assertTrue(t.isArrowType());
-    assertTrue(t.querySubtype(1).isProductType());
-    assertTrue(t.querySubtype(1).toString().equals("⦇ a, b ⦈"));
-    assertTrue(t.querySubtype(2).isProductType());
-    assertTrue(t.querySubtype(2).toString().equals("⦇ c, d ⦈"));
+    assertTrue(t.querySubtype(1).isDataType());
+    assertTrue(t.querySubtype(1).toString().equals("pair(a, b)"));
+    assertTrue(t.querySubtype(2).isDataType());
+    assertTrue(t.querySubtype(2).toString().equals("pair($a, d)"));
   }
 
   @Test
   public void testHigherArrowType() {
-    Type t = CoraParser.readType("(xx -> ⦇ yy, xx|)) -> zz");
+    Type t = CoraParser.readType("(xx() -> pair(yy, xx)) -> zz");
     assertTrue(t.isArrowType());
     assertTrue(t.querySubtype(1).isArrowType());
-    assertTrue(t.querySubtype(1).toString().equals("xx → ⦇ yy, xx ⦈"));
+    assertTrue(t.querySubtype(1).toString().equals("xx → pair(yy, xx)"));
     assertTrue(t.querySubtype(2).toString().equals("zz"));
   }
 
   @Test
-  public void testHigherProductType() {
-    Type t = CoraParser.readType("(|xx -> (|yy ,xx|), zz|)");
-    assertTrue(t.isProductType());
+  public void testHigherDataType() {
+    Type t = CoraParser.readType("c(xx -> d(yy ,xx), zz)");
+    assertTrue(t.isDataType());
     assertTrue(t.querySubtype(1).isArrowType());
-    assertTrue(t.querySubtype(1).toString().equals("xx → ⦇ yy, xx ⦈"));
+    assertTrue(t.querySubtype(1).toString().equals("xx → d(yy, xx)"));
     assertTrue(t.querySubtype(2).toString().equals("zz"));
   }
 
@@ -140,10 +155,11 @@ public class CoraTypesParsingTest {
 
   @Test
   public void testReadTypeEndingWithBrackets() {
-    Type t = CoraParser.readType("(|a,b|) → (c -> d → e)");
+    Type t = CoraParser.readType("pair(a,b) → (c -> $d → e)");
     assertTrue(t.isArrowType());
-    assertTrue(t.querySubtype(1).toString().equals("⦇ a, b ⦈"));
-    assertTrue(t.querySubtype(2).toString().equals("c → d → e"));
+    assertTrue(t.querySubtype(1).toString().equals("pair(a, b)"));
+    assertTrue(t.querySubtype(2).toString().equals("c → $d → e"));
+    assertTrue(t.querySubtype(2).querySubtype(2).querySubtype(1).isVariableType());
   }
 
   @Test
@@ -159,7 +175,7 @@ public class CoraTypesParsingTest {
     Type t = CoraParser.readType("a -> b -> -> c", false, collector);
     assertTrue(t.toString().equals("a → b → c"));
     assertTrue(collector.toString().equals(
-      "1:11: Expected a type (started by a sort identifier or bracket) but got ARROW (->).\n"));
+      "1:11: Expected a type (started by a sort constructor or bracket) but got ARROW (->).\n"));
   }
 
   @Test
@@ -183,7 +199,7 @@ public class CoraTypesParsingTest {
     assertTrue(t.toString().equals("Int"));
     assertTrue(t.isTheoryType());
     assertTrue(collector.toString().equals(
-      "1:1: Expected a type (started by a sort identifier or bracket) but got ARROW (->).\n"));
+      "1:1: Expected a type (started by a sort constructor or bracket) but got ARROW (->).\n"));
   }
 
   @Test
@@ -191,8 +207,8 @@ public class CoraTypesParsingTest {
     ErrorCollector collector = new ErrorCollector();
     Type t = CoraParser.readType("() →  b -> c", false, collector);
     assertTrue(t.toString().equals("b → c"));
-    assertTrue(collector.toString().equals(
-      "1:2: Expected a type (started by a sort identifier or bracket) but got BRACKETCLOSE ()).\n"));
+    assertTrue(collector.toString().equals("1:2: Expected a type (started by a sort constructor " +
+      "or bracket) but got BRACKETCLOSE ()).\n"));
   }
 
   @Test
@@ -201,16 +217,16 @@ public class CoraTypesParsingTest {
     Type t = CoraParser.readType("b -> c →", true, collector);
     assertTrue(t.toString().equals("b → c"));
     assertTrue(collector.toString().equals(
-      "1:9: Expected a type (started by a sort identifier or bracket) but got end of input.\n"));
+      "1:9: Expected a type (started by a sort constructor or bracket) but got end of input.\n"));
   }
 
   @Test
-  public void testTypeMissingTupleCloseBracketRecovery() {
+  public void testTypeMissingDataCloseBracketRecovery() {
     ErrorCollector collector = new ErrorCollector();
-    Type t = CoraParser.readType("(| b , c ) -> d", true, collector);
-    assertTrue(t.toString().equals("⦇ b, c ⦈ → d"));
+    Type t = CoraParser.readType("pair(b , c d", true, collector);
+    assertTrue(t.toString().equals("pair(b, c)"));
     assertTrue(collector.toString().equals(
-      "1:10: Expected tuple closing bracket but got BRACKETCLOSE ()).\n"));
+      "1:12: Expected closing bracket but got IDENTIFIER (d).\n"));
   }
 
   @Test
@@ -220,8 +236,8 @@ public class CoraTypesParsingTest {
     assertTrue(t.toString().equals("String"));
     assertTrue(t.isBaseType());
     assertFalse(t.isTheoryType());
-    assertTrue(collector.toString().equals(
-      "1:12: Expected a type (started by a sort identifier or bracket) but got BRACKETCLOSE ()).\n"));
+    assertTrue(collector.toString().equals("1:12: Expected a type (started by a sort " +
+      "constructor or bracket) but got BRACKETCLOSE ()).\n"));
   }
 
   @Test

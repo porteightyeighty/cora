@@ -43,9 +43,10 @@ class DeductionEqdeleteTest {
       "h :: List -> List\n" +
       "i :: (Int -> Bool) -> Int\n" +
       "j :: Int -> Int\n" +
-      "k :: (| Int, Int |) -> Int -> Int\n" +
-      "l :: Int -> Int -> (| Int, Int |)\n" +
+      "k :: pair(Int, Int) -> Int -> Int\n" +
+      "l :: Int -> Int -> pair(Int, Int)\n" +
       "q :: (Int -> Unit) -> Int -> Unit\n" +
+      "p :: Int -> Int -> pair(Int, Int)\n" +
       "a :: Int\n");
   }
 
@@ -121,9 +122,9 @@ class DeductionEqdeleteTest {
 
   @Test
   public void testFailedCreateDifferentStructure() {
-    testFailToCreate("k(l(x, 12), z) = k((| y, x |), y) | x = z");
+    testFailToCreate("k(l(x, 12), z) = k(p(y, x), y) | x = z");
     assertTrue(_module.toString().equals("There is no suitable context for both sides: " +
-      "subterms l(x, 12) and ⦇y, x⦈ cannot be equated.\n\n"));
+      "subterms l(x, 12) and p(y, x) cannot be equated.\n\n"));
   }
 
   @Test

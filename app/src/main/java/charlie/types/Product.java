@@ -28,6 +28,9 @@ public record Product(FixedList<Type> types) implements Type {
   @Override
   public boolean isProductType() { return true; }
 
+  @Override
+  public boolean isSort() { return true; }
+
   /** 
    * Returns true if the only base types sorts occurring in this type are theory sorts --
    * that is, the sorts specifically created as theory sorts by the TypeFactory.
@@ -35,6 +38,11 @@ public record Product(FixedList<Type> types) implements Type {
   @Override
   public boolean isTheoryType() {
     return types.stream().allMatch(Type::isTheoryType);
+  }
+
+  @Override
+  public boolean isMonomorphic() {
+    return types.stream().allMatch(Type::isMonomorphic);
   }
 
   /** @return false */
@@ -79,10 +87,10 @@ public record Product(FixedList<Type> types) implements Type {
 
   /** Returns the type order of the current type. */
   @Override
-  public int queryTypeOrder() {
+  public int queryFullTypeOrder() {
     return types
       .stream()
-      .map(Type::queryTypeOrder)
+      .map(Type::queryFullTypeOrder)
       .reduce(0, (n,m) -> Math.max(n,m));
   }
 

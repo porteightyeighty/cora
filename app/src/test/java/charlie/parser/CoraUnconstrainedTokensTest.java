@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -103,9 +103,8 @@ public class CoraUnconstrainedTokensTest {
 
   @Test
   public void testAllBasicTokens() throws LexerException {
-    Lexer lexer = createLexer("x-x⦇(y){,+#=_String\\a∀ ∃7*}():::a⦈[b→b.⇒]>c--λ12");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "x-x");
-    verifyToken(lexer.nextToken(), CoraTokenData.TUPLEOPEN, "⦇");
+    Lexer lexer = createLexer("x-⦇x(y){,+#=_String\\a∀ ∃7*}():::a⦈[b→b.⇒]>c--λ12");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "x-⦇x");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETOPEN, "(");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "y");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETCLOSE, ")");
@@ -119,8 +118,7 @@ public class CoraUnconstrainedTokensTest {
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETOPEN, "(");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETCLOSE, ")");
     verifyToken(lexer.nextToken(), CoraTokenData.DECLARE, "::");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, ":a");
-    verifyToken(lexer.nextToken(), CoraTokenData.TUPLECLOSE, "⦈");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, ":a⦈");
     verifyToken(lexer.nextToken(), CoraTokenData.METAOPEN, "[");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "b");
     verifyToken(lexer.nextToken(), CoraTokenData.ARROW, "→");
@@ -136,8 +134,8 @@ public class CoraUnconstrainedTokensTest {
 
   @Test
   public void testArrowsInIdentifer() throws LexerException {
-    Lexer lexer = createLexer("aa-b--->c→d=>-->e");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "aa-b--");
+    Lexer lexer = createLexer("a$a-b--->c→d=>-->e");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "a$a-b--");
     verifyToken(lexer.nextToken(), CoraTokenData.ARROW, "->");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "c");
     verifyToken(lexer.nextToken(), CoraTokenData.ARROW, "→");

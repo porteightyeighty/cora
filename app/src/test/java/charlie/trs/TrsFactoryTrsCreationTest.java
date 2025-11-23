@@ -123,7 +123,7 @@ public class TrsFactoryTrsCreationTest {
     assertThrows(IllegalSymbolException.class,
       () -> TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.MSTRS));
 
-    symbols.set(symbols.size()-1, TermFactory.createConstant("i", type("(|a , b|) → a")));
+    symbols.set(symbols.size()-1, TermFactory.createConstant("i", type("x(a , b) → a")));
     assertThrows(IllegalSymbolException.class,
       () -> TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.CFS));
   }

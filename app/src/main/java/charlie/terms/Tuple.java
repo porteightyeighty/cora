@@ -55,7 +55,7 @@ public class Tuple extends TermInherit {
     // set the type
     FixedList.Builder<Type> tmsTy = new FixedList.Builder<Type>();
     for (Term t : tms) tmsTy.add(t.queryType());
-    _tupleType = TypeFactory.createProduct(tmsTy.build());
+    _tupleType = new charlie.types.Product(tmsTy.build());
   }
 
   // Constructors ----------------------------------------------------------------------------------

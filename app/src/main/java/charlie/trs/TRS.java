@@ -166,7 +166,7 @@ public class TRS {
   private void verifyAlphabet() {
     for (FunctionSymbol f : _alphabet.getSymbols()) {
       Type type = f.queryType();
-      if (_level == TermLevel.FIRSTORDER && type.queryTypeOrder() > 1) {
+      if (_level == TermLevel.FIRSTORDER && type.queryFullTypeOrder() > 1) {
         throw new IllegalSymbolException(f, _trsKind, "higher-order symbols cannot occur in a " +
           "first-order TRS.");
       }

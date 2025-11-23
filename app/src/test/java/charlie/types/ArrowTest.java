@@ -39,25 +39,28 @@ class ArrowTest {
   }
 
   @Test
-  void tesMethodTypeReturn(){
-    Type arrType = TypeFactory.createArrow(intType(), boolType());
-    assertFalse(arrType.isTheoryType());
-    assertTrue(arrType.isArrowType());
-  }
-
-  @Test
   void testBasics() {
     Type t = new Arrow(intType(), boolType());
     assertTrue(t.isArrowType());
     assertFalse(t.isBaseType());
-    assertFalse(t.isProductType());
+    assertFalse(t.isDataType());
+    assertFalse(t.isVariableType());
+    assertFalse(t.isSort());
+    assertTrue(t.isSimple());
+    assertTrue(t.isMonomorphic());
+    assertFalse(t.isTheoryType());
+    assertTrue(t.queryNumberSubtypes() == 2); 
+    Type t2 = new Arrow(boolType(), t); 
+    assertTrue(t2.querySubtype(1).equals(boolType()));
+    assertTrue(t2.querySubtype(2).equals(t));
+    assertTrue(t.queryOutputType().equals(boolType()));
   }
 
   @Test
   public void testSimple() {
     Type inttype = intType();
     Type booltype = boolType();
-    Type tuple = new Product(FixedList.of(inttype, inttype));
+    Type tuple = new Data("prod", FixedList.of(inttype, inttype));
     Type t = new Arrow(booltype, booltype);
     assertTrue(t.isSimple());
     t = new Arrow(new Arrow(tuple, booltype), inttype);
@@ -106,11 +109,11 @@ class ArrowTest {
   public void testArity() {
     Type inttype  = intType();
     Base booltype = boolType();
-    Type pair = TypeFactory.createProduct(inttype, new Arrow(booltype, inttype));
-    Type pairbooltype    = new Arrow(pair, booltype);          // (int x bool -> int) -> bool
-    Type intpairbooltype = new Arrow(inttype, pairbooltype);   // int -> (int x bool -> int) -> bool
+    Type pair = TypeFactory.createSort("c", inttype, new Arrow(booltype, inttype));
+    Type pairbooltype    = new Arrow(pair, booltype);          // c(int, bool -> int) -> bool
+    Type intpairbooltype = new Arrow(inttype, pairbooltype);   // int -> c(int, bool -> int) -> bool
     Type intboolpairtype = new Arrow(inttype, new Arrow(booltype, pair));
-                                                               // int -> bool -> (int x (bool -> int))
+                                                               // int -> bool -> c(int, bool -> int)
 
     assertTrue(pairbooltype.queryArity() == 1);
     assertTrue(intpairbooltype.queryArity() == 2);
@@ -124,16 +127,30 @@ class ArrowTest {
     Type intbooltype    = new Arrow(inttype, booltype);        // int -> bool
     Type intintbooltype = new Arrow(inttype, intbooltype);     // int -> int -> bool
     Type intboolinttype = new Arrow(intbooltype, inttype);     // (int -> bool) -> int
-    Type pair = TypeFactory.createProduct(inttype, new Arrow(booltype, inttype));
-    Type pairbooltype    = new Arrow(pair, booltype);          // (int x bool -> int) -> bool
-    Type intpairbooltype = new Arrow(inttype, pairbooltype);   // int -> (int x bool -> int) -> bool
+    Type pair = TypeFactory.createSort("c", inttype, new Arrow(booltype, inttype));
+    Type pairbooltype    = new Arrow(pair, booltype);          // c(int, bool -> int) -> bool
+    Type intpairbooltype = new Arrow(inttype, pairbooltype);   // int -> c(int, bool -> int) -> bool
     Type intboolpairtype = new Arrow(inttype, new Arrow(booltype, pair));
-                                                               // int -> bool -> (int x (bool -> int))
-    assertEquals(1, intintbooltype.queryTypeOrder());
-    assertEquals(2, intboolinttype.queryTypeOrder());
-    assertEquals(2, pairbooltype.queryTypeOrder());
-    assertEquals(2, intpairbooltype.queryTypeOrder());
-    assertEquals(1, intboolpairtype.queryTypeOrder());
+                                                               // int -> bool -> c(int, bool -> int)
+    assertEquals(1, intintbooltype.querySimpleTypeOrder());
+    assertEquals(2, intboolinttype.querySimpleTypeOrder());
+    assertEquals(1, pairbooltype.querySimpleTypeOrder());
+    assertEquals(1, intpairbooltype.querySimpleTypeOrder());
+    assertEquals(1, intboolpairtype.querySimpleTypeOrder());
+
+    assertEquals(1, intintbooltype.queryFullTypeOrder());
+    assertEquals(2, intboolinttype.queryFullTypeOrder());
+    assertEquals(2, pairbooltype.queryFullTypeOrder());
+    assertEquals(2, intpairbooltype.queryFullTypeOrder());
+    assertEquals(1, intboolpairtype.queryFullTypeOrder());
+
+    Type alpha = new TVar("α");
+    Type intalpha = new Arrow(inttype, alpha);
+    Type boolalphaint = new Arrow(booltype, new Arrow(alpha, inttype));
+    assertTrue(intalpha.queryFullTypeOrder() == Integer.MAX_VALUE);
+    assertTrue(boolalphaint.queryFullTypeOrder() == Integer.MAX_VALUE);
+    assertTrue(intalpha.querySimpleTypeOrder() == 1);
+    assertTrue(boolalphaint.querySimpleTypeOrder() == 1);
   }
 
   @Test

@@ -167,7 +167,7 @@ public class OCocoUnsortedInputReader {
         return t.equals(TypeFactory.defaultSort);
       case Arrow(Type a, Type b):
         return isUnsorted(a) && isUnsorted(b);
-      case Product(FixedList<Type> args):
+      default:
         return false;
     }
   }

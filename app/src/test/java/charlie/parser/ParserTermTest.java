@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2024 Cynthia Kop
+ Copyright 2023--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -71,9 +71,6 @@ public class ParserTermTest {
     ParserTerm e2 = new Application(t, h, badlst1);
     ParserTerm e3 = new Application(t, h, badlst2);
     ParserTerm e4 = new Application(t, new PErr(h), goodlst);
-    ParserTerm f1 = new Tup(t, goodlst);
-    ParserTerm f2 = new Tup(t, badlst1);
-    ParserTerm f3 = new Tup(t, badlst2);
     assertFalse(d1.hasErrors());
     assertTrue(d2.hasErrors());
     assertTrue(d3.hasErrors());
@@ -82,9 +79,6 @@ public class ParserTermTest {
     assertTrue(e2.hasErrors());
     assertTrue(e3.hasErrors());
     assertTrue(e4.hasErrors());
-    assertFalse(f1.hasErrors());
-    assertTrue(f2.hasErrors());
-    assertTrue(f3.hasErrors());
   }
 }
 

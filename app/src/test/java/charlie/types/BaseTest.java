@@ -41,16 +41,24 @@ class BaseTest {
     Type t = intType();
     assertTrue(t.isBaseType());
     assertFalse(t.isArrowType());
-    assertFalse(t.isProductType());
+    assertFalse(t.isDataType());
+    assertFalse(t.isVariableType());
+    assertTrue(t.isSort());
+    assertTrue(t.isSimple());
+    assertTrue(t.isMonomorphic());
     assertTrue(t.equals(t));
     assertTrue(t.equals(intType()));
     assertFalse(t.equals(boolType()));
-    assertTrue(t.queryArity() == 0);
-    assertTrue(t.isSimple());
+    assertFalse(t.equals(new TVar("Int")));
+    assertFalse(t.equals("Int"));
+    assertTrue(t.toString().equals("Int"));
+    assertTrue(t.queryArity() == 0); 
+    assertTrue(t.queryNumberSubtypes() == 0); 
+    assertTrue(t.queryOutputType() == t); 
   }
 
   @Test
-  void testToStringIsJustTheName(){
+  void testToStringIsJustTheName() {
     String name = java.util.UUID.randomUUID().toString();
 
     Type ty = new Base(name);
@@ -58,7 +66,7 @@ class BaseTest {
   }
 
   @Test
-  void testTheoryType(){
+  void testTheoryType() {
     assertTrue(UniqueTypes.isTheoryType(TypeFactory.intSort));
     assertTrue(TypeFactory.boolSort.isTheoryType());
     assertTrue(TypeFactory.stringSort.isTheoryType());
@@ -69,7 +77,8 @@ class BaseTest {
 
   @Test
   void testTypeOrder() {
-    assertEquals(0, (new Base("b")).queryTypeOrder());
+    assertEquals(0, (new Base("b")).querySimpleTypeOrder());
+    assertEquals(0, (new Base("b")).queryFullTypeOrder());
   }
 
   @Test

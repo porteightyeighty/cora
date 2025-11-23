@@ -83,7 +83,7 @@ public class CoraParser {
   // ===================================== PARSING CONSTANTS ======================================
 
   /**
-   * This function checks if the next tokens represent a string, and if so, returns the string.
+   * This function checks if the next tokens represent an identifier, and if so, returns its text.
    * If not, null is returned and nothing is read.
    */
   private String tryReadIdentifier() {
@@ -95,7 +95,7 @@ public class CoraParser {
   // ======================================== READING TYPES =======================================
 
   /**
-   * type ::= basictype (typearrow type)?
+   * type ::= maintype (typearrow type)?
    *
    * This function reads a type and returns it.
    * The input is expected to actually be a type. If this is not the case, then an error is stored.
@@ -104,7 +104,7 @@ public class CoraParser {
    * recovery.
    */
   private Type readType() {
-    Type start = readBasicType();
+    Type start = readMainType();
     if (_status.readNextIf(CoraTokenData.ARROW) == null) return start;
     Type end = readType();
     if (start != null && end != null) return TypeFactory.createArrow(start, end);
@@ -114,26 +114,37 @@ public class CoraParser {
   }
 
   /**
-   * basictype ::= sort
-   *             | producttype
-   *             | BRACKETOPEN type BRACKETCLOSE
+   * maintype ::= base
+   *            | datatype
+   *            | BRACKETOPEN type BRACKETCLOSE
    *
    * where
-   * sort ::= INTTYPE | BOOLTYPE | STRINGTYPE | IDENTIFIER
+   * base ::= INTTYPE | BOOLTYPE | STRINGTYPE | IDENTIFIER
    *
-   * This function reads a basic type and returns it.  The input is expected to actually start with
-   * a basic type.  If this is not the case, then an error is stored and either null is returned, or
+   * This function reads a main type and returns it.  The input is expected to actually start with
+   * a main type.  If this is not the case, then an error is stored and either null is returned, or
    * whatever type we did manage to read.
    */
-  private Type readBasicType() {
+  private Type readMainType() {
     if (_status.readNextIf(CoraTokenData.INTTYPE) != null) return TypeFactory.intSort;
     if (_status.readNextIf(CoraTokenData.BOOLTYPE) != null) return TypeFactory.boolSort;
     if (_status.readNextIf(CoraTokenData.STRINGTYPE) != null) return TypeFactory.stringSort;
     String name = tryReadIdentifier();
-    if (name != null) return TypeFactory.createSort(name);
-    if (_status.nextTokenIs(CoraTokenData.TUPLEOPEN)) return readProductType();
+    if (name != null) {
+      if (name.length() > 0 && name.charAt(0) == '$') {
+        Token tok = _status.readNextIf(CoraTokenData.BRACKETOPEN);
+        if (tok != null) {
+          _status.storeError(tok, "Unexpected bracket following type variable.");
+          return readDataType(name);
+        }
+        return TypeFactory.createVariable(name.substring(1));
+      }   
+      if (_status.readNextIf(CoraTokenData.BRACKETOPEN) != null) return readDataType(name);
+      else return TypeFactory.createSort(name);
+    }   
+    // no name ==> it must be something in brackets!
     Token bracket = _status.expect(CoraTokenData.BRACKETOPEN,
-      "a type (started by a sort identifier or bracket)");
+      "a type (started by a sort constructor or bracket)");
     if (bracket == null) return null;
     Type ret = readType();
     _status.expect(CoraTokenData.BRACKETCLOSE, "closing bracket");
@@ -141,28 +152,44 @@ public class CoraParser {
   }
 
   /**
-   * producttype ::= TUPLEOPEN basictype COMMA...COMMA basictype TUPLECLOSE
-   * 
-   * This function reads a product type and returns it.  The input is expected to actually start
-   * with a product type.  If this is not the case, then an error is stored and either null is
-   * returned, or whatever type we did manage to read. (We try to complete the product, with a
-   * normal closing bracket rather than a tuple closing bracket if we have to).
+   * datatype ::= IDENTIFIER BRACKETOPEN datatype COMMA...COMMA datatype BRACKETCLOSE
+   *
+   * This function reads a data type and returns it.  When this is called, the identifier and
+   * opening bracket should already have been read.
+   *
+   * It is allowed for the list to be empty; in that case a base type is returned instead of a
+   * data type.
+   *
+   * The input is expected to actually start with the list, and we will read up to and including
+   * the final bracket.  If this fails, then an error is stored, but we will always return whatever
+   * type we did manage to read (since we at least have the sort constructor name).
    */
-  private Type readProductType() {
-    _status.expect(CoraTokenData.TUPLEOPEN, "tuple opening bracket");
+  private Type readDataType(String name) {
     ArrayList<Type> components = new ArrayList<Type>();
+    if (_status.readNextIf(CoraTokenData.BRACKETCLOSE) != null) return TypeFactory.createSort(name);
     Type arg = readType();
     while (_status.readNextIf(CoraTokenData.COMMA) != null) {
       if (arg != null) components.add(arg);
       arg = readType();
     }
     if (arg != null) components.add(arg);
-    if (_status.expect(CoraTokenData.TUPLECLOSE, "tuple closing bracket") == null) {
-      _status.readNextIf(CoraTokenData.BRACKETCLOSE);
-    }
-    if (components.size() == 0) return null;
-    if (components.size() == 1) return components.get(0);
-    return TypeFactory.createProduct(components);
+    _status.expect(CoraTokenData.BRACKETCLOSE, "closing bracket");
+    return TypeFactory.createSort(name, components);
+  }
+
+  /**
+   * Helper function for recoverState: this returns true if it is possible for the given token to
+   * appear anywhere inside a type.
+   */
+  private boolean tokenCanOccurInType(Token t) {
+    return t.getName().equals(CoraTokenData.IDENTIFIER) ||
+           t.getName().equals(CoraTokenData.INTTYPE) ||
+           t.getName().equals(CoraTokenData.BOOLTYPE) ||
+           t.getName().equals(CoraTokenData.STRINGTYPE) ||
+           t.getName().equals(CoraTokenData.BRACKETOPEN) ||
+           t.getName().equals(CoraTokenData.BRACKETCLOSE) ||
+           t.getName().equals(CoraTokenData.COMMA) ||
+           t.getName().equals(CoraTokenData.ARROW);
   }
 
   // ================================= READING INDIVIDUAL SYMBOLS =================================
@@ -260,7 +287,6 @@ public class CoraParser {
    *          | IDENTIFIER METAOPEN termlist METACLOSE
    *          | mainterm BRACKETOPEN termlist BRACKETCLOSE
    *          | BRACKETOPEN term BRACKETCLOSE
-   *          | TUPLEOPEN termlist TUPLECLOSE
    *          | METAOPEN infixsymbol METACLOSE
    *          | NOT mainterm
    *          | MINUS mainterm
@@ -321,21 +347,6 @@ public class CoraParser {
       if (end == null) return new PErr(ret);
     }
 
-    // TUPLEOPEN termlist TUPLECLOSE
-    else if ((token = _status.readNextIf(CoraTokenData.TUPLEOPEN)) != null) {
-      FixedList<ParserTerm> args =
-        readTermList(CoraTokenData.TUPLECLOSE, "tuple closing bracket |)");
-      if (args == null || args.size() == 0) {
-        ret = new PErr(new Identifier(token, "(| |)"));
-        if (args != null) _status.storeError(token, "Empty tuples are not allowed.");
-      }
-      else if (args.size() == 1) {
-        _status.storeError(token, "Tuples of length 1 are not allowed.");
-        ret = args.get(0);
-      }
-      else ret = new Tup(token, args);
-    }
-
     // IDENTIFIER
     else {
       token = _status.expect(CoraTokenData.IDENTIFIER, "term, started by an identifier, " +
@@ -355,7 +366,7 @@ public class CoraParser {
 
     // if we see an argument list, read it, and make the application structure
     while (_status.readNextIf(CoraTokenData.BRACKETOPEN) != null) {
-      FixedList<ParserTerm> args = readTermList(CoraTokenData.BRACKETCLOSE,"closing bracket )");
+      FixedList<ParserTerm> args = readTermList(CoraTokenData.BRACKETCLOSE, "closing bracket )");
       if (args == null) ret = new PErr(ret);
       else ret = new Application(ret.token(), ret, args);
     }
@@ -615,19 +626,30 @@ public class CoraParser {
 
   /**
    * We have encountered an error in an environment, and will now continue reading until the next
-   * token is a COMMA, BRACEOPEN, BRACECLOSE, or the end of a file.
+   * token is the end of the file, a BRACEOPEN, BRACECLOSE, or otherwise the sequence COMMA
+   * IDENTIFIER DECLARE.
    *
    * If it is BRACEOPEN or EOF, then the token is not read; if it is COMMA or BRACECLOSE, it is.
-   * The final token is returned.
+   * The corresponding token (BRACEOPEN, EOF, COMMA, BRACECLOSE) is returned.
    */
   private Token readRecoverEnvironment() {
-    Token next = _status.nextToken();
-    while (!next.isEof() && !next.getName().equals(CoraTokenData.COMMA) &&
-           !next.getName().equals(CoraTokenData.BRACEOPEN) &&
-           !next.getName().equals(CoraTokenData.BRACECLOSE)) next = _status.nextToken();
-    if (!next.getName().equals(CoraTokenData.COMMA) &&
-        !next.getName().equals(CoraTokenData.BRACECLOSE)) _status.pushBack(next);
-    return next;
+    while (true) {
+      Token next = _status.nextToken();
+      if (next.isEof() || next.getName().equals(CoraTokenData.BRACEOPEN)) {
+        _status.pushBack(next);
+        return next;
+      }
+      if (next.getName().equals(CoraTokenData.BRACECLOSE)) return next;
+      if (next.getName().equals(CoraTokenData.COMMA)) {
+        Token a = _status.readNextIf(CoraTokenData.IDENTIFIER);
+        Token b = _status.readNextIf(CoraTokenData.DECLARE);
+        if (a != null && b != null) {
+          _status.pushBack(b);
+          _status.pushBack(a);
+          return next;
+        }
+      }
+    }
   }
 
   /**  
@@ -683,7 +705,7 @@ public class CoraParser {
         ParserTerm term = readTerm();
         if (term != null && !term.hasErrors()) return;
       }
-      // :: <-- we may be a token into a declaration; it is also possible that we are inside an
+      // :: <-- we may be a token inside a declaration; it is also possible that we are inside an
       // environment or abstraction (although unlikely as we try to account for that possiblity)
       // but if the next step is to read a function symbol, this step will fail anyway if it is
       // actually a variable or meta-variable declaration
@@ -696,14 +718,8 @@ public class CoraParser {
       // we're following a declare, so we can definitely be inside a type, no matter what came
       // before!
       if (curr.getName().equals(CoraTokenData.DECLARE)) intype = true;
-      // ( or [ <-- if this comes directly after an identifier, we are not in a type
-      if ((curr.getName().equals(CoraTokenData.BRACKETOPEN) ||
-           curr.getName().equals(CoraTokenData.METAOPEN)) &&
-          prev != null && prev.getName().equals(CoraTokenData.IDENTIFIER)) {
-        intype = false;
-      }
-      // . <-- we're after a lambda declaration, so no longer in a type at least
-      if (curr.getName().equals(CoraTokenData.DOT)) intype = false;
+      // types can only contain a limited set of tokens
+      else if (!tokenCanOccurInType(curr)) intype = false;
       // → when we're not in a type <-- we're before the right-hand side of a rule
       if (curr.getName().equals(CoraTokenData.ARROW) && !intype) {
         ParserTerm t = readTerm();
@@ -757,19 +773,15 @@ public class CoraParser {
 
     // error cases: this is actually a variable / meta-variable declaration!
     if (_status.nextTokenIs(CoraTokenData.BRACECLOSE)) {
-      if (publ != null || priv != null) {
-        _status.storeError(_status.peekNext(),
-                           "Function symbol declartion cannot be followed by }!");
-      }
+      _status.storeError(_status.peekNext(),
+                         "Function symbol declaration cannot be followed by }!");
       return new ParserDeclaration(constant, name, null);
     }
     if (_status.nextTokenIs(CoraTokenData.COMMA) || _status.nextTokenIs(CoraTokenData.DOT) ||
         type == null) {
-      if (publ != null || priv != null) {
-        Token tok = _status.peekNext();
-        _status.storeError(_status.peekNext(), "Function symbol declartion cannot be followed by " +
-                           (tok.getName().equals(CoraTokenData.COMMA) ? "comma" : "dot") + "!");
-      }
+      Token tok = _status.peekNext();
+      _status.storeError(_status.peekNext(), "Function symbol declaration cannot be followed by " +
+                         (tok.getName().equals(CoraTokenData.COMMA) ? "comma" : "dot") + "!");
       recoverState();
       return new ParserDeclaration(constant, name, null);
     }

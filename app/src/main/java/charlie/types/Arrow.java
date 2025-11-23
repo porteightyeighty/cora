@@ -18,32 +18,91 @@ package charlie.types;
 import java.util.Objects;
 import charlie.util.NullStorageException;
 
+/**
+ * The arrow constructor is the primary way to build higher types: σ → τ represents a function from
+ * the domain σ to the domain τ.  In practice, we typically consider the arrow right-associative,
+ * denoting σ1 → ... → σn → τ for a function that takes n arguments and returns τ.
+ */
 public record Arrow(Type left, Type right) implements Type {
-  public Arrow(Type left, Type right) {
+  public Arrow {
     if (left == null || right == null) throw new NullStorageException("Arrow", "type");
-    this.left = left;
-    this.right = right;
   }
 
   @Override
-  public boolean isArrowType() { return true; }
+  public boolean isArrowType() {
+    return true;
+  }
+
+  @Override
+  public boolean isSort() {
+    return false;
+  }
+
+  @Override
+  public boolean isSimple() {
+    return this.left.isSimple() && this.right.isSimple();
+  }
+
+  @Override
+  public boolean isZeroSort() {
+    return false;
+  }
+
+  @Override
+  public boolean isMonomorphic() {
+    return this.left.isMonomorphic() && this.right.isMonomorphic();
+  }
+
+  @Override
+  public boolean isTheoryType() {
+    return this.left.isTheoryType() && this.right.isTheoryType();
+  }
+
+  /** For σ1 → ,,, → σm → τ, returns m. */
+  @Override
+  public int queryArity() {
+    return 1 + this.right.queryArity();
+  }
+
+  @Override
+  public int queryNumberSubtypes() {
+    return 2;
+  }
+
+  @Override
+  public Type querySubtype(int index) {
+    if (index == 1) return this.left;
+    if (index == 2) return this.right;
+    throw new IndexOutOfBoundsException("Arrow::querySubtype given " + index + " (expected 1-2).");
+  }
+
+  /** For σ1 → ,,, → σm → τ, returns τ. */
+  @Override
+  public Type queryOutputType() {
+    return this.right.queryOutputType();
+  }
+
+  @Override
+  public int querySimpleTypeOrder() {
+    return Math.max(1 + this.left.querySimpleTypeOrder(), this.right.querySimpleTypeOrder());
+  }
+
+  @Override
+  public int queryFullTypeOrder() {
+    int l = this.left.queryFullTypeOrder();
+    if (l == Integer.MAX_VALUE) return l;
+    return Math.max(1 + l, this.right.queryFullTypeOrder());
+  }
 
   @Override
   public String toString() {
     return (new TypePrinter()).print(this);
   }
 
-  /** Returns true if all sorts in the type are theory sorts. */
   @Override
-  public boolean isTheoryType() { return this.left.isTheoryType() && this.right.isTheoryType(); }
-
-  /** Returns true if both sides of the arrow are simple types. */
-  @Override
-  public boolean isSimple() { return this.left.isSimple() && this.right.isSimple(); }
-
-  /** @return false */
-  @Override
-  public boolean isZeroSort() { return false; }
+  public int hashCode() {
+    return Objects.hash(left, right);
+  }
 
   @Override
   public boolean equals(Type type) {
@@ -56,36 +115,6 @@ public record Arrow(Type left, Type right) implements Type {
   @Override
   public boolean equals(Object other) {
     return other instanceof Type t && equals(t);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(left, right);
-  }
-
-  /** For σ1 → ,,, → σm → τ, returns m. */
-  @Override
-  public int queryArity() { return 1 + this.right.queryArity(); }
-
-  /** For σ1 → ,,, → σm → τ, returns τ */
-  @Override
-  public Type queryOutputType() { return this.right.queryOutputType(); }
-
-  @Override
-  public int queryTypeOrder() {
-    return Math.max(1 + this.left.queryTypeOrder(), this.right.queryTypeOrder());
-  }
-
-  @Override
-  public int queryNumberSubtypes() {
-    return 2;
-  }
-
-  @Override
-  public Type querySubtype(int index) {
-    if (index == 1) return this.left;
-    if (index == 2) return this.right;
-    throw new IndexOutOfBoundsException("Arrow::subtype given " + index + " (expected 1-2).");
   }
 }
 
