@@ -15,6 +15,8 @@
 
 package charlie.types;
 
+import java.util.Map;
+import java.util.Set;
 import charlie.util.NullStorageException;
 
 /**
@@ -55,7 +57,26 @@ public record Base(String name) implements Type {
   }
 
   @Override
-  public int queryFullTypeOrder() { return 0; }
+  public int queryTypeOrder() { return 0; }
+
+  @Override
+  public void storeTypeVariables(Set<TVar> storage) { }
+
+  @Override
+  public Type instantiate(Map<TVar,Type> typeSubstitution) { return this; }
+
+  @Override
+  public boolean match(Type other, Map<TVar,Type> typeSubstitution) {
+    return other instanceof Base(String x) && this.name.equals(x);
+  }
+
+  @Override
+  public int compareTo(Type other) {
+    return switch(other) {
+      case Base(String n) -> this.name.compareTo(n);
+      default -> -1;
+    };
+  }
 
   @Override
   public String toString() { return this.name; }

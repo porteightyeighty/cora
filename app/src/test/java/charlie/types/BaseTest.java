@@ -18,6 +18,7 @@ package charlie.types;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.TreeMap;
 import charlie.util.NullStorageException;
 
 class BaseTest {
@@ -77,8 +78,41 @@ class BaseTest {
 
   @Test
   void testTypeOrder() {
-    assertEquals(0, (new Base("b")).querySimpleTypeOrder());
-    assertEquals(0, (new Base("b")).queryFullTypeOrder());
+    assertEquals(0, (new Base("b")).queryTypeOrder());
+  }
+
+  @Test
+  public void testComparison() {
+    Type x = new Base("x");
+    Type a = new Base("a");
+    Type aa = new Arrow(a, a);
+    Type b = new TVar("b");
+    Type d = TypeFactory.createSort("d", a);
+    assertTrue(x.compareTo(a) > 0);
+    assertTrue(a.compareTo(x) < 0);
+    assertTrue(x.compareTo(aa) < 0);
+    assertTrue(x.compareTo(b) < 0);
+    assertTrue(x.compareTo(d) < 0);
+  }
+
+  @Test
+  public void testInstantiate() {
+    Type a = new Base("sort");
+    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
+    map.put(new TVar("sort"), new Base("a"));
+    assertTrue(a.instantiate(map) == a);
+  }
+
+  @Test
+  public void testMatch() {
+    Type a = new Base("sort");
+    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
+    assertTrue(a.match(new Base("sort"), map));
+    assertFalse(a.match(new Base("a"), map));
+    assertFalse(a.match(new TVar("sort"), map));
+    assertFalse(a.match(TypeFactory.createSort("sort", new Base("a")), map));
+    assertFalse(a.match(new Arrow(a, a), map));
+    assertTrue(map.size() == 0);
   }
 
   @Test

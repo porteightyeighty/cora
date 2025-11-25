@@ -15,7 +15,9 @@
 
 package charlie.types;
 
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import charlie.util.NullStorageException;
 
 /**
@@ -83,15 +85,42 @@ public record Arrow(Type left, Type right) implements Type {
   }
 
   @Override
-  public int querySimpleTypeOrder() {
-    return Math.max(1 + this.left.querySimpleTypeOrder(), this.right.querySimpleTypeOrder());
+  public int queryTypeOrder() {
+    int l = this.left.queryTypeOrder();
+    if (l == Integer.MAX_VALUE) return l;
+    return Math.max(1 + l, this.right.queryTypeOrder());
   }
 
   @Override
-  public int queryFullTypeOrder() {
-    int l = this.left.queryFullTypeOrder();
-    if (l == Integer.MAX_VALUE) return l;
-    return Math.max(1 + l, this.right.queryFullTypeOrder());
+  public void storeTypeVariables(Set<TVar> storage) {
+    this.left.storeTypeVariables(storage);
+    this.right.storeTypeVariables(storage);
+  }
+
+  @Override
+  public Type instantiate(Map<TVar,Type> typeSubst) {
+    return new Arrow(this.left.instantiate(typeSubst), this.right.instantiate(typeSubst));
+  }
+
+  @Override
+  public boolean match(Type other, Map<TVar,Type> typeSubstitution) {
+    if (other instanceof Arrow(Type l, Type r)) {
+      return this.left.match(l, typeSubstitution) && this.right.match(r, typeSubstitution);
+    }
+    return false;
+  }
+
+  @Override
+  public int compareTo(Type other) {
+    return switch(other) {
+      case Base(_), TVar(_) -> 1;
+      case Arrow(Type l, Type r) -> {
+        int k = this.right.compareTo(r);
+        if (k == 0) yield this.left.compareTo(l);
+        else yield k;
+      }
+      default -> -1;
+    };
   }
 
   @Override

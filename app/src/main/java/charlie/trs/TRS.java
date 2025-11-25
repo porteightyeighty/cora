@@ -38,7 +38,7 @@ import charlie.trs.TrsProperties.*;
  * relation on the terms.  The set of terms is built in a systematic way based on the kind of TRS,
  * and the relation is based on a (possibly infinite) set of rules.
  *
- * To represent a TRS in a finite class -- and be able to analyse them -- we impose some
+ * To represent a TRS in a finite class -- and be able to analyse it -- we impose some
  * restrictions.
  *
  * *** Building terms
@@ -166,7 +166,7 @@ public class TRS {
   private void verifyAlphabet() {
     for (FunctionSymbol f : _alphabet.getSymbols()) {
       Type type = f.queryType();
-      if (_level == TermLevel.FIRSTORDER && type.queryFullTypeOrder() > 1) {
+      if (_level == TermLevel.FIRSTORDER && type.queryTypeOrder() > 1) {
         throw new IllegalSymbolException(f, _trsKind, "higher-order symbols cannot occur in a " +
           "first-order TRS.");
       }

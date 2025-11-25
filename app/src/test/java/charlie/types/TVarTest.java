@@ -18,6 +18,8 @@ package charlie.types;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.TreeMap;
+import java.util.TreeSet;
 import charlie.util.NullStorageException;
 
 class TVarTest {
@@ -40,13 +42,65 @@ class TVarTest {
     assertTrue(t.queryArity() == 0);
     assertTrue(t.queryNumberSubtypes() == 0);
     assertTrue(t.queryOutputType() == t);
-    assertTrue(t.querySimpleTypeOrder() == 0);
-    assertTrue(t.queryFullTypeOrder() == Integer.MAX_VALUE);
+    assertTrue(t.queryTypeOrder() == Integer.MAX_VALUE);
   }
 
   @Test
   public void testNullCreation() {
     assertThrows(NullStorageException.class, () -> new TVar(null));
+  }
+
+  @Test
+  public void testComparison() {
+    Type y = new TVar("y");
+    Type x = new TVar("x");
+    Type z = new Base("z");
+    Type xz = new Arrow(x, z);
+    Type d = TypeFactory.createSort("d", z, x);
+    assertTrue(y.compareTo(x) > 0);
+    assertTrue(x.compareTo(y) < 0);
+    assertTrue(y.compareTo(z) > 0);
+    assertTrue(y.compareTo(xz) < 0);
+    assertTrue(y.compareTo(d) < 0);
+  }
+
+  @Test
+  public void testStoreTypeVariables() {
+    TreeSet<TVar> set = new TreeSet<TVar>();
+    Type x = new TVar("x");
+    x.storeTypeVariables(set);
+    assertTrue(set.size() == 1);
+    assertTrue(set.contains(x));
+  }
+
+  @Test
+  public void testInstantiate() {
+    Type a = new TVar("alpha");
+    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
+    map.put(new TVar("beta"), new Base("a"));
+    assertTrue(a.instantiate(map) == a);
+    map.put(new TVar("alpha"), null);
+    assertTrue(a.instantiate(map) == a);
+    Base b = new Base("b");
+    map.put(new TVar("alpha"), b);
+    assertTrue(a.instantiate(map) == b);
+  }
+
+  @Test
+  public void testMatch() {
+    Type a = new TVar("alpha");
+    Type b = new TVar("beta");
+    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
+
+    assertTrue(a.match(new Base("b"), map));
+    assertTrue(a.match(new Base("b"), map));
+    assertFalse(a.match(new Base("c"), map));
+    assertTrue(map.size() == 1);
+    assertTrue(map.get(a).equals(new Base("b")));
+
+    assertTrue(b.match(a, map));
+    assertTrue(map.get(b).equals(a));
+    assertFalse(b.match(new Arrow(new Base("x"), new Base("y")), map));
   }
 
   @Test

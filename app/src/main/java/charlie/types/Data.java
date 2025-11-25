@@ -15,7 +15,9 @@
 
 package charlie.types;
 
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import charlie.util.NullStorageException;
 import charlie.util.FixedList;
 
@@ -78,8 +80,49 @@ public record Data(String name, FixedList<Type> args) implements Type {
   }
 
   @Override
-  public int queryFullTypeOrder() {
-    return args.stream().map(Type::queryFullTypeOrder).reduce(0, (n,m) -> Math.max(n,m));
+  public int queryTypeOrder() {
+    return this.args.stream().map(Type::queryTypeOrder).reduce(0, (n,m) -> Math.max(n,m));
+  }
+
+  @Override
+  public void storeTypeVariables(Set<TVar> storage) {
+    for (Type arg : this.args) arg.storeTypeVariables(storage);
+  }
+
+  @Override
+  public Type instantiate(Map<TVar,Type> typeSubstitution) {
+    FixedList.Builder<Type> argsBuilder = new FixedList.Builder<Type>();
+    for (Type arg : this.args) argsBuilder.add(arg.instantiate(typeSubstitution));
+    return new Data(this.name, argsBuilder.build());
+  }
+
+  @Override
+  public boolean match(Type other, Map<TVar,Type> typeSubstitution) {
+    if (other instanceof Data(String n, FixedList<Type> l)) {
+      if (!this.name.equals(n) || this.args.size() != l.size()) return false;
+      for (int i = 0; i < this.args.size(); i++) {
+        if (!this.args.get(i).match(l.get(i), typeSubstitution)) return false;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  @Override
+  public int compareTo(Type other) {
+    return switch(other) {
+      case Data(String n, FixedList<Type> l) -> {
+        int k = this.name.compareTo(n);
+        if (k == 0) k = this.args.size() - l.size();
+        if (k != 0) yield k;
+        for (int i = 0; i < this.args.size(); i++) {
+          k = this.args.get(i).compareTo(l.get(i));
+          if (k != 0) yield k;
+        }
+        yield 0;
+      }
+      default -> 1;
+    };
   }
 
   @Override

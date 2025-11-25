@@ -17,6 +17,8 @@ package charlie.types;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import charlie.util.NullStorageException;
 import charlie.util.FixedList;
@@ -132,25 +134,76 @@ class ArrowTest {
     Type intpairbooltype = new Arrow(inttype, pairbooltype);   // int -> c(int, bool -> int) -> bool
     Type intboolpairtype = new Arrow(inttype, new Arrow(booltype, pair));
                                                                // int -> bool -> c(int, bool -> int)
-    assertEquals(1, intintbooltype.querySimpleTypeOrder());
-    assertEquals(2, intboolinttype.querySimpleTypeOrder());
-    assertEquals(1, pairbooltype.querySimpleTypeOrder());
-    assertEquals(1, intpairbooltype.querySimpleTypeOrder());
-    assertEquals(1, intboolpairtype.querySimpleTypeOrder());
-
-    assertEquals(1, intintbooltype.queryFullTypeOrder());
-    assertEquals(2, intboolinttype.queryFullTypeOrder());
-    assertEquals(2, pairbooltype.queryFullTypeOrder());
-    assertEquals(2, intpairbooltype.queryFullTypeOrder());
-    assertEquals(1, intboolpairtype.queryFullTypeOrder());
+    assertEquals(1, intintbooltype.queryTypeOrder());
+    assertEquals(2, intboolinttype.queryTypeOrder());
+    assertEquals(2, pairbooltype.queryTypeOrder());
+    assertEquals(2, intpairbooltype.queryTypeOrder());
+    assertEquals(1, intboolpairtype.queryTypeOrder());
 
     Type alpha = new TVar("α");
     Type intalpha = new Arrow(inttype, alpha);
     Type boolalphaint = new Arrow(booltype, new Arrow(alpha, inttype));
-    assertTrue(intalpha.queryFullTypeOrder() == Integer.MAX_VALUE);
-    assertTrue(boolalphaint.queryFullTypeOrder() == Integer.MAX_VALUE);
-    assertTrue(intalpha.querySimpleTypeOrder() == 1);
-    assertTrue(boolalphaint.querySimpleTypeOrder() == 1);
+    assertTrue(intalpha.queryTypeOrder() == Integer.MAX_VALUE);
+    assertTrue(boolalphaint.queryTypeOrder() == Integer.MAX_VALUE);
+  }
+
+  @Test
+  public void testComparison() {
+    Type x = new Base("x");
+    Type y = new Base("y");
+    Type a = new TVar("a");
+    Type xy = new Arrow(x, y);
+    Type yx = new Arrow(y, x);
+    Type yy = new Arrow(y, y);
+    Type d = TypeFactory.createSort("d", a);
+    assertTrue(xy.compareTo(x) > 0);
+    assertTrue(xy.compareTo(a) > 0);
+    assertTrue(xy.compareTo(d) < 0);
+    assertTrue(xy.compareTo(yx) > 0); // second argument is compared first
+    assertTrue(xy.compareTo(yy) < 0); // if that fails, the first argument is compared
+    assertTrue(xy.compareTo(xy) == 0);
+    assertTrue(yx.compareTo(xy) < 0);
+    assertTrue(yy.compareTo(xy) > 0);
+  }
+
+  @Test
+  public void testStoreTypeVariables() {
+    Type arr = new Arrow(TypeFactory.createSort("c", new TVar("α")), new TVar("β"));
+    TreeSet<TVar> set = new TreeSet<TVar>();
+    arr.storeTypeVariables(set);
+    assertTrue(set.size() == 2);
+  }
+
+  @Test
+  public void testInstantiate() {
+    Type arr = new Arrow(TypeFactory.createSort("c", new TVar("α"), new TVar("β")),
+                         new TVar("β"));
+    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
+    map.put(new TVar("α"), new Base("b"));
+    map.put(new TVar("β"), new Base("a"));
+    assertTrue(arr.instantiate(map).toString().equals("c(b, a) → a"));
+    assertTrue(arr.toString().equals("c($α, $β) → $β"));  // unchanged by the call
+  }
+
+  @Test
+  public void testMatch() {
+    Type arr = new Arrow(new Arrow(new TVar("α"), new TVar("β")), new TVar("β"));
+
+    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
+    Type lst = TypeFactory.createSort("list", new TVar("δ"));
+    Type matches = new Arrow(new Arrow(lst, new Base("a")), new Base("a"));
+    assertTrue(arr.match(matches, map));
+    assertTrue(map.size() == 2);
+    assertTrue(map.get(new TVar("α")).toString().equals("list($δ)"));
+    assertTrue(map.get(new TVar("β")).equals(new Base("a")));
+
+    map = new TreeMap<TVar,Type>();
+    assertFalse(arr.match(lst, map));
+    assertTrue(map.size() == 0);
+    assertFalse(arr.match(new Arrow(new Base("base"), new Base("other")), map));
+
+    map = new TreeMap<TVar,Type>();
+    assertFalse(arr.match(new Arrow(new Arrow(new Base("a"), new Base("b")), new TVar("δ")), map));
   }
 
   @Test

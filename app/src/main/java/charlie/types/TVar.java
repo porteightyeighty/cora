@@ -15,6 +15,8 @@
 
 package charlie.types;
 
+import java.util.Map;
+import java.util.Set;
 import charlie.util.NullStorageException;
 
 /**
@@ -56,7 +58,36 @@ public record TVar(String name) implements Type {
   }
 
   @Override
-  public int queryFullTypeOrder() { return Integer.MAX_VALUE; }
+  public int queryTypeOrder() { return Integer.MAX_VALUE; }
+
+  @Override
+  public void storeTypeVariables(Set<TVar> storage) { storage.add(this); }
+
+  @Override
+  public Type instantiate(Map<TVar,Type> typeSubstitution) {
+    Type ret = typeSubstitution.get(this);
+    if (ret == null) return this;
+    else return ret;
+  }
+
+  @Override
+  public boolean match(Type other, Map<TVar,Type> typeSubstitution) {
+    Type mapped = typeSubstitution.get(this);
+    if (mapped == null) {
+      typeSubstitution.put(this, other);
+      return true;
+    }
+    return other.equals(mapped);
+  }
+
+  @Override
+  public int compareTo(Type other) {
+    return switch(other) {
+      case Base(String n) -> 1;
+      case TVar(String n) -> this.name.compareTo(n);
+      default -> -1;
+    };
+  }
 
   @Override
   public String toString(){

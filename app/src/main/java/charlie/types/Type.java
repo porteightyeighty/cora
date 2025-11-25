@@ -15,7 +15,9 @@
 
 package charlie.types;
 
-import java.util.List;
+import java.lang.Comparable;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Type ::= Base | Arrow(Type, Type) | Data(Type,...,Type) | TVar(name).
@@ -38,7 +40,7 @@ import java.util.List;
  *
  * Note: all instances of Type must (and can be expected to) be immutable.
  */
-public sealed interface Type permits
+public sealed interface Type extends Comparable<Type> permits
   Base, Arrow, Data, TVar {
 
   /** Returns true for base types, false for arrow types, data types and type variables. */
@@ -61,7 +63,7 @@ public sealed interface Type permits
 
   /**
    * Returns true if this type is a sort that is built exclusively from base types data type
-   * constructors (so no arrows or type variables): a sort with full type order 0.
+   * constructors (so no arrows or type variables): a sort with type order 0.
    */
   boolean isZeroSort();
 
@@ -103,22 +105,51 @@ public sealed interface Type permits
   default Type queryOutputType() { return this; }
 
   /**
-   * Returns the type order of the current type, considering all type variables and data types as
-   * just a sort with type order 0.
-   * For base types, data types and type variables, this is 0.
-   * For σ1 → ... → σm → τ, it is max(order(σ1)+1,...,order(σk)+1,order(τ)).
-   */
-  default int querySimpleTypeOrder() { return 0; }
-
-  /**
-   * Returns the type order of the current type, taking data types and type variables in
+   * Returns the type order of the current type.
    * For base types, this is 0.
    * For data types c(σ1,...,σk) it is max(order(σ1),...,order(σm)).
    * For σ1 → ... → σm → τ, it is max(order(σ1)+1,...,order(σk)+1,order(τ)).
    * And for type variables, it is undefined: if any type variable occurs anywhere in the type,
    * Integer.MAX_VALUE is returned.
    */
-  int queryFullTypeOrder();
+  int queryTypeOrder();
+
+  /**
+   * ONLY RELEVANT FOR POLYMORPHIC TYPES: this function stores the type variables that occur in the
+   * present type, into the given set.
+   *
+   * Since the given set is meant to be updated, it should be a mutable set.
+   *
+   * Complexity: linear in the size of the type.
+   *
+   * (For non-polymorphic types, this just doesn't do anything, but it does still cost linear time.)
+   */
+  void storeTypeVariables(Set<TVar> storage);
+
+  /**
+   * ONLY RELEVANT FOR POLYMORPHIC TYPES: this function returns the type that is obtained by
+   * replacing each occurrence of a type variable var in this type, by typeSubstitution[var].
+   * Type variables that do not occur in the domain of typeSubstitution are left unaltered.
+   *
+   * (Since types are immutable, this does not affect the current type; it only computes and
+   * returns the substituted type).
+   *
+   * The given typeSubstitution will not be updated, so it is fine for the argument to be
+   * immutable.
+   *
+   * (For non-polymorphic types, this just returns a copy of the type.)
+   */
+  Type instantiate(Map<TVar,Type> typeSubstitution);
+
+  /**
+   * ONLY RELEVANT FOR POLYMORPHIC TYPES: this function tries to extend typeSubstitution so that
+   * this.instantiate(typeSubstitution) equals instance.  If successful, true is returned (and
+   * typeSubstitution is fully updated as needed).  If unsuccessful, false is returned, but it is
+   * possible that typeSubstitution is still changed.
+   *
+   * Since the given map is meant to be updated, it should be a mutable map.
+   */
+  boolean match(Type instance, Map<TVar,Type> typeSubstitution);
 
   /** Returns whether the given Type is equal to us. */
   boolean equals(Type type);
