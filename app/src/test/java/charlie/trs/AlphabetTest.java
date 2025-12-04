@@ -90,8 +90,13 @@ public class AlphabetTest {
   public void testAlphabetNullInitialisation() {
     LookupMap<FunctionSymbol> map1 = null;
     ArrayList<FunctionSymbol> map2 = null;
+    LookupMap<FunctionSymbol> map3 = LookupMap.empty();
+    LookupMap<Integer> sorts1 = null;
+    LookupMap<Integer> sorts2 = LookupMap.empty();
     assertThrows(NullStorageException.class, () -> new Alphabet(map1));
-    assertThrows(NullStorageException.class, () -> new Alphabet(map2));
+    assertThrows(NullPointerException.class, () -> new Alphabet(map2));
+    assertThrows(NullStorageException.class, () -> new Alphabet(sorts1, map3));
+    assertThrows(NullStorageException.class, () -> new Alphabet(sorts2, map1));
   }
 
   @Test
@@ -112,4 +117,40 @@ public class AlphabetTest {
       // Nat vs nat
     assertThrows(TypingException.class, () -> new Alphabet(symbols));
   }
+
+  // creates f :: d(Int) → c(a, $β) → c($β, list) -> list
+  private FunctionSymbol makeSymbolWithComplexType() {
+    Type list = baseType("list");
+    Type cblist = TypeFactory.createSort("c", TypeFactory.createVariable("β"), list);
+    Type cab = TypeFactory.createSort("c", baseType("a"), TypeFactory.createVariable("β"));
+    Type dint = TypeFactory.createSort("d", TypeFactory.intSort);
+    Type type = TypeFactory.createArrow(dint, TypeFactory.createArrow(cab,
+      TypeFactory.createArrow(cblist, list)));
+    return makeSymbol("f", type);
+  }
+
+  @Test
+  public void testDeduceSortConstructors() {
+    ArrayList<FunctionSymbol> symbols = new ArrayList<FunctionSymbol>();
+    symbols.add(makeSymbolWithComplexType());
+    symbols.add(makeSymbol("test", baseType("Bool"))); // not a theory type!
+    Alphabet alf = new Alphabet(symbols);
+    assertTrue(alf.querySortConstructorArity("d") == 1);
+    assertTrue(alf.querySortConstructorArity("Int") == -1);
+    assertTrue(alf.querySortConstructorArity("c") == 2);
+    assertTrue(alf.querySortConstructorArity("a") == 0);
+    assertTrue(alf.querySortConstructorArity("list") == 0);
+    assertTrue(alf.querySortConstructorArity("Bool") == 0);
+  }
+
+  @Test
+  public void testInconsistentSortConstructors() {
+    // d(Int) → c(a, $β) → c($β, list) -> list
+    LookupMap.Builder<FunctionSymbol> builder = new LookupMap.Builder<FunctionSymbol>();
+    builder.put("f", makeSymbolWithComplexType());
+    builder.put("g", makeSymbol("g", TypeFactory.createSort("c", TypeFactory.intSort))); // c(Int)
+    LookupMap<FunctionSymbol> map = builder.build();
+    assertThrows(InconsistentSortException.class, () -> new Alphabet(map));
+  }
 }
+
