@@ -113,7 +113,8 @@ public record Arrow(Type left, Type right) implements Type {
   @Override
   public int compareTo(Type other) {
     return switch(other) {
-      case Base(_), TVar(_) -> 1;
+      case Base(String name) -> 1;
+      case TVar(String name) -> 1;
       case Arrow(Type l, Type r) -> {
         int k = this.right.compareTo(r);
         if (k == 0) yield this.left.compareTo(l);

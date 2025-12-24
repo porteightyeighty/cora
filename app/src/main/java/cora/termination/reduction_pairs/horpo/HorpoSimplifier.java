@@ -93,6 +93,8 @@ class HorpoSimplifier {
     if (a.isArrowType()) return b.isArrowType() &&
                                 sameTypeStructure(a.querySubtype(1), b.querySubtype(1)) &&
                                 sameTypeStructure(a.querySubtype(2), b.querySubtype(2));
+    // shouldn't happen, but just in case
+    return a.equals(b);
   }
 
   /** Helper function for brevity: requires one of the given constraints in the SmtProblem */

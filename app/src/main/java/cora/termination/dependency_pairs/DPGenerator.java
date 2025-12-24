@@ -15,6 +15,7 @@
 
 package cora.termination.dependency_pairs;
 
+import charlie.util.FixedList;
 import charlie.types.*;
 import charlie.terms.*;
 import charlie.trs.*;
@@ -131,9 +132,8 @@ public class DPGenerator {
     return switch(ty) {
       case Base(String name) -> _dpSort;
       case Data(String name, FixedList<Type> args) -> _dpSort;
-      case Product p -> _dpSort;
       case Arrow(Type left, Type right) -> TypeFactory.createArrow(left, generateDpType(right));
-      case TVar(_) ->
+      case TVar(String name) ->
         throw new IllegalArgumentException("Given a polymorphic type to the DP Generator");
     };
   }
