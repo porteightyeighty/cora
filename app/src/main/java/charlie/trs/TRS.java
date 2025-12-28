@@ -25,12 +25,11 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import charlie.util.NullStorageException;
-import charlie.util.Pair;
+import charlie.util.UserException;
 import charlie.util.FixedList;
 import charlie.types.Type;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.Term;
-import charlie.terms.position.Position;
 import charlie.trs.TrsProperties.*;
 
 /**
@@ -43,18 +42,20 @@ import charlie.trs.TrsProperties.*;
  *
  * *** Building terms
  *
- * A TRS has an alphabet: a finite set of monomorphic function symbols, each with distinct names;
- * these symbols are called the "term symbols".  In addition, there may be a (possibly infinite)
- * set of theory symbols: calculation symbols and values, with an associated meaning in some SMT
- * theory: the "theory symbols".  There is no overlap between the names in terms symbols and
- * theory symbols.  For now, the set of theory symbols is either empty, of consists of the values
- * and calculations symbols for all the theories currently implemented in Cora.  This may change in
- * the future, however.
+ * A TRS has an alphabet: a finite set of possibly polymorphic function symbols, each with distinct
+ * names; these symbols are called the "term symbols".  In addition, there may be a (possibly
+ * infinite) set of theory symbols: calculation symbols and values, with an associated meaning in
+ * some SMT theory: the "theory symbols".  There is no overlap between the names in terms symbols
+ * and theory symbols.  For now, the set of theory symbols is either empty, of consists of the
+ * values and calculations symbols for all the theories currently implemented in Cora.  This may
+ * change in the future, however.
  * 
- * The set of terms to be reduced consists of TRUE TERMS (so no meta-variables), built in a
- * systematic way from variables and function symbols in the theory.  This systematic way is
- * defined as a restriction of general term formation by properties such as "first order" or "no
- * tuples allowed".
+ * The set of terms to be reduced consists of MONOMORPHIC TRUE TERMS (so no type variables or
+ * meta-variables), built in a systematic way from variables and function symbols in the alphabet
+ * or theory.
+ * This systematic way is defined as a restriction of general term formation by properties such as
+ * "first order" or "no beta-redexes allowed".  All sort constructors are limited to those declared
+ * in the alphabet.
  *
  * *** Rules and reduction
  *
@@ -72,8 +73,8 @@ import charlie.trs.TrsProperties.*;
  *
  * We also keep track of public and private symbols.  All the theory symbols are automatically
  * public, but some of the terms symbols may be private.  While this does not affect T or →, the
- * "public terms" (true terms built from only public symbols) should be seen as the potential
- * starting points for analysis, which can be used in some analysis techniques.
+ * "public terms" (monomorphic true terms built from only public symbols) should be seen as the
+ * potential starting points for analysis, which can be used in some analysis techniques.
  */
 public class TRS {
   public enum RuleScheme { Beta, Eta, Calc };
@@ -86,7 +87,6 @@ public class TRS {
   private String _trsKind;
   private TermLevel _level;
   private boolean _theoriesIncluded;
-  private boolean _simpleTypes;
   private RuleRestrictions _rulesProperties;
   private HashMap<FunctionSymbol, List<Rule>> _functionRules;
   private LinkedList<Rule> _variableRules;
@@ -94,10 +94,13 @@ public class TRS {
   /**
    * Create a TRS with the given settings.  Default because this should only be called by the
    * factory.
+   *
+   * Note that "types" is only used as a check on alphabet; it is not used to set the actual type
+   * level for the TRS, which is given by the alphabet (and in _rulesProperties, by the rules).
    */
   TRS(Alphabet alphabet, List<Rule> rules, FixedList<RuleScheme> schemes,
       Collection<String> privateSymbols, String trsKindName, TermLevel trsLevel,
-      boolean includeTheories, boolean typesSimple, RuleRestrictions restrictions) {
+      boolean includeTheories, TypeLevel types, RuleRestrictions restrictions) {
 
     _alphabet = alphabet;
     _rules = FixedList.copy(rules);
@@ -105,16 +108,16 @@ public class TRS {
     if (privateSymbols == null) _private = new TreeSet<String>();
     else _private = new TreeSet<String>(privateSymbols);
 
-    construct(trsKindName, trsLevel, includeTheories, typesSimple, restrictions);
+    construct(trsKindName, trsLevel, includeTheories, types, restrictions);
   }
 
   /**
-   * Create a TRS with the given settings.  Default because this should only be called by the
-   * createDerivative function
+   * Create a TRS with the given settings.  Private because this should only be called by a
+   * createDerivative function.
    */
-  TRS(Alphabet alphabet, FixedList<Rule> rules, FixedList<RuleScheme> schemes,
+  private TRS(Alphabet alphabet, FixedList<Rule> rules, FixedList<RuleScheme> schemes,
       Collection<String> privateSymbols, String trsKindName, TermLevel trsLevel,
-      boolean includeTheories, boolean typesSimple, RuleRestrictions restrictions) {
+      boolean includeTheories) {
 
     _alphabet = alphabet;
     _rules = rules;
@@ -122,24 +125,23 @@ public class TRS {
     if (privateSymbols == null) _private = new TreeSet<String>();
     else _private = new TreeSet<String>(privateSymbols);
 
-    construct(trsKindName, trsLevel, includeTheories, typesSimple, restrictions);
+    construct(trsKindName, trsLevel, includeTheories, TypeLevel.POLYMORPHIC, null);
   }
 
   /** Helper function for the constructors: does all the work for the construction. */
   private void construct(String trsKindName, TermLevel trsLevel, boolean includeTheories,
-                         boolean typesSimple, RuleRestrictions restrictions) {
+                         TypeLevel typeLimitations, RuleRestrictions restrictions) {
     if (_alphabet == null) throw new NullStorageException("TRS", "alphabet");
     if (_rules == null) throw new NullStorageException("TRS", "rules");
     if (_schemes == null) throw new NullStorageException("TRS", "rule schemes");
 
     _theoriesIncluded = includeTheories;
-    _simpleTypes = typesSimple;
     _level = trsLevel;
     _trsKind = trsKindName;
     _defined = new TreeSet<FunctionSymbol>();
 
     // ensure that the alphabet follows the requirements we just stored
-    verifyAlphabet();
+    verifyAlphabet(typeLimitations);
 
     // build the rules list, and collect the actual rule restrictions while we're at it
     _rulesProperties = new RuleRestrictions();
@@ -163,17 +165,31 @@ public class TRS {
   }
 
   /** This checks that the alphabet follows the properties stored for the TRS terms. */
-  private void verifyAlphabet() {
+  private void verifyAlphabet(TypeLevel typeLimitations) {
     for (FunctionSymbol f : _alphabet.getSymbols()) {
       Type type = f.queryType();
       if (_level == TermLevel.FIRSTORDER && type.queryTypeOrder() > 1) {
         throw new IllegalSymbolException(f, _trsKind, "higher-order symbols cannot occur in a " +
           "first-order TRS.");
       }
-      if (_simpleTypes && !type.isSimple()) {
-        throw new IllegalSymbolException(f, _trsKind, "product types cannot occur in a " +
-          "product-free TRS.");
+      if (typeLimitations == TypeLevel.SIMPLE && !type.isSimple()) {
+        if (!type.isMonomorphic()) {
+          throw new IllegalSymbolException(f, _trsKind, "polymorphic types cannot occur in a " +
+            "simply-typed TRS.");
+        }
+        else {
+          throw new IllegalSymbolException(f, _trsKind, "data constructors with non-zero arity " +
+            "cannot occur in a simply-typed TRS.");
+        }
       }
+      else if (typeLimitations == TypeLevel.MONOMORPHIC && !type.isMonomorphic()) {
+        throw new IllegalSymbolException(f, _trsKind, "polymorphic types cannot occur in a " +
+          "monomorphic TRS.");
+      }
+    }
+    if (typeLimitations.compareTo(_alphabet.queryTypes()) < 0) {
+      throw new UserException("The alphabet contains a sort constructor declaration with " +
+        "non-zero arity; this is not allowed in " + _trsKind + "s.");
     }
   }
 
@@ -246,7 +262,8 @@ public class TRS {
 
   /**
    * Returns the FunctionSymbol associated to the given name in this TRS, if there is a unique
-   * one.  This does not include theory symbols since these are allowed to be polymorphic!
+   * one.  This does not include theory symbols since there are allowed to be multiple distinct
+   * ones with the same name!
    */
   public FunctionSymbol lookupSymbol(String name) {
     return _alphabet.lookup(name);
@@ -257,9 +274,20 @@ public class TRS {
     return _theoriesIncluded;
   }
 
-  /** Returns whether tuples and product types are supported in term construction. */
+  /**
+   * Returns whether types are limited to simple types in term construction (and all function
+   * symbols in the alphabet are monomorphic).
+   */
   public boolean simpleTypes() {
-    return _simpleTypes;
+    return _alphabet.queryTypes() == TypeLevel.SIMPLE;
+  }
+
+  /**
+   * Returns whether types are limited to monomorphic types in term construction (and all
+   * function symbols in the alphabet are monomorphic).
+   */
+  public boolean monomorphicTypes() {
+    return _alphabet.queryTypes().compareTo(TypeLevel.MONOMORPHIC) <= 0;
   }
 
   /** Returns whether we are limited to first-order terms in term construction. */
@@ -281,35 +309,32 @@ public class TRS {
   }
 
   /** 
-   * Creates a TRS with schemes and the restrictions for term rewriting as the current one has, but
-   * with the given rules and alphabet replacing the original ones.  No restrictions are imposed on
-   * the new rules, not even the restrictions on term formation that become a property of the new
-   * TRS.
+   * Creates a TRS with the same schemes and restrictions for term rewriting as the current one has,
+   * but with the given rules and alphabet replacing the original ones.  No restrictions are imposed
+   * on the new alphabet or new rules, not even the restrictions on term formation that become a
+   * property of the new TRS.
    */
-  public TRS createDerivative(List<Rule> newrules, Alphabet newAlphabet) {
-    return new TRS(newAlphabet, newrules, _schemes, _private, _trsKind, _level, _theoriesIncluded,
-                   _simpleTypes, null);
+  public TRS createDerivative(List<Rule> newRules, Alphabet newAlphabet) {
+    return createDerivative(FixedList.copy(newRules), newAlphabet);
   }
 
   /**
-   * Creates a TRS with schemes and the restrictions for term rewriting as the current one has, but
-   * with the given rules and alphabet replacing the original ones.  No restrictions are imposed on
-   * the new rules, not even the restrictions on term formation that become a property of the new
-   * TRS.
+   * Creates a TRS with the same schemes and restrictions for term rewriting as the current one has,
+   * but with the given rules and alphabet replacing the original ones.  No restrictions are imposed
+   * on the new alphabet or new rules, not even the restrictions on term formation that become a
+   * property of the new TRS.
    */
-  public TRS createDerivative(FixedList<Rule> newrules, Alphabet newAlphabet) {
-    return new TRS(newAlphabet, newrules, _schemes, _private, _trsKind, _level, _theoriesIncluded,
-                   _simpleTypes, null);
+  public TRS createDerivative(FixedList<Rule> newRules, Alphabet newAlphabet) {
+    return new TRS(newAlphabet, newRules, _schemes, _private, _trsKind, _level, _theoriesIncluded);
   }
 
   /** 
-   * Creates a TRS with alphabet, rule schemes and restrictions on term formation the same as we
-   * have, but with the given rules replacing the original ones.  No restrictions are imposed on
-   * the new rules.
+   * Creates a TRS with the same alphabet, rule schemes and restrictions on term formation as the
+   * current one has, but with the given rules replacing the original ones.  No restrictions are
+   * imposed on the new rules.
    */
-  public TRS createDerivative(List<Rule> newrules) {
-    return new TRS(_alphabet, newrules, _schemes, _private, _trsKind, _level, _theoriesIncluded,
-                   _simpleTypes, null);
+  public TRS createDerivative(List<Rule> newRules) {
+    return createDerivative(FixedList.copy(newRules), _alphabet);
   }
 
   /**
@@ -332,7 +357,7 @@ public class TRS {
                                   Root rootstat, FreshRight fresh,
                                   RuleScheme ...additionalSchemes) {
     if (_theoriesIncluded && theories == Constrained.NO) return false;
-    if (!_simpleTypes && types == TypeLevel.SIMPLE) return false;
+    if (_alphabet.queryTypes().compareTo(types) > 0) return false;
     if (TrsProperties.translateRuleToTermLevel(lvl).compareTo(_level) < 0) return false;
     if (!schemesIncluded(additionalSchemes)) return false;
     RuleRestrictions rest = new RuleRestrictions(lvl, theories, types, pattern, rootstat, fresh);
@@ -358,7 +383,7 @@ public class TRS {
                                   TermLevel termLevel, Constrained termTheories,
                                   TypeLevel termTypes, RuleScheme ...additionalSchemes) {
     if (_theoriesIncluded && termTheories == Constrained.NO) return false;
-    if (!_simpleTypes && termTypes == TypeLevel.SIMPLE) return false;
+    if (termTypes.compareTo(_alphabet.queryTypes()) < 0) return false;
     if (termLevel.compareTo(_level) < 0) return false;
     if (!schemesIncluded(additionalSchemes)) return false;
     RuleRestrictions rest =
@@ -383,12 +408,20 @@ public class TRS {
     else if (isApplicative()) {
       if (!term.isApplicative()) return false;
     }
-    if (!_simpleTypes && _theoriesIncluded) return true;
-    return null == term.findSubterm((sub,pos) ->
-      ( (!_theoriesIncluded && sub.isFunctionalTerm() && sub.queryRoot().isTheorySymbol()) ||
-        (_simpleTypes && !sub.queryType().isSimple())
-      )
-    );
+    for (var pair : term.querySubterms()) {
+      Term sub = pair.fst();
+      // if theories are not included, no theory symbols may occur
+      if (!_theoriesIncluded && sub.isFunctionalTerm() && sub.queryRoot().isTheorySymbol()) {
+        return false;
+      }
+      // if the TRS is monomorphic, then all types occurring in it must be
+      if (_alphabet.queryTypes() != TypeLevel.POLYMORPHIC && !sub.queryType().isMonomorphic()) {
+        return false;
+      }
+      // the data constructors must all occur with the right arity in the alphabet
+      if (_alphabet.checkTypeDeclared(sub.queryType()) != null) return false;
+    }
+    return true;
   }
 
   /** Gives a human-readable representation of the term rewriting system. */

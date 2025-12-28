@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.List;
 import java.util.Collection;
 import charlie.util.Pair;
+import charlie.types.Type;
 import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.replaceable.Replaceable;
@@ -34,7 +35,7 @@ import charlie.trs.TrsProperties.*;
 class RuleRestrictions {
   private Level _level;
   private boolean _theories;
-  private boolean _simple;
+  private TypeLevel _types;
   private Lhs _pattern;
   private Root _rootStatus;
   private FreshRight _fresh;
@@ -53,10 +54,12 @@ class RuleRestrictions {
   boolean theoriesUsed() { return _theories; }
 
   /**
-   * Returns whether all types are simple (that is, neither the left-hand side, right-hand side or
-   * the constraint has a subterm whose type contains (or is) a product type.
+   * Returns the lowest type level that both left and right hand side of the rule satisfy: whether
+   * types in the rule are simple (so no data types or type variables occur at all), monomorphic
+   * (no type variables occur, but at least one data constructor with arity ≥ 1 does) or
+   * polymorphic (there is at least a type variable).
    */
-  boolean simpleTypes() { return _simple; }
+  TypeLevel queryTypes() { return _types; }
 
   /** Returns whether the left-hand side is a pattern, semi-pattern or non-pattern. */
   Lhs patternStatus() { return _pattern; }
@@ -80,21 +83,18 @@ class RuleRestrictions {
   RuleRestrictions() {
     _level = Level.FIRSTORDER;
     _theories = false;
-    _simple = true;
+    _types = TypeLevel.SIMPLE;
     _pattern = Lhs.PATTERN;
     _rootStatus = Root.FUNCTION;
     _fresh = FreshRight.NONE;
   }
 
-  /** 
-   * Constructor that sets up all values in order.  This can only be called from within the trs
-   * package.
-   */
+  /** Constructor that sets up all values in order. */
   RuleRestrictions(Level lvl, Constrained theories, TypeLevel types, Lhs pattern, Root rootstat,
                    FreshRight fresh) {
     _level = lvl;
     _theories = (theories == Constrained.YES);
-    _simple = (types == TypeLevel.SIMPLE);
+    _types = types;
     _pattern = pattern;
     _rootStatus = rootstat;
     _fresh = fresh;
@@ -116,19 +116,20 @@ class RuleRestrictions {
     if (!left.isFunctionalTerm()) _rootStatus = Root.ANY;
     else if (left.queryRoot().isTheorySymbol()) _rootStatus = Root.THEORY;
     else _rootStatus = Root.FUNCTION;
-    // theories and simple types
-    _theories = false;
-    _simple = true;
+    // theories
     List<Pair<Term,Position>> subterms = left.querySubterms();
     subterms.addAll(right.querySubterms());
-    if (!constraint.isValue() || !constraint.toValue().getBool()) {
-      _theories = true;
-      subterms.addAll(constraint.querySubterms());
-    }
-    for (int i = 0; i < subterms.size() && (!_theories || _simple); i++) {
+    _theories = (!constraint.isValue() || !constraint.toValue().getBool());
+    for (int i = 0; i < subterms.size() && !_theories; i++) {
       Term sub = subterms.get(i).fst();
       if (sub.isFunctionalTerm() && sub.queryRoot().isTheorySymbol()) _theories = true;
-      if (!sub.queryType().isSimple()) _simple = false;
+    }
+    // type level
+    _types = TypeLevel.SIMPLE;
+    for (int i = 0; i < subterms.size() && _types != TypeLevel.POLYMORPHIC; i++) {
+      Type type = subterms.get(i).fst().queryType();
+      if (!type.isMonomorphic()) _types = TypeLevel.POLYMORPHIC;
+      else if (_types == TypeLevel.SIMPLE && !type.isSimple()) _types = TypeLevel.MONOMORPHIC;
     }
     // fresh (meta-)variables
     _fresh = FreshRight.NONE;
@@ -179,11 +180,16 @@ class RuleRestrictions {
         "variable that does not occur in the left-hand side" +
         (_fresh == FreshRight.NONE ? "" : " or the constraint") + ".";
     }
+    if (_types.compareTo(other._types) < 0) {
+      String kind = switch (other._types) {
+        case TypeLevel.POLYMORPHIC -> "type variables";
+        case TypeLevel.MONOMORPHIC -> "data constructors (with non-zero arity)";
+        default -> "EEK CHECKCOVERAGE BUG";
+      };
+      return "the use of " + kind + " is not supported.";
+    }
     if (!_theories && other._theories) {
       return "the use of theory symbols / constraints is not supported.";
-    }
-    if (_simple && !other._simple) {
-      return "the use of tuples (or any occurrence of product types) is not supported.";
     }
     return null;
   }
@@ -199,22 +205,21 @@ class RuleRestrictions {
     Root maxroot = _rootStatus;
     Lhs maxpattern = _pattern;
     FreshRight maxfresh = _fresh;
+    TypeLevel maxtypes = _types;
     boolean maxtheories = _theories;
-    boolean maxsimple = _simple;
     if (other._level.compareTo(maxlevel) > 0) maxlevel = other._level;
     if (other._rootStatus.compareTo(maxroot) > 0) maxroot = other._rootStatus;
     if (other._pattern.compareTo(maxpattern) > 0) maxpattern = other._pattern;
     if (other._fresh.compareTo(maxfresh) > 0) maxfresh = other._fresh;
+    if (other._types.compareTo(maxtypes) > 0) maxtypes = other._types;
     if (other._theories) maxtheories = true;
-    if (!other._simple) maxsimple = false;
     return new RuleRestrictions(maxlevel, maxtheories ? Constrained.YES : Constrained.NO,
-      maxsimple ? TypeLevel.SIMPLE : TypeLevel.SIMPLEPRODUCTS, maxpattern, maxroot,
-      maxfresh);
+      maxtypes, maxpattern, maxroot, maxfresh);
   }
 
   /** Used for debugging */
   public String toString() {
-    return "{ " + _level + " ; " + _theories + " ; " + _simple + " ; " + _pattern + " ; " +
+    return "{ " + _level + " ; " + _theories + " ; " + _types + " ; " + _pattern + " ; " +
       _rootStatus + " ; " + _fresh + " }";
   };
 }

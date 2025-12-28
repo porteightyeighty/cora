@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
+import charlie.util.FixedList;
+import charlie.util.LookupMap;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
@@ -45,6 +47,8 @@ public class TrsTest {
   private FunctionSymbol f = makeConstant("f", "a -> b -> a");
   private FunctionSymbol g = makeConstant("g", "Int -> a");
   private FunctionSymbol h = makeConstant("h", "(a -> b) -> a -> b");
+  private FunctionSymbol k = makeConstant("k", "pair(a -> b, Int)-> a -> b");
+  private FunctionSymbol listcons = makeConstant("cons", "$α -> list($α) -> list($α)");
   private TRS _mstrs = null;
   private TRS _lctrs = null;
   private TRS _strs = null;
@@ -52,6 +56,8 @@ public class TrsTest {
   private TRS _cfs = null;
   private TRS _ams = null;
   private TRS _cora = null;
+  private TRS _polystrs = null;
+  private TRS _polycora = null;
 
   private void setupTRSs() {
     if (_mstrs != null) return;   // we've called this before
@@ -64,6 +70,9 @@ public class TrsTest {
     _cfs = TrsFactory.createTrs(alf, empty, TrsFactory.CFS);
     _ams = TrsFactory.createTrs(alf, empty, TrsFactory.AMS);
     _cora = TrsFactory.createTrs(alf, empty, TrsFactory.CORA);
+    Alphabet alf2 = new Alphabet(List.of(f,g,h,a,b,k,listcons));
+    _polystrs = TrsFactory.createTrs(alf2, empty, TrsFactory.STRS);
+    _polycora = TrsFactory.createTrs(alf2, empty, TrsFactory.CORA);
   }
 
   @Test
@@ -125,17 +134,22 @@ public class TrsTest {
   }
 
   @Test
-  public void testTermsAllowedData() {
+  public void testTermsAllowedSort() {
     setupTRSs();
+    // a variable of an unsupported sort is not permitted anywhere
+    Variable y = TermFactory.createVar("y", type("Q"));
+    assertFalse(_mstrs.termAllowed(y));
+    assertFalse(_cora.termAllowed(y));
+    // same with a variable that occurs inside an application
     Term x = TermFactory.createVar("x", type("pair(a , b)"));
-    Term z = TermFactory.createVar("y", type("pair(a , b) -> c"));
+    Term z = TermFactory.createVar("y", type("pair(a , b) -> b"));
     Term zx = z.apply(x);
-    assertFalse(_mstrs.termAllowed(x));
-    assertFalse(_lctrs.termAllowed(x));
     assertFalse(_cfs.termAllowed(zx));
-    assertFalse(_lcstrs.termAllowed(z));
     assertFalse(_ams.termAllowed(zx));
-    assertTrue(_cora.termAllowed(zx));
+    assertFalse(_cora.termAllowed(zx));
+    // however, it _is_ allowed when that data constructor is in the alphabet
+    assertTrue(_polystrs.termAllowed(zx));
+    assertTrue(_polycora.termAllowed(zx));
   }
 
   @Test
@@ -151,27 +165,40 @@ public class TrsTest {
                                         Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
     assertFalse(_cfs.verifyProperties(Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE,
                                       Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
-    assertFalse(_cora.verifyProperties(Level.META, Constrained.YES, TypeLevel.SIMPLE,
+    assertFalse(_cora.verifyProperties(Level.META, Constrained.NO, TypeLevel.SIMPLE,
                                        Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
-    assertTrue(_cora.verifyProperties(Level.META, Constrained.YES, TypeLevel.SIMPLEPRODUCTS,
+    assertTrue(_cora.verifyProperties(Level.LAMBDA, Constrained.YES, TypeLevel.SIMPLE,
                                       Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
+    assertTrue(_strs.verifyProperties(Level.APPLICATIVE, Constrained.NO, TypeLevel.MONOMORPHIC,
+                                      Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
+    assertFalse(_polystrs.verifyProperties(Level.APPLICATIVE, Constrained.NO, TypeLevel.SIMPLE,
+                                           Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
+    assertFalse(_polycora.verifyProperties(Level.LAMBDA, Constrained.YES, TypeLevel.SIMPLE,
+                                           Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
   }
 
   @Test
   public void testDerivedProperties() {
-    Alphabet alf = new Alphabet(List.of(f, a, b));
+    Alphabet alf = new Alphabet(List.of(f, k, a, b));
     ArrayList<Rule> rules = new ArrayList<Rule>();
     Variable x = TermFactory.createVar("x", type("a"));
     rules.add(TrsFactory.createRule(TermFactory.createApp(f, x, b), x));
     TRS trs = TrsFactory.createTrs(alf, rules, TrsFactory.CORA);
     assertTrue(trs.theoriesIncluded());
     assertFalse(trs.simpleTypes());
+    assertTrue(trs.monomorphicTypes());
     assertFalse(trs.isApplicative());
     assertTrue(trs.verifyProperties(Level.FIRSTORDER, Constrained.NO, TypeLevel.SIMPLE,
                                     Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE, TermLevel.LAMBDA,
-                                    Constrained.YES, TypeLevel.SIMPLEPRODUCTS));
-    assertFalse(trs.verifyProperties(Level.FIRSTORDER, Constrained.NO, TypeLevel.SIMPLE,
+                                    Constrained.YES, TypeLevel.MONOMORPHIC));
+    assertFalse(trs.verifyProperties(Level.FIRSTORDER, Constrained.NO, TypeLevel.MONOMORPHIC,
                                      Lhs.PATTERN, Root.FUNCTION, FreshRight.CVARS));
+    alf = new Alphabet(List.of(f, k, a, b, listcons));
+    trs = TrsFactory.createTrs(alf, rules, TrsFactory.CORA);
+    assertFalse(trs.monomorphicTypes());
+    assertTrue(trs.verifyProperties(Level.FIRSTORDER, Constrained.NO, TypeLevel.SIMPLE,
+                                    Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE, TermLevel.LAMBDA,
+                                    Constrained.YES, TypeLevel.POLYMORPHIC));
   }
 
   @Test
@@ -180,6 +207,8 @@ public class TrsTest {
     Variable y = TermFactory.createVar("y", type("a"));
     Variable x = TermFactory.createBinder("x", type("a"));
     Variable u = TermFactory.createVar("u", type("Int"));
+    Variable v = TermFactory.createVar("v", type("$α"));
+    Variable w = TermFactory.createVar("w", type("list($α)"));
     
     // h(Z, y) -> h(λx.b, y)
     Rule rule1 = TrsFactory.createRule(TermFactory.createApp(h, z, y),
@@ -194,6 +223,8 @@ public class TrsTest {
       TheoryFactory.smallerSymbol, u, TheoryFactory.createValue(0)));
     // f(A, B) -> y
     Rule rule5 = TrsFactory.createRule(f.apply(a).apply(b), y);
+    // cons(v, w) -> w
+    Rule rule6 = TrsFactory.createRule(listcons.apply(v).apply(w), w);
 
     Alphabet alf = new Alphabet(List.of(f,g,h,a,b));
     TRS ams1 = TrsFactory.createTrs(alf, List.of(rule1), TrsFactory.AMS);
@@ -202,6 +233,7 @@ public class TrsTest {
     TRS lcstrs1 = TrsFactory.createTrs(alf, List.of(rule3), TrsFactory.LCSTRS);
     TRS lcstrs2 = TrsFactory.createTrs(alf, List.of(rule2, rule3, rule4), TrsFactory.LCSTRS);
     TRS cora = TrsFactory.createTrs(alf, List.of(rule5), TrsFactory.CORA);
+    TRS cora2 = TrsFactory.createTrs(alf, List.of(rule1, rule3, rule4, rule6), TrsFactory.CORA);
 
     assertTrue(ams1.verifyProperties(
       Level.LAMBDA, Constrained.NO, TypeLevel.SIMPLE, Lhs.PATTERN, Root.FUNCTION, FreshRight.NONE));
@@ -237,9 +269,16 @@ public class TrsTest {
 
     assertTrue(cora.verifyProperties(Level.FIRSTORDER, Constrained.NO, TypeLevel.SIMPLE,
       Lhs.PATTERN, Root.FUNCTION, FreshRight.ANY, TermLevel.LAMBDA, Constrained.YES,
-      TypeLevel.SIMPLEPRODUCTS));
+      TypeLevel.MONOMORPHIC));
     assertFalse(cora.verifyProperties(Level.FIRSTORDER, Constrained.NO, TypeLevel.SIMPLE,
       Lhs.PATTERN, Root.FUNCTION, FreshRight.CVARS));
+
+    assertTrue(cora2.verifyProperties(Level.LAMBDA, Constrained.YES, TypeLevel.POLYMORPHIC,
+      Lhs.SEMIPATTERN, Root.ANY, FreshRight.CVARS, TermLevel.LAMBDA, Constrained.YES,
+      TypeLevel.MONOMORPHIC));
+    assertFalse(cora2.verifyProperties(Level.LAMBDA, Constrained.NO, TypeLevel.MONOMORPHIC,
+      Lhs.SEMIPATTERN, Root.ANY, FreshRight.CVARS, TermLevel.LAMBDA, Constrained.YES,
+      TypeLevel.MONOMORPHIC));
   }
 
   @Test
@@ -375,6 +414,28 @@ public class TrsTest {
     assertTrue(trs.queryRuleArity(TheoryFactory.plusSymbol) == 2);
     assertTrue(trs.queryRuleArity(TheoryFactory.minusSymbol) == 1);
     assertTrue(trs.queryRuleArity(TheoryFactory.timesSymbol) == -1);
+  }
+
+  @Test
+  public void testConstructWithUnusedSymbol() {
+    LookupMap.Builder<Integer> sortbuilder = new LookupMap.Builder<Integer>();
+    sortbuilder.put("pair", 2);
+    sortbuilder.put("a", 0);
+    sortbuilder.put("b", 0);
+    LookupMap.Builder<FunctionSymbol> symbbuilder = new LookupMap.Builder<FunctionSymbol>();
+    symbbuilder.put("f", f);
+    Alphabet alf = new Alphabet(sortbuilder.build(), symbbuilder.build());
+    ArrayList<Rule> rules = new ArrayList<Rule>();
+    Variable x = TermFactory.createVar("x", type("a"));
+    Variable y = TermFactory.createVar("y", type("b"));
+    rules.add(new Rule(f.apply(x).apply(y), x));
+    // this is fine
+    new TRS(alf, rules, FixedList.of(), List.of(), "TEST", TermLevel.FIRSTORDER, false,
+      TypeLevel.MONOMORPHIC, new RuleRestrictions());
+    // this is not
+    assertThrows(charlie.util.UserException.class, () ->
+      new TRS(alf, rules, FixedList.of(), List.of(), "TEST", TermLevel.FIRSTORDER, false,
+      TypeLevel.SIMPLE, new RuleRestrictions()));
   }
 }
 

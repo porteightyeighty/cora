@@ -26,6 +26,7 @@ import charlie.types.*;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.TermFactory;
 import charlie.terms.TypingException;
+import charlie.trs.TrsProperties.TypeLevel;
 
 public class AlphabetTest {
   private Type baseType(String name) {
@@ -151,6 +152,75 @@ public class AlphabetTest {
     builder.put("g", makeSymbol("g", TypeFactory.createSort("c", TypeFactory.intSort))); // c(Int)
     LookupMap<FunctionSymbol> map = builder.build();
     assertThrows(InconsistentSortException.class, () -> new Alphabet(map));
+  }
+
+  @Test
+  public void testTypeDeclared() {
+    LookupMap.Builder<Integer> sortbuilder = new LookupMap.Builder<Integer>();
+    sortbuilder.put("a", 0);
+    sortbuilder.put("b", 0);
+    sortbuilder.put("c", 1);
+    sortbuilder.put("d", 2);
+    LookupMap.Builder<FunctionSymbol> symbbuilder = new LookupMap.Builder<FunctionSymbol>();
+    symbbuilder.put("f", makeSymbol("f", TypeFactory.createArrow(baseType("a"), baseType("b"))));
+    Alphabet alf = new Alphabet(sortbuilder.build(), symbbuilder.build());
+    // a -> c($alpha) -> d(b, c(a))
+    Type alpha = TypeFactory.createVariable("alpha");
+    Type a = baseType("a");
+    Type dbca = TypeFactory.createSort("d", baseType("b"), TypeFactory.createSort("c", a));
+    Type calpha = TypeFactory.createSort("c", alpha);
+    Type first = TypeFactory.createArrow(a, TypeFactory.createArrow(calpha, dbca));
+    assertTrue(alf.checkTypeDeclared(first) == null);
+    // $alpha -> d($alpha)
+    Type second = TypeFactory.createArrow(alpha, TypeFactory.createSort("d", alpha));
+    assertTrue(alf.checkTypeDeclared(second).equals("d"));
+    // e -> a
+    Type third = TypeFactory.createArrow(baseType("e"), a);
+    assertTrue(alf.checkTypeDeclared(third).equals("e"));
+    // other checks
+    assertTrue(alf.queryTypes() == TypeLevel.MONOMORPHIC);
+    assertTrue(alf.querySortConstructorArity("c") == 1);
+  }
+
+  @Test
+  public void testTypeLevel() {
+    FunctionSymbol a = makeSymbol("A", baseType("a"));
+    FunctionSymbol f = makeSymbol("f", TypeFactory.createArrow(baseType("a"), baseType("b")));
+    FunctionSymbol u = makeSymbol("u", TypeFactory.createSort("list", baseType("a")));
+    FunctionSymbol fst = makeSymbol("fst", TypeFactory.createArrow(TypeFactory.createSort("pair",
+      TypeFactory.createVariable("alpha"), TypeFactory.createVariable("beta")),
+      TypeFactory.createVariable("alpha")));
+    Alphabet alf1 = new Alphabet(List.of(a));
+    Alphabet alf2 = new Alphabet(List.of(a, f));
+    Alphabet alf3 = new Alphabet(List.of(a, u));
+    Alphabet alf4 = new Alphabet(List.of(a, f, u, fst));
+    assertTrue(alf1.queryTypes() == TypeLevel.SIMPLE);
+    assertTrue(alf2.queryTypes() == TypeLevel.SIMPLE);
+    assertTrue(alf3.queryTypes() == TypeLevel.MONOMORPHIC);
+    assertTrue(alf4.queryTypes() == TypeLevel.POLYMORPHIC);
+    assertTrue(alf4.querySortConstructorArity("pair") == 2);
+
+    LookupMap.Builder<FunctionSymbol> builder = new LookupMap.Builder<FunctionSymbol>();
+    builder.put("A", a);
+    builder.put("u", u);
+    Alphabet alf5 = new Alphabet(builder.build());
+    assertTrue(alf5.queryTypes() == TypeLevel.MONOMORPHIC);
+    assertTrue(alf5.querySortConstructorArity("list") == 1);
+  }
+
+  @Test
+  public void testInconsistentSorts() {
+    // there is a symbol that is not declared
+    LookupMap.Builder<Integer> sortbuilder = new LookupMap.Builder<Integer>();
+    LookupMap.Builder<FunctionSymbol> symbbuilder = new LookupMap.Builder<FunctionSymbol>();
+    sortbuilder.put("a", 1);
+    symbbuilder.put("f", makeSymbol("f", baseType("b")));
+    LookupMap<Integer> sorts = sortbuilder.build();
+    assertThrows(IllegalSymbolException.class, () -> new Alphabet(sorts, symbbuilder.build()));
+    // there is a symbol declared with the wrong arity
+    LookupMap.Builder<FunctionSymbol> symbbuilder2 = new LookupMap.Builder<FunctionSymbol>();
+    symbbuilder2.put("f", makeSymbol("f", baseType("a")));
+    assertThrows(IllegalSymbolException.class, () -> new Alphabet(sorts, symbbuilder2.build()));
   }
 }
 

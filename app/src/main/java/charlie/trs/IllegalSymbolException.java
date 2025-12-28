@@ -25,7 +25,7 @@ import charlie.terms.FunctionSymbol;
  */
 public class IllegalSymbolException extends UserException {
   public IllegalSymbolException(FunctionSymbol symbol, String kind, String explanation) {
-    super("Illegal occurrence of symbol ", symbol.queryName(), " with type ",
-      symbol.queryType(), " in " + kind + ": ", explanation);
+    super("Illegal occurrence of symbol ", symbol, " with type ", symbol.queryType(), " in " +
+      kind + ": ", explanation);
   }
 }

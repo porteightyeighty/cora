@@ -96,42 +96,40 @@ public class RuleTest {
   public void testPropertiesOne() {
     // a → g(λz.z)
     Term a = makeConstant("a", "o");
-    Term g = makeConstant("g", "(a → a) → o");
-    Variable z = TermFactory.createBinder("z", type("a"));
+    Term g = makeConstant("g", "($a → $a) → o");
+    Variable z = TermFactory.createBinder("z", type("$a"));
     Rule rule = new Rule(a, g.apply(TermFactory.createAbstraction(z, z)));
     RuleRestrictions properties = rule.queryProperties();
     assertTrue(properties.queryLevel() == Level.LAMBDA);
     assertFalse(properties.theoriesUsed());
-    assertTrue(properties.simpleTypes());
+    assertTrue(properties.queryTypes() == TypeLevel.POLYMORPHIC);
     assertTrue(properties.patternStatus() == Lhs.PATTERN);
     assertTrue(properties.rootStatus() == Root.FUNCTION);
     assertTrue(properties.rightReplaceablePolicy() == FreshRight.NONE);
     assertFalse(rule.isConstrained());
   }
 
-/* TODO
   @Test
   public void testPropertiesTwo() {
-    // f(λx.Z⟨x⟩) → g( ⦇1,2⦈ ) with f a variable
+    // f(λx.Z⟨x⟩) → g(p(1,2)) with f a variable
     Term f = TermFactory.createVar("f", type("(o → o) → o"));
     Variable x = TermFactory.createBinder("x", type("o"));
     MetaVariable z = TermFactory.createMetaVar("Z", type("o → o"), 1);
-    Term g = TermFactory.createConstant("g", type("⦇ Int , Int ⦈ → o"));
-    Term tuple =
-      TermFactory.createTuple(TheoryFactory.createValue(1), TheoryFactory.createValue(2));
+    Term g = TermFactory.createConstant("g", type("pair(Int , Int) → o"));
+    Term p = TermFactory.createConstant("p", type("Int → Int → pair(Int, Int)"));
+    Term tuple = p.apply(TheoryFactory.createValue(1)).apply(TheoryFactory.createValue(2));
     Term left = f.apply(TermFactory.createAbstraction(x, TermFactory.createMeta(z, x)));
     Term right = g.apply(tuple);
     Rule rule = new Rule(left, right);
     RuleRestrictions properties = rule.queryProperties();
     assertTrue(properties.queryLevel() == Level.META);
     assertTrue(properties.theoriesUsed());
-    assertFalse(properties.simpleTypes());
+    assertTrue(properties.queryTypes() == TypeLevel.MONOMORPHIC);
     assertTrue(properties.patternStatus() == Lhs.SEMIPATTERN);
     assertTrue(properties.rootStatus() == Root.ANY);
     assertTrue(properties.rightReplaceablePolicy() == FreshRight.NONE);
     assertFalse(rule.isConstrained());
   }
-*/
 
   @Test
   public void testPropertiesThree() {
@@ -146,7 +144,7 @@ public class RuleTest {
     RuleRestrictions properties = rule.queryProperties();
     assertTrue(properties.queryLevel() == Level.META);
     assertTrue(properties.theoriesUsed());
-    assertTrue(properties.simpleTypes());
+    assertTrue(properties.queryTypes() == TypeLevel.SIMPLE);
     assertTrue(properties.patternStatus() == Lhs.NONPATTERN);
     assertTrue(properties.rootStatus() == Root.THEORY);
     assertTrue(properties.rightReplaceablePolicy() == FreshRight.CVARS);

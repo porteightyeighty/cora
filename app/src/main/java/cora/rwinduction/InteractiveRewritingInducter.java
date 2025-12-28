@@ -249,7 +249,7 @@ public class InteractiveRewritingInducter {
    * returned instead.
    */
   private static String checkLegalTrs(TRS trs) {
-    if (!trs.verifyProperties(Level.META, Constrained.YES, TypeLevel.SIMPLEPRODUCTS,
+    if (!trs.verifyProperties(Level.META, Constrained.YES, TypeLevel.SIMPLE,
                               Lhs.SEMIPATTERN, Root.THEORY, FreshRight.ANY)) {
       return "The TRS does not satisfy the requirements to apply rewriting induction: " +
         "a simply-typed LCSTRS with left-hand sides being functional terms.";

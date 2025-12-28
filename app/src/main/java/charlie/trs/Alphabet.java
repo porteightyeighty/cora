@@ -23,31 +23,68 @@ import charlie.util.NullStorageException;
 import charlie.types.*;
 import charlie.terms.FunctionSymbol;
 import charlie.terms.TypingException;
+import charlie.trs.TrsProperties.TypeLevel;
 
 /**
  * The alphabet class specifically represents the TERMS alphabet.  It consists of:
  * - a set of sort constructors along with their arities
  * - a set of user-defined (possibly polymorphic) function symbols
+ * - it also keeps track of the kinds of types used inside it
  * Both sets are finite and immutable.
  * Theory types and symbols are not included as these would be part of the THEORY alphabet.
  */
 public class Alphabet {
   private final LookupMap<Integer> _sorts;
   private final LookupMap<FunctionSymbol> _symbols;
+  private final TypeLevel _level; // SIMPLE, MONOMORPHIC or POLYMORPHIC
+
+  /**
+   * Creates an Alphabet with the given arities for each sort constructor and the given list of
+   * symbols, whose type level is exactly level.  No consistency checks are done, since this is a
+   * private constructor that should only be used in ways that keep sorts, symbols and level
+   * consistent.
+   */
+  private Alphabet(LookupMap<Integer> sorts, LookupMap<FunctionSymbol> symbols, TypeLevel level) {
+    _sorts = sorts;
+    _symbols = symbols;
+    _level = level;
+  }
 
   /**
    * Creates an Alphabet with the given arities for each sort constructor, and the given list of
    * symbols.
    * Note that it is required that all sort constructors that occur in the type of any of the
    * symbols are in sorts, with the corresponding arity (with the exception of theory sorts, which
-   * do not need to be included in the sorts list).  However, this property is not checked; this
-   * should be guaranteed by the caller.
+   * do not need to be included in the sorts list).  If this property fails, then an
+   * IllegalSymbolException is thrown.
    */
   public Alphabet(LookupMap<Integer> sorts, LookupMap<FunctionSymbol> symbols) {
     if (sorts == null) throw new NullStorageException("Alphabet", "sort constructor mapping");
     if (symbols == null) throw new NullStorageException("Alphabet", "symbols list");
     _sorts = sorts;
     _symbols = symbols;
+    // discover the type level of this alphabet
+    TypeLevel level = TypeLevel.SIMPLE;
+    for (Integer k : sorts.values()) {
+      if (k > 0) level = TypeLevel.MONOMORPHIC;
+    }
+    for (FunctionSymbol f : symbols.values()) {
+      if (!f.queryType().isMonomorphic()) {
+        level = TypeLevel.POLYMORPHIC;
+        break;
+      }
+    }
+    _level = level;
+    // check that the sort constructors used in the alphabet are all declared
+    for (FunctionSymbol f : symbols.values()) {
+      String problem = checkTypeDeclared(f.queryType());
+      if (problem != null) {
+        throw new IllegalSymbolException(f, "alphabet",
+          sorts.containsKey(problem) ? "sort constructor " + problem + " previously occurred " +
+            "with " + sorts.get(problem) + " arguments." : "sort constructor " + problem +
+            " has not been declared.");
+      }
+    }
   }
 
   /**
@@ -61,14 +98,18 @@ public class Alphabet {
     if (symbols == null) throw new NullStorageException("Alphabet", "symbols list");
     _symbols = symbols;
     LookupMap.Builder<Integer> builder = new LookupMap.Builder<Integer>();
-    for (FunctionSymbol f : symbols.values()) storeSortConstructorsInType(builder, f);
+    TypeLevel level = TypeLevel.SIMPLE;
+    for (FunctionSymbol f : symbols.values()) {
+      level = storeSortConstructorsInType(builder, f, level);
+    }
+    _level = level;
     _sorts = builder.build();
   }
 
   /**
    * Create an alphabet with the given symbols.
    * Duplicate occurrences of the same function symbol are removed; duplicate occurrences of the
-   * same type that are not the same symbol cause a TypingException to be produced.
+   * same name that are not the same symbol cause a TypingException to be produced.
    * The non-theory sort constructors that occur in the types of the symbols are stored and
    * checked for consistency; if sort arities are not consistent then an InconsistentSortException
    * is thrown.
@@ -76,7 +117,7 @@ public class Alphabet {
   public Alphabet(Collection<FunctionSymbol> symbols) {
     LookupMap.Builder<FunctionSymbol> symbolsBuilder = new LookupMap.Builder<FunctionSymbol>();
     LookupMap.Builder<Integer> sortsBuilder = new LookupMap.Builder<Integer>();
-    addSymbols(symbolsBuilder, sortsBuilder, symbols);
+    _level = addSymbols(symbolsBuilder, sortsBuilder, symbols, TypeLevel.SIMPLE);
     _symbols = symbolsBuilder.build();
     _sorts = sortsBuilder.build();
   }
@@ -90,8 +131,8 @@ public class Alphabet {
     LookupMap.Builder<Integer> sortsBuilder = new LookupMap.Builder<Integer>();
     for (FunctionSymbol f : _symbols.values()) symbolsBuilder.put(f.queryName(), f);
     for (String sort : _sorts.keySet()) sortsBuilder.put(sort, _sorts.get(sort));
-    addSymbols(symbolsBuilder, sortsBuilder, toadd);
-    return new Alphabet(sortsBuilder.build(), symbolsBuilder.build());
+    TypeLevel tlevel = addSymbols(symbolsBuilder, sortsBuilder, toadd, _level);
+    return new Alphabet(sortsBuilder.build(), symbolsBuilder.build(), tlevel);
   }
 
   /**
@@ -111,9 +152,11 @@ public class Alphabet {
   /**
    * Helper function for the constructors: this stores all the sort constructors in the type of f
    * into the given builder, and throws an InconsistentSortException if there is an inconsistency.
-   * (Theory sorts are not included.)
+   * (Theory sorts are not included.)  Moreover, the lowest type level that is ≥ tlevel and covers
+   * all the types used in the type of f is returned.
    */
-  private void storeSortConstructorsInType(LookupMap.Builder<Integer> builder, FunctionSymbol f) {
+  private TypeLevel storeSortConstructorsInType(LookupMap.Builder<Integer> builder,
+                                                FunctionSymbol f, TypeLevel tlevel) {
     Stack<Type> stack = new Stack<Type>();
     stack.add(f.queryType());
     while (!stack.isEmpty()) {
@@ -134,25 +177,29 @@ public class Alphabet {
                                                 args.size(), k);
           }
           for (Type arg : args) stack.push(arg);
+          if (tlevel == TypeLevel.SIMPLE) tlevel = TypeLevel.MONOMORPHIC;
           continue;
         case Arrow(Type left, Type right):
           stack.push(left);
           stack.push(right);
           continue;
         case TVar(String name):
+          tlevel = TypeLevel.POLYMORPHIC;
           continue;
       }
     }
+    return tlevel;
   }
 
   /**
-   * Helper function for one of the constructors, and the add "constructor": this adds all the
-   * function symbols in the given collection to the given symbolsBuilder, and the sort constructors
-   * occurring in them to the given sortsBuilder.
+   * Helper function for one of the constructors, and the add function: this adds all the function
+   * symbols in the given collection to the given symbolsBuilder, and the sort constructors
+   * occurring in them to the given sortsBuilder.  The return value is the lowest type level
+   * ≥ tlevel that covers the types of everything in symbols.
    */
-  private void addSymbols(LookupMap.Builder<FunctionSymbol> symbolsBuilder,
-                          LookupMap.Builder<Integer> sortsBuilder,
-                          Collection<FunctionSymbol> symbols) {
+  private TypeLevel addSymbols(LookupMap.Builder<FunctionSymbol> symbolsBuilder,
+                               LookupMap.Builder<Integer> sortsBuilder,
+                               Collection<FunctionSymbol> symbols, TypeLevel tlevel) {
     for (FunctionSymbol f : symbols) {
       if (f == null) throw new NullStorageException("Alphabet", "a symbol");
       if (symbolsBuilder.containsKey(f.queryName())) {
@@ -163,13 +210,50 @@ public class Alphabet {
         }
       }
       else symbolsBuilder.put(f.queryName(), f);
-      storeSortConstructorsInType(sortsBuilder, f);
+      tlevel = storeSortConstructorsInType(sortsBuilder, f, tlevel);
     }
+    return tlevel;
+  }
+
+  /**
+   * Returns null if all the type constructors in type are either theory sorts, or occur in the
+   * alphabet with the used arity.  Returns the name of the illegal sort if not.
+   */
+  public String checkTypeDeclared(Type type) {
+    Stack<Type> stack = new Stack<Type>();
+    stack.add(type);
+    while (!stack.isEmpty()) {
+      Type t = stack.pop();
+      switch (t) {
+        case Base(String name):
+          if (t.isBaseTheoryType()) continue;
+          if (!_sorts.containsKey(name)) return name;
+          if (_sorts.get(name) != 0) return name;
+          continue;
+        case Data(String name, FixedList<Type> args):
+          if (!_sorts.containsKey(name)) return name;
+          if (_sorts.get(name) != args.size()) return name;
+          for (Type arg : args) stack.push(arg);
+          continue;
+        case Arrow(Type left, Type right):
+          stack.push(left);
+          stack.push(right);
+          continue;
+        case TVar(String name):
+          continue;
+      }
+    }
+    return null;
   }
 
   /** Returns the FunctionSymbol with the given name if it exists, or null otherwise. */
   public FunctionSymbol lookup(String name) {
     return _symbols.get(name);
+  }
+
+  /** Returns the set of all function symbols occurring in the alphabet. */
+  public Collection<FunctionSymbol> getSymbols() {
+    return _symbols.values();
   }
 
   /**
@@ -181,9 +265,9 @@ public class Alphabet {
     return _sorts.get(name);
   }
 
-  /** Returns the set of all function symbols occurring in the alphabet. */
-  public Collection<FunctionSymbol> getSymbols() {
-    return _symbols.values();
+  /** Returns the maximum type level used by any sort used or declared in the alphabet. */
+  public TypeLevel queryTypes() {
+    return _level;
   }
 
   /**

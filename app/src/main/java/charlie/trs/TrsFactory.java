@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024 Cynthia Kop
+ Copyright 2024--2025 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -42,19 +42,19 @@ public class TrsFactory {
   }
 
   public static final TrsKind MSTRS = new TrsKind("MSTRS",
-    Level.FIRSTORDER,  Constrained.NO,  TypeLevel.SIMPLE,    Lhs.PATTERN,     Root.FUNCTION, FreshRight.NONE);
+    Level.FIRSTORDER,  Constrained.NO,  TypeLevel.MONOMORPHIC,  Lhs.PATTERN,     Root.FUNCTION, FreshRight.NONE);
   public static final TrsKind STRS = new TrsKind("STRS",
-    Level.APPLICATIVE, Constrained.NO,  TypeLevel.SIMPLE,    Lhs.SEMIPATTERN, Root.ANY,      FreshRight.NONE);
+    Level.APPLICATIVE, Constrained.NO,  TypeLevel.POLYMORPHIC,  Lhs.SEMIPATTERN, Root.ANY,      FreshRight.NONE);
   public static final TrsKind CFS = new TrsKind("CFS",
-    Level.LAMBDA,      Constrained.NO,  TypeLevel.SIMPLE,    Lhs.SEMIPATTERN, Root.ANY,      FreshRight.NONE);
+    Level.LAMBDA,      Constrained.NO,  TypeLevel.POLYMORPHIC,  Lhs.SEMIPATTERN, Root.ANY,      FreshRight.NONE);
   public static final TrsKind AMS = new TrsKind("AMS",
-    Level.META,        Constrained.NO,  TypeLevel.SIMPLE,    Lhs.SEMIPATTERN, Root.ANY,      FreshRight.NONE);
+    Level.META,        Constrained.NO,  TypeLevel.POLYMORPHIC,  Lhs.SEMIPATTERN, Root.ANY,      FreshRight.NONE);
   public static final TrsKind LCTRS = new TrsKind("LCTRS",
-    Level.FIRSTORDER,  Constrained.YES, TypeLevel.SIMPLE,    Lhs.PATTERN,     Root.THEORY,   FreshRight.CVARS);
+    Level.FIRSTORDER,  Constrained.YES, TypeLevel.MONOMORPHIC,  Lhs.PATTERN,     Root.THEORY,   FreshRight.CVARS);
   public static final TrsKind LCSTRS = new TrsKind("LCSTRS",
-    Level.APPLICATIVE, Constrained.YES, TypeLevel.SIMPLE,    Lhs.SEMIPATTERN, Root.ANY,      FreshRight.CVARS);
+    Level.APPLICATIVE, Constrained.YES, TypeLevel.POLYMORPHIC,  Lhs.SEMIPATTERN, Root.ANY,      FreshRight.CVARS);
   public static final TrsKind CORA = new TrsKind("Cora-TRS",
-    Level.META,   Constrained.YES, TypeLevel.SIMPLEPRODUCTS, Lhs.NONPATTERN,  Root.ANY,      FreshRight.ANY);
+    Level.META,        Constrained.YES, TypeLevel.POLYMORPHIC,  Lhs.NONPATTERN,  Root.ANY,      FreshRight.ANY);
 
   /**
    * Check if the given rule is allowed in the given kind of TRS.  If not, throws an
@@ -69,7 +69,7 @@ public class TrsFactory {
 
   /**
    * This function creates an unconstrained rule left → right.
-   * The rule is checked against the given TRS kind: if the rule is not allowed in the give nkind
+   * The rule is checked against the given TRS kind: if the rule is not allowed in the given kind
    * of TRS, then an IllegalRuleException is thrown.
    */
   public static Rule createRule(Term left, Term right, TrsKind restrictions) {
@@ -119,7 +119,7 @@ public class TrsFactory {
 
     return new TRS(alphabet, rules, newschemes.build(), privateSymbols, kind._name,
                    TrsProperties.translateRuleToTermLevel(kind._restrictions.queryLevel()),
-                   kind._restrictions.theoriesUsed(), kind._restrictions.simpleTypes(),
+                   kind._restrictions.theoriesUsed(), kind._restrictions.queryTypes(),
                    kind._restrictions);
   }
 

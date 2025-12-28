@@ -24,10 +24,10 @@ public class RuleRestrictionsTest {
   @Test
   public void testBasicCreate() {
     RuleRestrictions rest = new RuleRestrictions(Level.APPLICATIVE, Constrained.YES,
-                       TypeLevel.SIMPLE, Lhs.NONPATTERN, Root.ANY, FreshRight.CVARS);
+                       TypeLevel.MONOMORPHIC, Lhs.NONPATTERN, Root.ANY, FreshRight.CVARS);
     assertTrue(rest.queryLevel() == Level.APPLICATIVE);
     assertTrue(rest.theoriesUsed());
-    assertTrue(rest.simpleTypes());
+    assertTrue(rest.queryTypes() == TypeLevel.MONOMORPHIC);
     assertTrue(rest.patternStatus() == Lhs.NONPATTERN);
     assertTrue(rest.rootStatus() == Root.ANY);
     assertTrue(rest.rightReplaceablePolicy() == FreshRight.CVARS);
@@ -38,23 +38,26 @@ public class RuleRestrictionsTest {
     RuleRestrictions nothing = new RuleRestrictions(Level.FIRSTORDER, Constrained.YES,
                                                     TypeLevel.SIMPLE, Lhs.PATTERN,
                                                     Root.FUNCTION, FreshRight.NONE);
-    RuleRestrictions anything = new RuleRestrictions(Level.META, Constrained.YES, TypeLevel.SIMPLEPRODUCTS,
-                                                     Lhs.NONPATTERN, Root.ANY, FreshRight.ANY);
+    RuleRestrictions anything = new RuleRestrictions(Level.META, Constrained.YES,
+                                                     TypeLevel.POLYMORPHIC, Lhs.NONPATTERN,
+                                                     Root.ANY, FreshRight.ANY);
     assertTrue(nothing.checkCoverage(nothing) == null);
     assertTrue(nothing.checkCoverage(anything).equals(
       "the rule level is limited to first-order terms, not meta-terms."));
     RuleRestrictions a = new RuleRestrictions(Level.APPLICATIVE, Constrained.YES,
-              TypeLevel.SIMPLEPRODUCTS, Lhs.PATTERN, Root.THEORY, FreshRight.NONE);
-    RuleRestrictions b = new RuleRestrictions(Level.LAMBDA, Constrained.NO, TypeLevel.SIMPLE,
-                                              Lhs.SEMIPATTERN, Root.THEORY, FreshRight.ANY);
+      TypeLevel.MONOMORPHIC, Lhs.PATTERN, Root.THEORY, FreshRight.NONE);
+    RuleRestrictions b = new RuleRestrictions(Level.LAMBDA, Constrained.NO,
+      TypeLevel.MONOMORPHIC, Lhs.SEMIPATTERN, Root.THEORY, FreshRight.ANY);
     RuleRestrictions c = new RuleRestrictions(Level.APPLICATIVE, Constrained.YES,
-                   TypeLevel.SIMPLE, Lhs.SEMIPATTERN, Root.ANY, FreshRight.CVARS);
+      TypeLevel.SIMPLE, Lhs.SEMIPATTERN, Root.ANY, FreshRight.CVARS);
     RuleRestrictions d = new RuleRestrictions(Level.META, Constrained.YES,
-        TypeLevel.SIMPLEPRODUCTS, Lhs.PATTERN, Root.ANY, FreshRight.ANY);
+      TypeLevel.POLYMORPHIC, Lhs.PATTERN, Root.ANY, FreshRight.ANY);
     RuleRestrictions e = new RuleRestrictions(Level.FIRSTORDER, Constrained.NO,
-        TypeLevel.SIMPLE, Lhs.PATTERN, Root.FUNCTION, FreshRight.CVARS);
+      TypeLevel.SIMPLE, Lhs.PATTERN, Root.FUNCTION, FreshRight.CVARS);
     RuleRestrictions f = new RuleRestrictions(Level.META, Constrained.YES, TypeLevel.SIMPLE,
-                                              Lhs.SEMIPATTERN, Root.ANY, FreshRight.CVARS);
+      Lhs.SEMIPATTERN, Root.ANY, FreshRight.CVARS);
+    RuleRestrictions g = new RuleRestrictions(Level.META, Constrained.YES, TypeLevel.SIMPLE,
+      Lhs.SEMIPATTERN, Root.ANY, FreshRight.ANY);
     assertTrue(a.checkCoverage(b).equals(
       "the rule level is limited to applicative terms, not true terms."));
     assertTrue(a.checkCoverage(c).equals(
@@ -62,7 +65,7 @@ public class RuleRestrictionsTest {
     assertTrue(b.checkCoverage(a).equals(
       "the use of theory symbols / constraints is not supported."));
     assertTrue(c.checkCoverage(a).equals(
-      "the use of tuples (or any occurrence of product types) is not supported."));
+      "the use of data constructors (with non-zero arity) is not supported."));
     assertTrue(d.checkCoverage(b).equals(
       "the left-hand side should be a pattern, not a semi-pattern."));
     assertTrue(nothing.checkCoverage(e).equals(
@@ -70,14 +73,15 @@ public class RuleRestrictionsTest {
     assertTrue(f.checkCoverage(d).equals(
       "the right-hand side contains a meta-variable that does not occur in the left-hand " +
       "side or the constraint."));
+    assertTrue(g.checkCoverage(d).equals("the use of type variables is not supported."));
   }
 
   @Test
   public void testSupremum() {
     RuleRestrictions a = new RuleRestrictions(Level.APPLICATIVE, Constrained.NO,
-                                              TypeLevel.SIMPLEPRODUCTS, Lhs.SEMIPATTERN, Root.ANY,
+                                              TypeLevel.MONOMORPHIC, Lhs.SEMIPATTERN, Root.ANY,
                                               FreshRight.NONE);
-    RuleRestrictions b = new RuleRestrictions(Level.META, Constrained.YES, TypeLevel.SIMPLE,
+    RuleRestrictions b = new RuleRestrictions(Level.META, Constrained.YES, TypeLevel.POLYMORPHIC,
                                               Lhs.PATTERN, Root.THEORY, FreshRight.CVARS);
     // doing it from either side should result in the same
     RuleRestrictions c = a.supremum(b);
@@ -86,8 +90,8 @@ public class RuleRestrictionsTest {
     assertTrue(d.queryLevel() == Level.META);
     assertTrue(c.theoriesUsed());
     assertTrue(d.theoriesUsed());
-    assertFalse(c.simpleTypes());
-    assertFalse(d.simpleTypes());
+    assertTrue(c.queryTypes() == TypeLevel.POLYMORPHIC);
+    assertTrue(d.queryTypes() == TypeLevel.POLYMORPHIC);
     assertTrue(c.patternStatus() == Lhs.SEMIPATTERN);
     assertTrue(d.patternStatus() == Lhs.SEMIPATTERN);
     assertTrue(c.rootStatus() == Root.ANY);

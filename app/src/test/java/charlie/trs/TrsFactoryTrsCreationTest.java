@@ -123,9 +123,9 @@ public class TrsFactoryTrsCreationTest {
     assertThrows(IllegalSymbolException.class,
       () -> TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.MSTRS));
 
-    symbols.set(symbols.size()-1, TermFactory.createConstant("i", type("x(a , b) → a")));
+    symbols.set(symbols.size()-1, TermFactory.createConstant("i", type("x($a , b)")));
     assertThrows(IllegalSymbolException.class,
-      () -> TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.CFS));
+      () -> TrsFactory.createTrs(new Alphabet(symbols), rules, TrsFactory.LCTRS));
   }
 
   @Test

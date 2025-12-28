@@ -45,7 +45,8 @@ public class TrsProperties {
   /** The type level of a TRS indicates the type system used for term formation and rules. */
   public enum TypeLevel {
     SIMPLE,         // simple types: built from base types and the arrow operator
-    SIMPLEPRODUCTS  // simple types along with products
+    MONOMORPHIC,    // monomorphic types: built without type variables, but may have data types
+    POLYMORPHIC     // polymorphic types: data constructors and type variables may occur
   }
 
   /** The root status of rules gives restrictions on the left-hand sides of the rules. */
@@ -66,14 +67,14 @@ public class TrsProperties {
   public enum FreshRight {
     NONE,   // meta-variables in the right-hand side should also occur in the left
     CVARS,  // meta-variables in the right-hand side should also occur in the left or the constraint
-    ANY     // the right-hand side may have meat-variables that do not occur in left or constraint
+    ANY     // the right-hand side may have meta-variables that do not occur in left or constraint
   }
 
   /**
    * The constructions of terms permitted in a TRS may differ from the construction of its rules.
    * Hence, we sometimes also track specifically the properties admitted for rules.
    * The "term level" indicates whether terms should be first-order, applicative or true.
-   * (Meta-terms are never allowed to occur outside of room formation.)
+   * (Meta-terms are never allowed to occur outside of rule formation.)
    */
   public enum TermLevel { FIRSTORDER, APPLICATIVE, LAMBDA }
 
