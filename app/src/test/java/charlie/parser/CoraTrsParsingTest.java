@@ -18,6 +18,7 @@ package charlie.parser;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import charlie.util.LookupMap;
 import charlie.types.*;
 import charlie.parser.lib.ParsingException;
 import charlie.parser.lib.ErrorCollector;
@@ -310,7 +311,7 @@ public class CoraTrsParsingTest {
   public void testParseCorrectPublicDeclaration() {
     ErrorCollector collector = new ErrorCollector();
     ParserDeclaration decl =
-      CoraParser.readDeclaration("public g :: a -> (b -> c) -> d\nx", false, collector);
+      CoraParser.readDeclaration("public g :: a -> (b -> c) -> d\nx", false, collector).get("g");
     assertTrue(decl.name().equals("g"));
     assertTrue(decl.type().toString().equals("a → (b → c) → d"));
     assertTrue(decl.extra() == 0);
@@ -323,7 +324,7 @@ public class CoraTrsParsingTest {
   public void testParseCorrectPrivateDeclaration() {
     ErrorCollector collector = new ErrorCollector();
     ParserDeclaration decl =
-      CoraParser.readDeclaration("private g :: a -> (b -> c) -> d\nx", false, collector);
+      CoraParser.readDeclaration("private g :: a -> (b -> c) -> d\nx", false, collector).get("g");
     assertTrue(decl.name().equals("g"));
     assertTrue(decl.type().toString().equals("a → (b → c) → d"));
     assertTrue(decl.extra() == 1);
@@ -335,53 +336,117 @@ public class CoraTrsParsingTest {
   @Test
   public void testParseCorrectDefaultDeclaration() {
     ErrorCollector collector = new ErrorCollector();
-    ParserDeclaration decl =
-      CoraParser.readDeclaration("g :: a -> (b -> c) -> d\nx", false, collector);
+    LookupMap.Builder<ParserDeclaration> symbBuilder = new LookupMap.Builder<ParserDeclaration>();
+    LookupMap.Builder<Integer> sortBuilder = new LookupMap.Builder<Integer>();
+    assertTrue(CoraParser.readDeclaration("g :: a -> (b -> c) -> d\nx", false, symbBuilder,
+                                          sortBuilder, collector));
+    assertTrue(sortBuilder.build().size() == 0);
+    ParserDeclaration decl = symbBuilder.get("g");
+    assertTrue(symbBuilder.build().size() == 1);
     assertTrue(decl.name().equals("g"));
     assertTrue(decl.type().toString().equals("a → (b → c) → d"));
     assertTrue(decl.extra() == 0);
-    // we stop readint at the right point
+    // we stop reading at the right point
     assertTrue(collector.toString().equals(
       "2:1: Expected end of input but got IDENTIFIER (x).\n"));
   }
 
   @Test
+  public void testParseCorrectSingularSortDeclaration() {
+    ErrorCollector collector = new ErrorCollector();
+    LookupMap.Builder<ParserDeclaration> symbBuilder = new LookupMap.Builder<ParserDeclaration>();
+    LookupMap.Builder<Integer> sortBuilder = new LookupMap.Builder<Integer>();
+    assertTrue(CoraParser.readDeclaration("sort d($alpha,$beta) xy", true, symbBuilder,
+                                          sortBuilder, collector));
+    assertTrue(symbBuilder.build().size() == 0);
+    assertTrue(sortBuilder.get("d") == 2);
+    assertTrue(sortBuilder.build().size() == 1);
+    // we stop reading at the right point
+    assertTrue(collector.toString().equals(
+      "1:22: Expected end of input but got IDENTIFIER (xy).\n"));
+  }
+
+  @Test
+  public void testParseCorrectFullSortDeclaration() {
+    ErrorCollector collector = new ErrorCollector();
+    LookupMap.Builder<ParserDeclaration> symbBuilder = new LookupMap.Builder<ParserDeclaration>();
+    LookupMap.Builder<Integer> sortBuilder = new LookupMap.Builder<Integer>();
+    assertTrue(CoraParser.readDeclaration("sort tree($a,$b) = node($a,tree($a,$b)) | leaf($b)\nxy",
+      true, symbBuilder, sortBuilder, collector));
+    assertTrue(symbBuilder.get("node").type().toString().equals("$a → tree($a, $b) → tree($a, $b)"));
+    assertTrue(symbBuilder.get("node").extra() == ParserDeclaration.EXTRA_PUBLIC);
+    assertTrue(symbBuilder.get("leaf").type().toString().equals("$b → tree($a, $b)"));
+    assertTrue(symbBuilder.get("leaf").extra() == ParserDeclaration.EXTRA_PUBLIC);
+    assertTrue(symbBuilder.build().size() == 2);
+    assertTrue(sortBuilder.get("tree") == 2);
+    assertTrue(sortBuilder.build().size() == 1);
+    // we stop reading at the right point
+    assertTrue(collector.toString().equals(
+      "2:1: Expected end of input but got IDENTIFIER (xy).\n"));
+  }
+
+  @Test
+  public void testParsePrivateSortDeclaration() {
+    ErrorCollector collector = new ErrorCollector();
+    LookupMap.Builder<ParserDeclaration> symbBuilder = new LookupMap.Builder<ParserDeclaration>();
+    LookupMap.Builder<Integer> sortBuilder = new LookupMap.Builder<Integer>();
+    assertTrue(CoraParser.readDeclaration("private sort test($a) = A\nxy",
+      true, symbBuilder, sortBuilder, collector));
+    assertTrue(symbBuilder.get("A").type().toString().equals("test($a)"));
+    assertTrue(symbBuilder.get("A").extra() == ParserDeclaration.EXTRA_PRIVATE);
+    assertTrue(symbBuilder.build().size() == 1);
+    assertTrue(sortBuilder.get("test") == 1);
+    assertTrue(sortBuilder.build().size() == 1);
+    // we stop reading at the right point
+    assertTrue(collector.toString().equals(
+      "2:1: Expected end of input but got IDENTIFIER (xy).\n"));
+  }
+
+  @Test
+  public void testUsesExtraTypeVariable() {
+    ErrorCollector collector = new ErrorCollector();
+    LookupMap.Builder<ParserDeclaration> symbBuilder = new LookupMap.Builder<ParserDeclaration>();
+    LookupMap.Builder<Integer> sortBuilder = new LookupMap.Builder<Integer>();
+    assertTrue(CoraParser.readDeclaration("sort test($a,$b) = A($b,$c)",
+      false, symbBuilder, sortBuilder, collector));
+    assertTrue(symbBuilder.get("A").type().toString().equals("$b → $c → test($a, $b)"));
+    assertTrue(symbBuilder.get("A").extra() == ParserDeclaration.EXTRA_PUBLIC);
+    assertTrue(symbBuilder.build().size() == 1);
+    assertTrue(sortBuilder.get("test") == 2);
+    assertTrue(sortBuilder.build().size() == 1);
+    assertTrue(collector.toString().equals("1:20: Type $b → $c → test($a, $b) for function " +
+      "symbol A contains a type variable $c that does not occur in the sort test($a, $b).\n"));
+  }
+
+  @Test
   public void testDoNotReadAnythingIfNotADeclaration() {
     ErrorCollector collector = new ErrorCollector();
-    ParserDeclaration decl = CoraParser.readDeclaration("g(x,y)", true, collector);
-    assertTrue(decl == null);
-    assertTrue(collector.toString().equals(
-      "1:1: Expected end of input but got IDENTIFIER (g).\n"));
+    assertTrue(CoraParser.readDeclaration("g(x,y)", true, collector) == null);
+    assertTrue(collector.toString().equals("1:1: No declaration given!\n"));
   }
 
   @Test
   public void testRecoverAfterPublicNonDeclaration() {
     ErrorCollector collector = new ErrorCollector();
-    ParserDeclaration decl = CoraParser.readDeclaration(
-      "public g(x,y) -> x + y\naa :: bb\nc -> d", true, collector);
-    assertTrue(decl != null);
-    assertTrue(decl.type() == null);
+    String txt = "public g(x,y) -> x + y\naa :: bb\nc -> d";
+    assertTrue(CoraParser.readDeclaration(txt, true, collector).size() == 0);
     assertTrue(collector.toString().equals(
-      "1:9: Expected :: but got BRACKETOPEN (().\n" +
+      "1:1: Illegal use of public: should be followed by function declaration or sort declaration.\n" +
       "2:1: Expected end of input but got IDENTIFIER (aa).\n"));
   }
 
   @Test
   public void testTryReadingDeclarationWithoutIdentifier() {
     ErrorCollector collector = new ErrorCollector();
-    ParserDeclaration decl = CoraParser.readDeclaration(":: a -> b", false, collector);
-    assertTrue(decl == null);
-    assertTrue(collector.toString().equals(
-      "1:1: Expected end of input but got DECLARE (::).\n"));
+    assertTrue(CoraParser.readDeclaration(":: a -> b", false, collector) == null);
+    assertTrue(collector.toString().equals("1:1: No declaration given!\n"));
   }
 
   @Test
   public void testReadDefaultDeclarationFollowedByComma() {
     ErrorCollector collector = new ErrorCollector();
-    ParserDeclaration decl = CoraParser.readDeclaration(
-      "g :: a → (b -> c) ,\n z :: [test] -> Int\n", true, collector);
-    assertTrue(decl != null);
-    assertTrue(decl.type() == null);
+    String txt = "g :: a → (b -> c) ,\n z :: [test] -> Int\n";
+    assertTrue(CoraParser.readDeclaration(txt, true, collector).size() == 0);
     assertTrue(collector.toString().equals(
       "1:19: Function symbol declaration cannot be followed by comma!\n" +
       "2:2: Expected end of input but got IDENTIFIER (z).\n"));
@@ -390,10 +455,8 @@ public class CoraTrsParsingTest {
   @Test
   public void testReadPublicDeclarationFollowedByComma() {
     ErrorCollector collector = new ErrorCollector();
-    ParserDeclaration decl = CoraParser.readDeclaration(
-      "public g :: a → (b -> c) , test\nhello::o->o\nf() -> d ->", false, collector);
-    assertTrue(decl != null);
-    assertTrue(decl.type() == null);
+    String txt = "public g :: a → (b -> c) , test\nhello::o->o\nf() -> d ->";
+    assertTrue(CoraParser.readDeclaration(txt, false, collector).size() == 0);
     assertTrue(collector.toString().equals(
       "1:26: Function symbol declaration cannot be followed by comma!\n" +
       "2:1: Expected end of input but got IDENTIFIER (hello).\n"));
@@ -402,9 +465,8 @@ public class CoraTrsParsingTest {
   @Test
   public void testDeclarationWithIncorrectType() {
     ErrorCollector collector = new ErrorCollector();
-    ParserDeclaration decl = CoraParser.readDeclaration(
-      "g :: a -> (b -> ) → d", false, collector);
-    assertTrue(decl != null);
+    ParserDeclaration decl =
+      CoraParser.readDeclaration("g :: a -> (b -> ) → d", false, collector).get("g");
     assertTrue(decl.type() != null);
     assertTrue(collector.toString().equals("1:17: Expected a type " +
       "(started by a sort constructor or bracket) but got BRACKETCLOSE ()).\n"));
@@ -413,9 +475,7 @@ public class CoraTrsParsingTest {
   @Test
   public void testDeclarationWithoutType() {
     ErrorCollector collector = new ErrorCollector();
-    ParserDeclaration decl = CoraParser.readDeclaration("g :: {}", true, collector);
-    assertTrue(decl != null);
-    assertTrue(decl.type() == null);
+    assertTrue(CoraParser.readDeclaration("g :: {}", true, collector).size() == 0);
     assertTrue(collector.toString().equals(
       "1:6: Expected a type (started by a sort constructor or bracket) but got BRACEOPEN ({).\n"));
   }
@@ -423,10 +483,8 @@ public class CoraTrsParsingTest {
   @Test
   public void testDeclarationWithoutTypeFollowedByDot() {
     ErrorCollector collector = new ErrorCollector();
-    ParserDeclaration decl =
-      CoraParser.readDeclaration("private g :: . -> aλb {}", false, collector);
-    assertTrue(decl != null);
-    assertTrue(decl.type() == null);
+    String txt = "private g :: . -> aλb {}";
+    assertTrue(CoraParser.readDeclaration(txt, false, collector).size() == 0);
     assertTrue(collector.toString().equals(
       "1:14: Expected a type (started by a sort constructor or bracket) but got DOT (.).\n" +
       "1:20: Expected end of input but got LAMBDA (λ).\n"));
@@ -435,13 +493,98 @@ public class CoraTrsParsingTest {
   @Test
   public void testDeclarationWithoutTypeFollowedByNonsense() {
     ErrorCollector collector = new ErrorCollector();
-    ParserDeclaration decl =
-      CoraParser.readDeclaration("g :: ) a λb aq :: b -> c next", true, collector);
-    assertTrue(decl != null);
-    assertTrue(decl.type() == null);
+    String txt = "g :: ) a λb aq :: b -> c next";
+    assertTrue(CoraParser.readDeclaration(txt, true, collector).size() == 0);
     assertTrue(collector.toString().equals(
       "1:6: Expected a type (started by a sort constructor or bracket) but got BRACKETCLOSE ()).\n" +
       "1:13: Expected end of input but got IDENTIFIER (aq).\n"));
+  }
+
+  @Test
+  public void testDuplicateSortDeclaration() {
+    ErrorCollector collector = new ErrorCollector();
+    LookupMap.Builder<ParserDeclaration> symbBuilder = new LookupMap.Builder<ParserDeclaration>();
+    LookupMap.Builder<Integer> sortBuilder = new LookupMap.Builder<Integer>();
+    assertTrue(CoraParser.readDeclaration("sort d($alpha,$beta)", true, symbBuilder,
+                                          sortBuilder, collector));
+    assertTrue(CoraParser.readDeclaration("sort d($alpha,$beta)", false, symbBuilder,
+                                          sortBuilder, collector));
+    assertTrue(symbBuilder.build().size() == 0);
+    assertTrue(sortBuilder.get("d") == 2);
+    assertTrue(sortBuilder.build().size() == 1);
+    assertTrue(collector.toString().equals("1:6: Redeclaration of sort constructor d.\n"));
+  }
+
+  @Test
+  public void testAttemptToDeclareArrowType() {
+    ErrorCollector collector = new ErrorCollector();
+    LookupMap.Builder<ParserDeclaration> symbBuilder = new LookupMap.Builder<ParserDeclaration>();
+    LookupMap.Builder<Integer> sortBuilder = new LookupMap.Builder<Integer>();
+    assertTrue(CoraParser.readDeclaration("public sort a -> b = A(a) | B(a,b)", true, symbBuilder,
+                                          sortBuilder, collector));
+    assertTrue(symbBuilder.build().size() == 0);
+    assertTrue(sortBuilder.get("a") == 0);
+    assertTrue(sortBuilder.build().size() == 1);
+    assertTrue(collector.toString().equals("1:15: Expected end of input but got ARROW (->).\n"));
+  }
+
+  @Test
+  public void testDuplicateVariableInSort() {
+    ErrorCollector collector = new ErrorCollector();
+    LookupMap.Builder<ParserDeclaration> symbBuilder = new LookupMap.Builder<ParserDeclaration>();
+    LookupMap.Builder<Integer> sortBuilder = new LookupMap.Builder<Integer>();
+    assertTrue(CoraParser.readDeclaration("private sort srt($alpha,$beta, $alpha)", false,
+                                          symbBuilder, sortBuilder, collector));
+    assertTrue(symbBuilder.build().size() == 0);
+    assertTrue(sortBuilder.get("srt") == 3);
+    assertTrue(sortBuilder.build().size() == 1);
+    assertTrue(collector.toString().equals("1:14: Type variable $alpha occurs more than once in " +
+      "sort declaration.\n"));
+  }
+
+  @Test
+  public void testNotAVariableInSort() {
+    ErrorCollector collector = new ErrorCollector();
+    LookupMap.Builder<ParserDeclaration> symbBuilder = new LookupMap.Builder<ParserDeclaration>();
+    LookupMap.Builder<Integer> sortBuilder = new LookupMap.Builder<Integer>();
+    assertTrue(CoraParser.readDeclaration("private sort list($alpha,list)", false,
+                                          symbBuilder, sortBuilder, collector));
+    assertTrue(symbBuilder.build().size() == 0);
+    assertTrue(sortBuilder.get("list") == 2);
+    assertTrue(sortBuilder.build().size() == 1);
+    assertTrue(collector.toString().equals("1:14: Expected a sort constructor applied to zero " +
+      "or more type variables; the argument list is not a type variable.\n"));
+  }
+
+  @Test
+  public void testSortNotProperlyClosed() {
+    ErrorCollector collector = new ErrorCollector();
+    LookupMap.Builder<ParserDeclaration> symbBuilder = new LookupMap.Builder<ParserDeclaration>();
+    LookupMap.Builder<Integer> sortBuilder = new LookupMap.Builder<Integer>();
+    assertTrue(CoraParser.readDeclaration("sort list($alpha = cons($alpha) | nil id(x) -> x",
+                                          false, symbBuilder, sortBuilder, collector));
+    assertTrue(symbBuilder.get("cons").type().toString().equals("$alpha → list($alpha)"));
+    assertTrue(symbBuilder.get("nil").type().toString().equals("list($alpha)"));
+    assertTrue(symbBuilder.build().size() == 2);
+    assertTrue(sortBuilder.get("list") == 1);
+    assertTrue(sortBuilder.build().size() == 1);
+    assertTrue(collector.toString().equals(
+      "1:18: Expected closing bracket but got EQUAL (=).\n" +
+      "1:39: Expected end of input but got IDENTIFIER (id).\n")); // we end in the right place
+  }
+
+  @Test
+  public void testSortDeclarationRecoverAfterNonsense() {
+    ErrorCollector collector = new ErrorCollector();
+    LookupMap.Builder<ParserDeclaration> symbBuilder = new LookupMap.Builder<ParserDeclaration>();
+    LookupMap.Builder<Integer> sortBuilder = new LookupMap.Builder<Integer>();
+    assertTrue(CoraParser.readDeclaration("sort λ = cons($alpha) | nil | something x :: y public z",
+                                          false, symbBuilder, sortBuilder, collector));
+    assertTrue(symbBuilder.build().size() == 0);
+    assertTrue(sortBuilder.build().size() == 0);
+    assertTrue(collector.toString().equals(
+      "1:6: Expected sort constructor name but got LAMBDA (λ).\n" +
+      "1:41: Expected end of input but got IDENTIFIER (x).\n"));
   }
 
   @Test

@@ -38,11 +38,11 @@ class GraphProcessorTest {
     // approximation of "compare root symbols"), so we can avoid using the SMT-solver in a unit
     // test.
     TRS trs = CoraInputReader.readTrsFromString(
-      " a :: sort \n b :: sort \n c :: sort \n d :: sort \n" +
+      " a :: srt \n b :: srt \n c :: srt \n d :: srt \n" +
       " a -> a \n a -> b \n b -> c \n c -> b", TrsFactory.MSTRS);
     */
     TRS trs = CoraInputReader.readTrsFromString(
-      " a :: sort \n b :: sort \n c :: sort \n d :: sort \n" +
+      " a :: srt \n b :: srt \n c :: srt \n d :: srt \n" +
       " a -> a \n a -> b \n b -> c \n c -> b");
     GraphProcessor proc = new GraphProcessor();
 

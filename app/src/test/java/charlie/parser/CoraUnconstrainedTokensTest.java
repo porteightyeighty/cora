@@ -93,21 +93,23 @@ public class CoraUnconstrainedTokensTest {
   }
 
   @Test
-  public void testPublicPrivate() throws LexerException {
-    Lexer lexer = createLexer("public private publicprivate PUBLIC");
+  public void testKeywords() throws LexerException {
+    Lexer lexer = createLexer("public private publicprivate sort PUBLIC");
     verifyToken(lexer.nextToken(), CoraTokenData.PUBLIC, "public");
     verifyToken(lexer.nextToken(), CoraTokenData.PRIVATE, "private");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "publicprivate");
+    verifyToken(lexer.nextToken(), CoraTokenData.SORT, "sort");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "PUBLIC");
   }
 
   @Test
   public void testAllBasicTokens() throws LexerException {
-    Lexer lexer = createLexer("x-⦇x(y){,+#=_String\\a∀ ∃7*}():::a⦈[b→b.⇒]>c--λ12");
+    Lexer lexer = createLexer("x-⦇x(y)={,+#=_String\\a∀ ∃7*}():::a⦈[b→b=.⇒]>c--λ12");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "x-⦇x");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETOPEN, "(");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "y");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACKETCLOSE, ")");
+    verifyToken(lexer.nextToken(), CoraTokenData.EQUAL, "=");
     verifyToken(lexer.nextToken(), CoraTokenData.BRACEOPEN, "{");
     verifyToken(lexer.nextToken(), CoraTokenData.COMMA, ",");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "+#=_String");
@@ -122,7 +124,7 @@ public class CoraUnconstrainedTokensTest {
     verifyToken(lexer.nextToken(), CoraTokenData.METAOPEN, "[");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "b");
     verifyToken(lexer.nextToken(), CoraTokenData.ARROW, "→");
-    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "b");
+    verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "b=");
     verifyToken(lexer.nextToken(), CoraTokenData.DOT, ".");
     verifyToken(lexer.nextToken(), CoraTokenData.IDENTIFIER, "⇒");
     verifyToken(lexer.nextToken(), CoraTokenData.METACLOSE, "]");

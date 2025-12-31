@@ -17,6 +17,7 @@ package charlie.parser;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.TreeSet;
 
 import charlie.util.FixedList;
 import charlie.util.LookupMap;
@@ -678,6 +679,209 @@ public class CoraParser {
     return null;
   }
  
+  // ==================================== READING DECLARATIONS ====================================
+
+  /**
+   * fundec ::= IDENTIFIER DECLARE type
+   * fundecs are never followed by DOT, COMMA or BRACECLOSE.
+   *
+   * There are three possible outcomes:
+   * - if the next two tokens are not IDENTIFIER DECLARE, then nothing is read, and false returned
+   * - if we do start with IDENTIFIER DECLARE but this is not a valid declaration, then an error is
+   *   stored and error recovery is done to ensure that the status gets back to a program line; in
+   *   this case, decs is unmodified, and true is returned
+   * - if this is a valid declaration, then the declaration is fully read and added to decs; in
+   *   this case, true is returned
+   */
+  private boolean tryReadDeclaration(ArrayList<ParserDeclaration> decs, boolean forcePrivate) {
+    Token constant = _status.readNextIf(CoraTokenData.IDENTIFIER);
+    if (constant == null) return false;
+    if (_status.readNextIf(CoraTokenData.DECLARE) == null) {
+      _status.pushBack(constant);
+      return false;
+    }
+    // we've read IDENTIFIER DECLARE -- now we must have a valid declaration!
+    Type type = readType();
+    String name = constant.getText();
+
+    // there was a major problem reading the type; do error recovery
+    if (type == null) {
+      recoverState();
+      return true;
+    }
+
+    // other error cases: this is actually a variable / meta-variable declaration!
+    Token tok = _status.peekNext();
+    String kind = null;
+    if (tok.getName().equals(CoraTokenData.BRACECLOSE)) kind = "}";
+    if (tok.getName().equals(CoraTokenData.COMMA)) kind = "comma";
+    if (tok.getName().equals(CoraTokenData.DOT)) kind = "dot";
+    if (kind != null) {
+      _status.storeError(tok, "Function symbol declaration cannot be followed by " + kind + "!");
+      recoverState();
+      return true;
+    }
+
+    decs.add(new ParserDeclaration(constant, name, type, forcePrivate ? 1 : 0));
+    return true;
+  }
+
+  /**
+   * sortdec ::= SORT restrictedsort EQUAL declform (MID declform)*)?
+   *
+   * There are two possible outcomes:
+   * - if the next token is not SORT, then nothing is read and false is returned
+   * - at least something is read, in which case true is returned; the corresponding function
+   *   symbol declarations are stored in decs, and if the sort declaration is stored in sorts.
+   *
+   * Even if something is read, it is possible that errors occur.  In this case, the
+   * corresponding declarations may or may not be added to decs, and error recovery is done.
+   * Hence, after a call to this function the status should be at the start of a program line
+   * again.
+   */
+  private boolean tryReadSortDeclaration(ArrayList<ParserDeclaration> decs,
+                                         LookupMap.Builder<Integer> sorts, boolean forcePrivate) {
+    if (_status.readNextIf(CoraTokenData.SORT) == null) return false;
+    TreeSet<TVar> tvars = new TreeSet<TVar>();
+    Token tok = _status.peekNext();
+    Type sort = readRestrictedSort(tvars, sorts);
+    if (sort == null) return true;  // an error message has already been given
+    if (_status.readNextIf(CoraTokenData.EQUAL) == null) return true;
+    while (true) {
+      ParserDeclaration decl = readDeclarationForm(sort, forcePrivate);
+      if (decl != null) {
+        decs.add(decl);
+        for (TVar alpha : decl.type().getTypeVariables()) {
+          if (!tvars.contains(alpha)) {
+            _status.storeError(new ParsingErrorMessage(decl.token(), "Type ", decl.type(),
+              " for function symbol " + decl.name() + " contains a type variable ", alpha,
+              " that does not occur in the sort ", sort, "."));
+          }
+        }
+      }
+      if (_status.readNextIf(CoraTokenData.MID) == null) return true;
+    }
+  }
+
+  /**
+   * restrictedsort ::= IDENTIFIER | IDENTIFIER BRACKETOPEN typevar (COMMA typevar)* BRACKETCLOSE
+   * Here, all type variables must be distinct.  The full type is returned, the variables added
+   * to store, and IDENTIFIER : <number of typevars> added to sorts.
+   *
+   * If a type variable occurs more than once, or some argument is not a type variable, then an
+   * error is stored but we continue as though it is not a problem.  If the sort has previously
+   * been declared, an appropriate error is stored as well.  In case of other errors, null is
+   * returned and error recovery done (so the status is restored to the start of a program line).
+   */
+  private Type readRestrictedSort(TreeSet<TVar> store, LookupMap.Builder<Integer> sorts) {
+    Token sortconstructor = _status.expect(CoraTokenData.IDENTIFIER, "sort constructor name");
+    if (sortconstructor == null) { recoverState(); return null; }
+    if (sorts.containsKey(sortconstructor.getText())) {
+      _status.storeError(sortconstructor, "Redeclaration of sort constructor " +
+        sortconstructor.getText() + ".");
+    }
+
+    _status.pushBack(sortconstructor);
+    Type t = readMainType();
+    if (t == null) { recoverState(); return null; }
+
+    // valid case: it's a base type, so a constructor with arity 0
+    if (t instanceof Base(String name)) {
+      sorts.put(name, 0);
+      return t;
+    }
+    // valid case: it's a data type, so a constructor with arity > 0
+    int len = 0;
+    if (t instanceof Data(String name, FixedList<Type> args)) {
+      sorts.put(name, args.size());
+      for (Type arg : args) {
+        if (arg instanceof TVar alpha) {
+          if (store.contains(alpha)) {
+            _status.storeError(new ParsingErrorMessage(sortconstructor, "Type variable ", alpha,
+              " occurs more than once in sort declaration."));
+          }
+          store.add(alpha);
+        }
+        else {
+          _status.storeError(new ParsingErrorMessage(sortconstructor, "Expected a sort " +
+            "constructor applied to zero or more type variables; the argument ", arg,
+            " is not a type variable."));
+          break;
+        }
+      }
+    }
+    // error cases shouldn't happen due to the IDENTIFIER check, but just in case
+    else {
+      _status.storeError(new ParsingErrorMessage(sortconstructor, "Unexpected type ", t,
+        ": expected a sort constructor applied to zero or more type variables."));
+    }
+    return t;
+  }
+
+
+  /**
+   * declform ::= IDENTIFER | IDENTIFIER BRACKETOPEN type (COMMA type)* BRACKETCLOSE
+   *
+   * This function reads a declaration form, and returns the declaration of the identifier as a
+   * constructor with output type sort.
+   */
+  private ParserDeclaration readDeclarationForm(Type sort, boolean forcePrivate) {
+    Token identifier = _status.expect(CoraTokenData.IDENTIFIER, "identifier (sort constructor)");
+    if (identifier == null) { recoverState(); return null; }
+    String name = identifier.getText();
+    int priv = forcePrivate ? ParserDeclaration.EXTRA_PRIVATE : ParserDeclaration.EXTRA_PUBLIC;
+    // handle IDENTIFIER without brackets, and IDENTIFIER BRACKETOPEN BRACKETCLOSE
+    if (_status.readNextIf(CoraTokenData.BRACKETOPEN) == null ||
+        _status.readNextIf(CoraTokenData.BRACKETCLOSE) != null) {
+      return new ParserDeclaration(identifier, name, sort, priv);
+    }
+    // at least one type should be given!
+    ArrayList<Type> types = new ArrayList<Type>();
+    while (true) {
+      Type type = readType();
+      if (type == null) { recoverState(); return null; }
+      types.add(type);
+      if (_status.readNextIf(CoraTokenData.BRACKETCLOSE) != null) break;
+      _status.expect(CoraTokenData.COMMA, "comma or closing bracket");
+    }
+    // we read a list of types; create the output type for the constructor!
+    Type type = sort;
+    for (int i = types.size()-1; i >= 0; i--) type = TypeFactory.createArrow(types.get(i), type);
+    return new ParserDeclaration(identifier, name, type, priv);
+  }
+
+  /**
+   * declaration ::= (PUBLIC | PRIVATE)? (fundec | sortdec)
+   * Reads either fundec or sortdec if one is at the head of the parser declaration, and stores
+   * them in symbolstorage.  Returns true if something was read (even if an error was encountered),
+   * false if not.
+   * This already contains error checking that no duplicate declarations are created.
+   */
+  private boolean tryReadDeclarations(LookupMap.Builder<ParserDeclaration> symbolstorage,
+                                      LookupMap.Builder<Integer> sortstorage) {
+    Token publ = _status.readNextIf(CoraTokenData.PUBLIC);
+    Token priv = (publ == null) ? _status.readNextIf(CoraTokenData.PRIVATE) : null;
+    boolean forcePrivate = priv != null;
+    ArrayList<ParserDeclaration> decs = new ArrayList<ParserDeclaration>();
+    if (tryReadSortDeclaration(decs, sortstorage, forcePrivate) ||
+        tryReadDeclaration(decs, forcePrivate)) {
+      for (ParserDeclaration d : decs) {
+        if (symbolstorage.containsKey(d.name())) {
+          _status.storeError(d.token(), "Redeclaration of previously declared function symbol " +
+            d.name() + ".");
+        }
+        else symbolstorage.put(d.name(), d);
+      }
+      return true;
+    }
+    if (publ == null && priv == null) return false;
+    Token offender = (publ == null) ? priv : publ;
+    _status.storeError(offender, "Illegal use of " + offender.getText() + ": should be followed " +
+      "by function declaration or sort declaration.");
+    recoverState();
+    return true;
+  }
+
   // ====================================== READING FULL TRSs =====================================
 
   /**
@@ -696,13 +900,15 @@ public class CoraParser {
       // } <-- we're past the rule declaration part, but still at the start of a rule; we're
       // probably going to run into typing trouble, but so be it
       if (curr.getName().equals(CoraTokenData.BRACECLOSE)) { _status.pushBack(curr); return; }
-      // public / private <-- we're at the start of a function symbol declaration
+      // public / private / sort <-- we're at the start of a function symbol or type declaration
       if (curr.getName().equals(CoraTokenData.PUBLIC) ||
-          curr.getName().equals(CoraTokenData.PRIVATE)) { _status.pushBack(curr); return; }
+          curr.getName().equals(CoraTokenData.PRIVATE) ||
+          curr.getName().equals(CoraTokenData.SORT)) { _status.pushBack(curr); return; }
       // | <-- we're at the constraint part of a rule, so we can continue after reading the
-      // constraint
+      // constraint (unless we're in a sort declaration)
       if (curr.getName().equals(CoraTokenData.MID)) {
         ParserTerm term = readTerm();
+        if (_status.nextTokenIs(CoraTokenData.MID)) continue;
         if (term != null && !term.hasErrors()) return;
       }
       // :: <-- we may be a token inside a declaration; it is also possible that we are inside an
@@ -731,82 +937,16 @@ public class CoraParser {
     }
   }
 
-  /**
-   * fundec ::= (PUBLIC|PRIVATE)? IDENTIFIER DECLARE type
-   * fundecs are never followed by DOT or COMMA.
-   *
-   * There are three possible return values:
-   * - null: nothing was read; this is not a declaration
-   *   (this occurs if the upcoming token is neither PUBLIC nor PRIVATE, nor are the upcoming two
-   *   tokens IDENTIFIER DECLARE)
-   * - a ParserDeclaration with type() null: this is not a valid declaration, and an error was
-   *   stored, but at least one token has been read; in this case, error recovery is immediately
-   *   done to ensure that the status is back to a program line.
-   * - a valid ParserDeclaration
-   */
-  private ParserDeclaration tryReadDeclaration() {
-    Token publ, priv, constant;
-
-    publ = _status.readNextIf(CoraTokenData.PUBLIC);
-    priv = (publ != null) ? null : _status.readNextIf(CoraTokenData.PRIVATE);
-
-    // PUBLIC / PRIVATE: this *has* to be a parser declaration!
-    if (publ != null || priv != null) {
-      constant = _status.expect(CoraTokenData.IDENTIFIER,
-        "an identifier (for a function symbol name to be declared)");
-      Token declaresymb = _status.expect(CoraTokenData.DECLARE, "::");
-      if (constant == null || declaresymb == null) {
-        recoverState();
-        return new ParserDeclaration(publ == null ? priv : publ, "public/private", null);
-      }
-    }
-    else {
-      constant = _status.readNextIf(CoraTokenData.IDENTIFIER);
-      if (constant == null) return null;
-      if (_status.readNextIf(CoraTokenData.DECLARE) == null) {
-        _status.pushBack(constant);
-        return null;
-      }
-    }
-    Type type = readType();
-    String name = constant.getText();
-
-    // error cases: this is actually a variable / meta-variable declaration!
-    if (_status.nextTokenIs(CoraTokenData.BRACECLOSE)) {
-      _status.storeError(_status.peekNext(),
-                         "Function symbol declaration cannot be followed by }!");
-      return new ParserDeclaration(constant, name, null);
-    }
-    if (_status.nextTokenIs(CoraTokenData.COMMA) || _status.nextTokenIs(CoraTokenData.DOT) ||
-        type == null) {
-      Token tok = _status.peekNext();
-      _status.storeError(_status.peekNext(), "Function symbol declaration cannot be followed by " +
-                         (tok.getName().equals(CoraTokenData.COMMA) ? "comma" : "dot") + "!");
-      recoverState();
-      return new ParserDeclaration(constant, name, null);
-    }
-
-    return new ParserDeclaration(constant, name, type, priv == null ? 0 : 1);
-  }
-
   private ParserProgram readTRS() {
     LookupMap.Builder<ParserDeclaration> symbols = new LookupMap.Builder<ParserDeclaration>();
+    LookupMap.Builder<Integer> sorts = new LookupMap.Builder<Integer>();
     FixedList.Builder<ParserRule> rules = new FixedList.Builder<ParserRule>();
     while (!_status.peekNext().isEof()) {
-      ParserDeclaration decl = tryReadDeclaration();
-      if (decl == null) {
-        ParserRule rule = readRule();
-        if (rule != null) rules.add(rule);
-      }
-      else if (decl.type() != null) {
-        if (symbols.containsKey(decl.name())) {
-          _status.storeError(decl.token(), "Redeclaration of previously declared function symbol " +
-            decl.name() + ".");
-        }
-        else symbols.put(decl.name(), decl);
-      }
+      if (tryReadDeclarations(symbols, sorts)) continue;
+      ParserRule rule = readRule();
+      if (rule != null) rules.add(rule);
     }
-    return new ParserProgram(symbols.build(), rules.build());
+    return new ParserProgram(sorts.build(), symbols.build(), rules.build());
   }
 
   // ====================================== PUBLIC FUNCTIONS ======================================
@@ -935,22 +1075,47 @@ public class CoraParser {
   public static ParserRule readRule(String str) { return readRule(str, true, null); }
 
   /**
-   * Reads a function declaration from the given string.
-   * Since this is primarily meant for use in unit testing, the output can be one of the following
-   * options:
+   * Reads a function or sort declaration from the given string.
+   * Since this is meant for use in unit testing, the output can be one of the following options:
    * - null: if nothing was read
-   * - a ParserDeclaration with type() null: if something was read, but an error occurred
-   * - a valid ParserDeclaration: if the declaration was read
-   *   if the declaration is private, moreover the extra() field is 1; otherwise it is 0.
+   * - a number (possibly zero) of ParserDeclarations: if something was read; there may be zero
+   *   either if nothing was declared, or if there was an error with the declaration (in which case
+   *   an appropriate error message has been stored)
+   * If the declaration is private, moreover the extra() field on each declaration is 1; otherwise
+   * it is 0.
    * @throws ParsingException
    */
-  public static ParserDeclaration readDeclaration(String str, boolean constrained,
-                                                  ErrorCollector collector) {
+  static LookupMap<ParserDeclaration> readDeclaration(String str, boolean constrained,
+                                                             ErrorCollector collector) {
+    LookupMap.Builder<ParserDeclaration> symbBuilder = new LookupMap.Builder<ParserDeclaration>();
+    LookupMap.Builder<Integer> sortBuilder = new LookupMap.Builder<Integer>();
+    if (!readDeclaration(str, constrained, symbBuilder, sortBuilder, collector)) return null;
+    return symbBuilder.build();
+  }
+
+  /**
+   * Reads a function or sort declaration from the given string.
+   * Since this is meant for use in unit testing, the output can be one of the following options:
+   * - false: if nothing was read
+   * - true: if something was read, in which case any successfully read symbol and sort declarations
+   *   are stored in the two builders.  It is possible that nothing is stored if there were errors,
+   *   though (in which case an appropriate error message has been stored in the collector).
+   * If the declaration is private, moreover the extra() field on each function symbol declaration
+   * is 1; otherwise it is 0.
+   * @throws ParsingException
+   */
+  public static boolean readDeclaration(String str, boolean constrained,
+                                        LookupMap.Builder<ParserDeclaration> symbolBuilder,
+                                        LookupMap.Builder<Integer> sortBuilder,
+                                        ErrorCollector collector) {
     ParsingStatus status = makeStatus(str, constrained, collector);
     CoraParser parser = new CoraParser(status);
-    ParserDeclaration decl = parser.tryReadDeclaration();
+    if (!parser.tryReadDeclarations(symbolBuilder, sortBuilder)) {
+      status.storeError(status.peekNext(), "No declaration given!");
+      return false;
+    }
     status.expect(Token.EOF, "end of input");
-    return decl;
+    return true;
   }
 
   /**

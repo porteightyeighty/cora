@@ -16,6 +16,7 @@
 package charlie.trs;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Stack;
 import charlie.util.FixedList;
 import charlie.util.LookupMap;
@@ -104,6 +105,23 @@ public class Alphabet {
     }
     _level = level;
     _sorts = builder.build();
+  }
+
+  /**
+   * Create an alphabet with the given sorts and symbols.
+   * Duplicate occurrences of the same function symbol are removed; duplicate occurrences of the
+   * same name that are not the same symbol cause a TypingException to be produced.
+   * The sorts along with the non-theory sort constructors that occur in the types of the symbols
+   * are stored and checked for consistency; if sort arities are not consistent then an
+   * InconsistentSortException is thrown.
+   */
+  public Alphabet(Map<String,Integer> sorts, Collection<FunctionSymbol> symbols) {
+    LookupMap.Builder<FunctionSymbol> symbolsBuilder = new LookupMap.Builder<FunctionSymbol>();
+    LookupMap.Builder<Integer> sortsBuilder = new LookupMap.Builder<Integer>();
+    for (String name : sorts.keySet()) sortsBuilder.put(name, sorts.get(name));
+    _level = addSymbols(symbolsBuilder, sortsBuilder, symbols, TypeLevel.SIMPLE);
+    _symbols = symbolsBuilder.build();
+    _sorts = sortsBuilder.build();
   }
 
   /**

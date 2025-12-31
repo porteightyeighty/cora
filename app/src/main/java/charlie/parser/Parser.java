@@ -94,8 +94,8 @@ public interface Parser {
 
   /**
    * ParserDeclaration ::= (token, name, type, extra).
-   * This record is used for a function or variable declaration.  The extra field can be used in
-   * two ways:
+   * This record is used for a sort constructor, function or variable declaration.  The extra field
+   * can be used in two ways:
    * - for META-VARIABLE declarations, it is the arity; hence, for VARIABLE declarations it is
    *   necessarily 0
    * - for FUNCTION SYMBOL declarations, it indicates private status: 0 for public, 1 for private
@@ -104,7 +104,7 @@ public interface Parser {
     public static final int EXTRA_PUBLIC = 0;
     public static final int EXTRA_PRIVATE = 1;
     public ParserDeclaration(Token token, String name, Type type) {
-      this(token, name, type, 0);
+      this(token, name, type, EXTRA_PUBLIC);
     }
   }
 
@@ -131,9 +131,15 @@ public interface Parser {
   /**
    * A "program" essentially defines a TRS, except it is not yet typed.  It consists of a number of
    * function symbol declarations, a number of rules, and a set of "private" symbols (all others
-   * are public).
+   * are public).  In addition, some sort declarations may be given that do not (necessarily) come
+   * with function symbol declarations.
    */
-  public record ParserProgram(LookupMap<ParserDeclaration> fundecs,
-                              FixedList<ParserRule> rules) {}
+  public record ParserProgram(LookupMap<Integer> sortdecs,
+                              LookupMap<ParserDeclaration> fundecs,
+                              FixedList<ParserRule> rules) {
+    public ParserProgram(LookupMap<ParserDeclaration> fundecs, FixedList<ParserRule> rules) {
+      this((new LookupMap.Builder<Integer>()).build(), fundecs, rules);
+    }
+  }
 }
 

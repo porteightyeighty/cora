@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import charlie.util.LookupMap;
+import charlie.util.UserException;
 import charlie.types.*;
 import charlie.parser.lib.Token;
 import charlie.parser.lib.ParsingErrorMessage;
@@ -131,7 +132,7 @@ public class CoraInputReader extends TermTyper {
   }
 
   /**
-   * Either returns a valid rule, or returns null and potentially stores an erorr if the given
+   * Either returns a valid rule, or returns null and potentially stores an error if the given
    * parser rule does not define a valid rule.
    * Here, kind is allowed to be null.
    */
@@ -167,7 +168,10 @@ public class CoraInputReader extends TermTyper {
   }
 
   private TRS makeTRS(ParserProgram program, TrsKind kind) {
-    // store the symbols into the symbol data
+    // store the sort constructors and function symbols into the symbol data
+    for (String name : program.sortdecs().keySet()) {
+      _symbols.addSortConstructor(name, program.sortdecs().get(name));
+    }
     for (ParserDeclaration decl : sort(program.fundecs())) {
       handleFunctionDeclaration(decl);
     }
@@ -179,15 +183,12 @@ public class CoraInputReader extends TermTyper {
     }
 
     // turn the result into a TRS!
-    Alphabet alf = _symbols.queryCurrentAlphabet();
     try {
+      Alphabet alf = _symbols.queryCurrentAlphabet();
       return TrsFactory.createTrs(_symbols.queryCurrentAlphabet(), rules,
                                   _symbols.queryPrivateSymbols(), false, kind);
     }
-    catch (IllegalRuleException e) {
-      storeError(null, e);
-    }
-    catch (IllegalSymbolException e) {
+    catch (UserException e) {
       storeError(null, e);
     }
     return null;
@@ -198,9 +199,14 @@ public class CoraInputReader extends TermTyper {
   /** Symbol declaration */
   static void readDeclarationForUnitTest(String str, SymbolData data, boolean constrained,
                                          ErrorCollector collector) {
-    ParserDeclaration decl = CoraParser.readDeclaration(str, constrained, collector);
+    LookupMap.Builder<ParserDeclaration> symbBuilder = new LookupMap.Builder<ParserDeclaration>();
+    LookupMap.Builder<Integer> sortBuilder = new LookupMap.Builder<Integer>();
+    CoraParser.readDeclaration(str, constrained, symbBuilder, sortBuilder, collector);
     CoraInputReader reader = new CoraInputReader(data, collector);
-    reader.handleFunctionDeclaration(decl);
+    LookupMap<ParserDeclaration> symbs = symbBuilder.build();
+    LookupMap<Integer> sorts = sortBuilder.build();
+    for (String name : sorts.keySet()) reader._symbols.addSortConstructor(name, sorts.get(name));
+    for (ParserDeclaration dec : symbs.values()) reader.handleFunctionDeclaration(dec);
   }
 
   // ==================================== PUBLIC FUNCTIONALITY ====================================
@@ -338,7 +344,6 @@ public class CoraInputReader extends TermTyper {
     throwIfErrors(collector);
     return ret;
   }
-
 
   /**
    * Reads the given parser term into a proper term, using the TRS to assess the function symbols

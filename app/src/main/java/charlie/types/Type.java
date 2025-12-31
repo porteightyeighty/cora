@@ -18,6 +18,7 @@ package charlie.types;
 import java.lang.Comparable;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Type ::= Base | Arrow(Type, Type) | Data(Type,...,Type) | TVar(name).
@@ -125,6 +126,20 @@ public sealed interface Type extends Comparable<Type> permits
    * (For non-polymorphic types, this just doesn't do anything, but it does still cost linear time.)
    */
   void storeTypeVariables(Set<TVar> storage);
+
+  /**
+   * ONLY RELEVANT FOR POLYMORPHIC TYPES: this function returns the type variables that occur in
+   * the present type.
+   *
+   * Complexity: linear in the size of the type.
+   *
+   * (For non-polymorphic types, this just doesn't do anything, but it does still cost linear time.)
+   */
+  default TreeSet<TVar> getTypeVariables() {
+    TreeSet<TVar> set = new TreeSet<TVar>();
+    storeTypeVariables(set);
+    return set;
+  }
 
   /**
    * ONLY RELEVANT FOR POLYMORPHIC TYPES: this function returns the type that is obtained by

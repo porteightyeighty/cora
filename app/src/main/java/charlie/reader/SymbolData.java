@@ -27,7 +27,7 @@ import charlie.trs.TRS;
 
 /**
  * This class maintains information used for turning data from the parser into proper Cora
- * structures, in particular the lists of declared function symbols, variables and
+ * structures, in particular the lists of declared sorts, function symbols, variables and
  * meta-variables.
  */
 class SymbolData {
@@ -35,6 +35,7 @@ class SymbolData {
   private TreeMap<String,FunctionSymbol> _alphabet;   // function symbols
   private TreeMap<String,Variable> _variables;        // variables
   private TreeMap<String,MetaVariable> _mvariables;   // meta-variables of arity ≥ 1
+  private TreeMap<String,Integer> _sorts;             // sort constructors
   private TreeSet<String> _private;                   // the names of private symbols
 
   SymbolData() {
@@ -42,6 +43,7 @@ class SymbolData {
     _alphabet = new TreeMap<String,FunctionSymbol>();
     _variables = new TreeMap<String,Variable>();
     _mvariables = new TreeMap<String,MetaVariable>();
+    _sorts = new TreeMap<String,Integer>();
     _private = new TreeSet<String>();
   }
 
@@ -55,6 +57,8 @@ class SymbolData {
     _alphabet = new TreeMap<String,FunctionSymbol>();
     _variables = new TreeMap<String,Variable>();
     _mvariables = new TreeMap<String,MetaVariable>();
+    _sorts = new TreeMap<String,Integer>();
+    _private = new TreeSet<String>();
   }
 
   /**
@@ -140,9 +144,29 @@ class SymbolData {
     addMetaVariable(mvar, mvar.queryName());
   }
 
+  /** If the given sort constructor has been declared, this returns its arity, otherwise -1. */
+  public int lookupSortConstructor(String name) {
+    if (_sorts.containsKey(name)) return _sorts.get(name);
+    else return -1;
+  }
+
+  /**
+   * Explicitly declare a sort constructor: sets the arity to the given numer.
+   * Should not be used for sort constructors that have already been declared (although it is
+   * allowed if the arities are the same).
+   */
+  public void addSortConstructor(String name, int arity) {
+    if (_sorts.containsKey(name)) {
+      if (_sorts.get(name) != arity) {
+        throw new IllegalArgumentException("Duplicate call to SymbolData::addSortConstructor: " +
+          "trying to overwrite a previously declared constructor " + name);
+      }
+    }
+    else _sorts.put(name, arity);
+  }
+
   /** This marks the given function symbol as a private symbol. */
   public void setPrivate(FunctionSymbol symbol) {
-    if (symbol == null) throw new NullStorageException("SymbolData", "private function symbol");
     _private.add(symbol.queryName());
   }
 
@@ -155,6 +179,7 @@ class SymbolData {
 
   /**
    * This function removes all variable and meta-variable declarations from the current parse data.
+   * (Function symbols and sort constructors are not removed!)
    */
   public void clearEnvironment() {
     _variables.clear();
@@ -187,13 +212,17 @@ class SymbolData {
            lookupFunctionSymbol(name) != null;
   }
 
-  /** Returns an Alphabet containing all the currently declared function symbols. */
+  /**
+   * Returns an Alphabet containing all the currently declared function symbols.
+   * Warning: this may throw an IllegalSymbolException if some function symbol uses a sort
+   * inconsistently.
+   */
   public Alphabet queryCurrentAlphabet() {
     if (_trs != null) {
       throw new RuntimeException("Calling queryCurrentAlphabet for SymbolData constructed with " +
         "a given TRS!");
     }
-    return new Alphabet(_alphabet.values());
+    return new Alphabet(_sorts, _alphabet.values());
   }
 
   /** This returns the set of private symbols defined in the symbol data. */

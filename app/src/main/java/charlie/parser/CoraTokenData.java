@@ -41,6 +41,9 @@ public class CoraTokenData {
   public static final String ARROW          = "ARROW";
   public static final String PUBLIC         = "PUBLIC";
   public static final String PRIVATE        = "PRIVATE";
+  public static final String SORT           = "SORT";
+  public static final String MID            = "MID";
+  public static final String EQUAL          = "EQUAL";
   /* The following are only used for constrained TRSs. */
   public static final String INTEGER        = "INTEGER";
   public static final String TRUE           = "TRUE";
@@ -49,14 +52,12 @@ public class CoraTokenData {
   public static final String PLUS           = "PLUS";
   public static final String MINUS          = "MINUS";
   public static final String TIMES          = "TIMES";
-  public static final String MID            = "MID";
   public static final String DIV            = "DIV";
   public static final String MOD            = "MOD";
   public static final String GEQ            = "GEQ";
   public static final String GREATER        = "GREATER";
   public static final String LEQ            = "LEQ";
   public static final String SMALLER        = "SMALLER";
-  public static final String EQUAL          = "EQUAL";
   public static final String EQUALINT       = "EQUALINT";
   public static final String EQUALSTRING    = "EQUALSTRING";
   public static final String EQUALBOOL      = "EQUALBOOL";
@@ -74,7 +75,7 @@ public class CoraTokenData {
 
   /** Unconstrained TRSs admit a more broad range of identifiers. */
   private static String[] utokens = new String[] {
-    "([^\\s()\\[\\]⟨⟩\\{\\}\"',:λ\\.\\*\\\\\\.→/-]|(:(?!:))|(-(?!>))|(/(?!\\*))|(\\*(?!/)))+" , IDENTIFIER,
+    "([^\\s()\\[\\]⟨⟩\\{\\}\"',:λ\\.\\|\\*\\\\\\.→/-]|(:(?!:))|(-(?!>))|(/(?!\\*))|(\\*(?!/)))+" , IDENTIFIER,
       // identifiers are built from any characters other than whitespace, brackets,
       // braces, quotes, commas, colons, lambda, backslash, dot or unicode arrows
       // they also may not contain -> or /* or */
@@ -91,7 +92,6 @@ public class CoraTokenData {
     "\\+"                                     , PLUS,
     "-"                                       , MINUS,
     "\\*"                                     , TIMES,
-    "\\|"                                     , MID,
     ":"                                       , COLON,
     "/"                                       , DIV,
     "%"                                       , MOD,
@@ -99,7 +99,6 @@ public class CoraTokenData {
     "<"                                       , SMALLER,
     "≥|(>=)"                                  , GEQ,
     "≤|(<=)"                                  , LEQ,
-    "="                                       , EQUAL,
     "=_Int"                                   , EQUALINT,
     "=_String"                                , EQUALSTRING,
     "=_Bool"                                  , EQUALBOOL,
@@ -146,6 +145,9 @@ public class CoraTokenData {
     "→"                                       , ARROW,
     "private"                                 , PRIVATE,
     "public"                                  , PUBLIC,
+    "sort"                                    , SORT,
+    "="                                       , EQUAL,
+    "\\|"                                     , MID,
     "/\\*"                                    , "COMMENTOPEN",
     "\\*/"                                    , "COMMENTCLOSE",
     "\\s"                                     , Token.SKIP,
