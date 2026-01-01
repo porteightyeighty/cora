@@ -23,7 +23,7 @@ import charlie.terms.Term;
  * A substitution is a function that maps a finite set of replaceables to terms of the same type.
  * Substitutions can be both mutable and immutable.
  */
-public interface Substitution {
+public interface Substitution extends Term.ISubstitution {
   /** Returns the Term that x is mapped to, or null if x is not mapped to anything. */
   Term get(Replaceable x);
 
@@ -50,7 +50,7 @@ public interface Substitution {
    * Note that the result of substituting is a term where all binders in lambdas are freshly
    * generated.
    */
-  Term substitute(Term term);
+  Term applySubstitution(Term term);
 
   /**
    * Returns the set of replaceables which are mapped to a term, including those which are mapped

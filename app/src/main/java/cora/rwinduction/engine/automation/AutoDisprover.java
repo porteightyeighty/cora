@@ -240,8 +240,8 @@ public final class AutoDisprover {
    */
   private static boolean findFirstOrderInstance(Term left, Term right, Term constraint,
                                                 MutableSubstitution gamma) {
-    Substitution delta = findBaseSubstitution(gamma.substitute(left), gamma.substitute(right),
-                                              gamma.substitute(constraint), Optional.empty(),
+    Substitution delta = findBaseSubstitution(left.substitute(gamma), right.substitute(gamma),
+                                              constraint.substitute(gamma), Optional.empty(),
                                               null);
     if (delta == null) return false;
     gamma.combine(delta);

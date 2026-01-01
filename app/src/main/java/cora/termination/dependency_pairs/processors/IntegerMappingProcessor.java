@@ -120,7 +120,7 @@ public class IntegerMappingProcessor implements Processor {
         for (Variable x : s.vars()) {
           if (subst.get(x) == null) { ok = false; break; }
         }
-        if (ok) _candidates.get(root).add(subst.substitute(s));
+        if (ok) _candidates.get(root).add(s.substitute(subst));
       }
     }
   }
@@ -194,7 +194,7 @@ public class IntegerMappingProcessor implements Processor {
     for (int varL = 0; varL < f.queryArity(); varL ++) {
       subst.extend(_fnToFreshVar.get(f).get(varL), term.queryArgument(varL + 1));
     }
-    return subst.substitute(candidate);
+    return candidate.substitute(subst);
   }
 
   /**

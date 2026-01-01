@@ -35,7 +35,7 @@ class BetaReducer implements ReduceObject {
     Term b = args.get(0);
     MutableSubstitution gamma = new MutableSubstitution();
     gamma.extend(x, b);
-    Term newhead = gamma.substitute(a);
+    Term newhead = a.substitute(gamma);
     if (args.size() == 1) return newhead;
     return newhead.apply(args.subList(1, args.size()));
   }

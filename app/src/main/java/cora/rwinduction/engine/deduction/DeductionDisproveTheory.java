@@ -56,9 +56,9 @@ public class DeductionDisproveTheory extends DeductionStep {
       return null;
     }
 
-    Term left = subst.substitute(ec.getLhs());
-    Term right = subst.substitute(ec.getRhs());
-    Term constr = subst.substitute(ec.getConstraint());
+    Term left = ec.getLhs().substitute(subst);
+    Term right = ec.getRhs().substitute(subst);
+    Term constr = ec.getConstraint().substitute(subst);
     if (!left.isGround() || !right.isGround() || !constr.isGround() || !constr.isTheoryTerm()) {
       m.ifPresent(o -> o.println("The substitution does not map all variables in the equation " +
         "to ground theory terms."));
@@ -89,9 +89,9 @@ public class DeductionDisproveTheory extends DeductionStep {
 
   @Override
   public boolean verify(Optional<OutputModule> module) {
-    Value constraint = TermAnalyser.evaluate(_substitution.substitute(_equ.getConstraint()));
-    Value l = TermAnalyser.evaluate(_substitution.substitute(_equ.getLhs()));
-    Value r = TermAnalyser.evaluate(_substitution.substitute(_equ.getRhs()));
+    Value constraint = TermAnalyser.evaluate(_equ.getConstraint().substitute(_substitution));
+    Value l = TermAnalyser.evaluate(_equ.getLhs().substitute(_substitution));
+    Value r = TermAnalyser.evaluate(_equ.getRhs().substitute(_substitution));
     if (!constraint.equals(TheoryFactory.trueValue)) {
       println(module, "DISPROVE cannot be applied with the given substitution %a, since the " +
         "instantiated constraint evaluates to false.",
@@ -108,9 +108,9 @@ public class DeductionDisproveTheory extends DeductionStep {
 
   @Override
   public void explain(OutputModule module) {
-    Value constraint = TermAnalyser.evaluate(_substitution.substitute(_equ.getConstraint()));
-    Value l = TermAnalyser.evaluate(_substitution.substitute(_equ.getLhs()));
-    Value r = TermAnalyser.evaluate(_substitution.substitute(_equ.getRhs()));
+    Value constraint = TermAnalyser.evaluate(_equ.getConstraint().substitute(_substitution));
+    Value l = TermAnalyser.evaluate(_equ.getLhs().substitute(_substitution));
+    Value r = TermAnalyser.evaluate(_equ.getRhs().substitute(_substitution));
     module.println("We apply DISPROVE to %a, which succeeds because under the substitution %a, " +
       "the constraint %a evaluates to true, while the sides of the equation can be calculated " +
       "to %a and %a respectively.", _equ.getName(),

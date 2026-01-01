@@ -102,9 +102,9 @@ public record DP(Term lhs, Term rhs, Term constraint, Set<Variable> lvars)
     for (Variable x : getAllVariables()) {
       subst.extend(x, TermFactory.createVar(x.queryName(), x.queryType()));
     }
-    Term newLhs = subst.substitute(this.lhs);
-    Term newRhs = subst.substitute(this.rhs);
-    Term newConstraint = subst.substitute(this.constraint);
+    Term newLhs = this.lhs.substitute(subst);
+    Term newRhs = this.rhs.substitute(subst);
+    Term newConstraint = this.constraint.substitute(subst);
     Set<Variable> newTheoryVars = new LinkedHashSet<>();
     for (Variable x : this.lvars) {
       Term y = subst.get(x);

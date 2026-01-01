@@ -73,19 +73,19 @@ public class CriticalPeaksFinder {
 
     // the combined constraint must be satisfiable for this to give a critical pair
     var con = TheoryFactory.createConjunction(
-      subst.substitute(target.queryConstraint()),
-      subst.substitute(source.queryConstraint()));
+      target.queryConstraint().substitute(subst),
+      source.queryConstraint().substitute(subst));
     var result = TermAnalyser.satisfy(con, Settings.smtSolver);
     if (result instanceof TermAnalyser.Result.NO) return;
 
     // all requirements are satisfied; compute the critical pair
     var lhs = source.queryLeftSide().replaceSubterm(
       position.append(new FinalPos(subterm.numberArguments() - taLhs.numberArguments())),
-      subst.substitute(target.queryRightSide()));
-    var rhs = subst.substitute(source.queryRightSide());
+      target.queryRightSide().substitute(subst));
+    var rhs = source.queryRightSide().substitute(subst);
     if (_nontrivial && lhs.equals(rhs)) return;
 
-    var top = subst.substitute(source.queryLeftSide());
+    var top = source.queryLeftSide().substitute(subst);
     _cps.add(new CriticalPeak(top, lhs, rhs, con));
   }
 
@@ -163,9 +163,9 @@ public class CriticalPeaksFinder {
       subst.extend(x, TermFactory.createVar(x.queryName(), x.queryType()));
     }
     return TrsFactory.createRule(
-      subst.substitute(rule.queryLeftSide()),
-      subst.substitute(rule.queryRightSide()),
-      subst.substitute(rule.queryConstraint()));
+      rule.queryLeftSide().substitute(subst),
+      rule.queryRightSide().substitute(subst),
+      rule.queryConstraint().substitute(subst));
   }
 
   /**

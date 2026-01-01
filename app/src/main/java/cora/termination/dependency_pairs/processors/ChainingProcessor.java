@@ -227,8 +227,8 @@ public class ChainingProcessor implements Processor {
         return Optional.empty();
       }
     }
-    Term resultRhs = matcher.substitute(dp2.rhs());
-    Term dp2ConstraintSubst = matcher.substitute(dp2.constraint());
+    Term resultRhs = dp2.rhs().substitute(matcher);
+    Term dp2ConstraintSubst = dp2.constraint().substitute(matcher);
     Term resultConstraint = TermFactory.createApp(TheoryFactory.andSymbol,
       dp1.constraint(), dp2ConstraintSubst);
     Set<Variable> resultTheoryVars = new LinkedHashSet<>(dp1.lvars());

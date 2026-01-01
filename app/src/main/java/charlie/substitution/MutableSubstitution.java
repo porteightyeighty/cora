@@ -121,7 +121,7 @@ public class MutableSubstitution implements Substitution {
    */
   public void combine(Substitution delta) {
     for (Replaceable x : _mapping.keySet()) {
-      _mapping.put(x, delta.substitute(_mapping.get(x)));
+      _mapping.put(x, delta.applySubstitution(_mapping.get(x)));
     }
     for (Replaceable y : delta.domain()) {
       if (!_mapping.containsKey(y)) {
@@ -141,7 +141,7 @@ public class MutableSubstitution implements Substitution {
   }
 
   /** Applies the current substitution to the given term and returns the result. */
-  public Term substitute(Term term) {
+  public Term applySubstitution(Term term) {
     if (term.isVariable()) return getReplacement(term.queryVariable());
     else if (term.isConstant()) return term;
     else if (term.isMetaApplication()) {
@@ -153,13 +153,13 @@ public class MutableSubstitution implements Substitution {
     else if (term.isAbstraction()) {
       return substituteAbstraction(term.queryVariable(), term.queryAbstractionSubterm());
     }
-    else throw new IllegalArgumentException("Substitution::substitute called with a term that " +
-      "does not have any of the standard term shapes!");
+    else throw new IllegalArgumentException("Substitution::applySubstitution called with a term " +
+      "that does not have any of the standard term shapes!");
   }
 
   private Term substituteMetaApplication(MetaVariable z, ArrayList<Term> args) {
     // set the args to the substituted arguments
-    for (int i = 0; i < args.size(); i++) args.set(i, substitute(args.get(i)));
+    for (int i = 0; i < args.size(); i++) args.set(i, applySubstitution(args.get(i)));
     // if we're not substituting Z, then just create a new meta-application with the updated args
     Term value = _mapping.get(z);
     if (value == null) return TermFactory.createMeta(z, args);
@@ -175,12 +175,12 @@ public class MutableSubstitution implements Substitution {
       value = value.queryAbstractionSubterm();
       delta.replace(x, args.get(i));
     }   
-    return delta.substitute(value);
+    return delta.applySubstitution(value);
   }
 
   private Term substituteApplication(Term head, ArrayList<Term> args) {
-    head = substitute(head);
-    for (int i = 0; i < args.size(); i++) args.set(i, substitute(args.get(i)));
+    head = applySubstitution(head);
+    for (int i = 0; i < args.size(); i++) args.set(i, applySubstitution(args.get(i)));
     return head.apply(args);
   }
 
@@ -188,7 +188,7 @@ public class MutableSubstitution implements Substitution {
     Variable freshvar = TermFactory.createBinder(binder.queryName(), binder.queryType());
     Term previous = _mapping.get(binder);
     _mapping.put(binder, freshvar);
-    Term subtermSubstitute = substitute(subterm);
+    Term subtermSubstitute = applySubstitution(subterm);
     if (previous == null) _mapping.remove(binder);
     else _mapping.put(binder, previous);
     return TermFactory.createAbstraction(freshvar, subtermSubstitute);

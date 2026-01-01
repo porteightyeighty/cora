@@ -93,9 +93,9 @@ class ApproximateReducer {
     for (Variable x : dp.constraint().vars()) {
       if (subst.get(x) == null) subst.extend(x, TermFactory.createVar(x.queryName(), x.queryType()));
     }
-    Term newleft = subst.substitute(dp.lhs());
-    Term newright = subst.substitute(dp.rhs());
-    Term newconstraint = subst.substitute(dp.constraint());
+    Term newleft = dp.lhs().substitute(subst);
+    Term newright = dp.rhs().substitute(subst);
+    Term newconstraint = dp.constraint().substitute(subst);
 
     TreeSet<Variable> theory = new TreeSet<>();
     for (Variable x : dp.lvars()) {

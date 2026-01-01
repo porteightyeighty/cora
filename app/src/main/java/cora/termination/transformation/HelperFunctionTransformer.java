@@ -238,9 +238,9 @@ public class HelperFunctionTransformer {
         Rule rule = rules.get(i);
         Term lhs = rule.queryLeftSide();
         Term rhs = rule.queryRightSide();
-        Term lhssubst = subst.substitute(lhs);
+        Term lhssubst = lhs.substitute(subst);
         if (!lhssubst.equals(lhs)) {
-          Term rhssubst = subst.substitute(rhs);
+          Term rhssubst = rhs.substitute(subst);
           rules.add(TrsFactory.createRule(lhssubst, rhssubst, rule.queryConstraint()));
         }
       }

@@ -72,7 +72,7 @@ class UnifierTest {
     var y = read("y", renaming, trs);
     var sub = Unifier.mgu(x1, y);
     assertEquals(sub.domain().size(), 1);
-    assertEquals(sub.substitute(x1), sub.substitute(y));
+    assertEquals(sub.applySubstitution(x1), sub.applySubstitution(y));
   }
 
   @Test
@@ -105,8 +105,8 @@ class UnifierTest {
     var x = read("x", renaming, trs);
     var y = read("y", renaming, trs);
     var a = read("a", renaming, trs);
-    assertEquals(sub.substitute(x), a);
-    assertEquals(sub.substitute(y), a);
+    assertEquals(sub.applySubstitution(x), a);
+    assertEquals(sub.applySubstitution(y), a);
   }
 
   @Test
@@ -131,9 +131,9 @@ class UnifierTest {
     var b = read("b", renaming, trs);
     var y = read("y", renaming, trs);
     var fa = read("f(a)", renaming, trs);
-    assertEquals(sub.substitute(F), ga);
-    assertEquals(sub.substitute(x), b);
-    assertEquals(sub.substitute(y), fa);
+    assertEquals(sub.applySubstitution(F), ga);
+    assertEquals(sub.applySubstitution(x), b);
+    assertEquals(sub.applySubstitution(y), fa);
   }
 
   @Test
@@ -147,13 +147,13 @@ class UnifierTest {
     var fygx = read("f(y, g(x))", renaming, trs);
     var sub = Unifier.mgu(fxz, fygx);
     assertEquals(sub.domain().size(), 2);
-    assertEquals(sub.substitute(fxz), sub.substitute(fygx));
+    assertEquals(sub.applySubstitution(fxz), sub.applySubstitution(fygx));
 
     var z = read("z", renaming, trs);
     var g = read("g", renaming, trs);
-    assertEquals(sub.substitute(z).queryHead(), g);
-    assertEquals(sub.substitute(z).numberArguments(), 1);
-    assertTrue(sub.substitute(z).queryArgument(1).isVariable());
+    assertEquals(sub.applySubstitution(z).queryHead(), g);
+    assertEquals(sub.applySubstitution(z).numberArguments(), 1);
+    assertTrue(sub.applySubstitution(z).queryArgument(1).isVariable());
   }
 
   @Test

@@ -63,7 +63,7 @@ class RuleReducer implements ReduceObject {
     for (Variable x : _rule.queryConstraint().vars()) {
       if (subst.get(x) != null && !subst.get(x).isValue()) return false;
     }
-    Term csub = subst.substitute(_rule.queryConstraint());
+    Term csub = _rule.queryConstraint().substitute(subst);
     if (csub.isGround()) return TermAnalyser.evaluate(csub).getBool();
     else return TermAnalyser.satisfy(csub, Settings.smtSolver) instanceof TermAnalyser.Result.YES;
   }
@@ -84,7 +84,7 @@ class RuleReducer implements ReduceObject {
     for (Variable x : _rule.queryConstraint().vars()) {
       if (subst.get(x) != null && !subst.get(x).isValue()) return null;
     }
-    Term csub = subst.substitute(_rule.queryConstraint());
+    Term csub = _rule.queryConstraint().substitute(subst);
     if (csub.isGround()) {
       if (!TermAnalyser.evaluate(csub).getBool()) return null;
     }
@@ -105,7 +105,7 @@ class RuleReducer implements ReduceObject {
 
     ArrayList<Term> args = new ArrayList<Term>();
     for (int i = n-k+1; i <= n; i++) args.add(t.queryArgument(i));
-    Term righthead = subst.substitute(_rule.queryRightSide());
+    Term righthead = _rule.queryRightSide().substitute(subst);
     return righthead.apply(args);
   }
 

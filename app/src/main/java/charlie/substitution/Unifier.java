@@ -48,11 +48,12 @@ public class Unifier {
     /* Update remaining equations. */
     for (var iter = _equations.listIterator(); iter.hasNext(); ) {
       Pair<Term,Term> equ = iter.next();
-      iter.set(new Pair<Term,Term>(sub.substitute(equ.fst()), sub.substitute(equ.snd())));
+      iter.set(new Pair<Term,Term>(sub.applySubstitution(equ.fst()),
+                                   sub.applySubstitution(equ.snd())));
     }
     /* Update the partial result. */
     for (var y : _partialMgu.domain()) {
-      _partialMgu.replace(y, sub.substitute(_partialMgu.get(y)));
+      _partialMgu.replace(y, sub.applySubstitution(_partialMgu.get(y)));
     }
     _partialMgu.extend(x, t);
     return true;

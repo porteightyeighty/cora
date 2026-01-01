@@ -187,11 +187,11 @@ public final class DeductionCase extends DeductionStep {
     for (ExtraInfo info : _cases) {
       Optional<Term> leftGeq = ec.getLeftGreaterTerm();
       Optional<Term> rightGeq = ec.getRightGreaterTerm();
-      if (!leftGeq.isEmpty()) leftGeq = Optional.of(info.subst().substitute(leftGeq.get()));
-      if (!rightGeq.isEmpty()) rightGeq = Optional.of(info.subst().substitute(rightGeq.get()));
-      Term lhs = info.subst().substitute(ec.getEquation().getLhs());
-      Term rhs = info.subst().substitute(ec.getEquation().getRhs());
-      Term constraint = info.subst().substitute(ec.getEquation().getConstraint());
+      if (!leftGeq.isEmpty()) leftGeq = Optional.of(leftGeq.get().substitute(info.subst()));
+      if (!rightGeq.isEmpty()) rightGeq = Optional.of(rightGeq.get().substitute(info.subst()));
+      Term lhs = ec.getEquation().getLhs().substitute(info.subst());
+      Term rhs = ec.getEquation().getRhs().substitute(info.subst());
+      Term constraint = ec.getEquation().getConstraint().substitute(info.subst());
       constraint = TheoryFactory.createConjunction(constraint, info.constraint());
       replacements.add(new EquationContext(leftGeq, new Equation(lhs, rhs, constraint),
         rightGeq, index, info.renaming()));

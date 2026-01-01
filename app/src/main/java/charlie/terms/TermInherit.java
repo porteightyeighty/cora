@@ -149,7 +149,7 @@ abstract class TermInherit implements Term {
   }
 
   /** Returns true if freeReplaceables() contains no binder variables. */
-  public boolean isClosed() {
+  public final boolean isClosed() {
     ReplaceableList vs = freeReplaceables();
     for (Replaceable x : vs) {
       if (x.queryReplaceableKind() == Replaceable.Kind.BINDER) return false;
@@ -170,7 +170,7 @@ abstract class TermInherit implements Term {
   }
 
   /** Returns true if freeReplaceables() contains no meta-variables. */
-  public boolean isTrueTerm() {
+  public final boolean isTrueTerm() {
     ReplaceableList vs = freeReplaceables();
     for (Replaceable x : vs) {
       if (x.queryReplaceableKind() == Replaceable.Kind.METAVAR) return false;
@@ -201,7 +201,7 @@ abstract class TermInherit implements Term {
   }
 
   /** Returns whether all alpha-equal variants of this have other as a subterm. */
-  public boolean hasSubterm(Term other) {
+  public final boolean hasSubterm(Term other) {
     for (Pair<Term,Position> p : querySubterms()) {
       if (p.fst().equals(other)) {
         // check that other doesn't freely contain binder variables that are bound in us
@@ -280,13 +280,18 @@ abstract class TermInherit implements Term {
    * If the current term is h(t1,...,tk) and has a type σ1 →...→ σn → τ and args = [s1,...,sn] with
    * each si : σi, then this function returns h(t1,...,tk,s1,...,sn).
    */
-  public Term apply(List<Term> args) {
+  public final Term apply(List<Term> args) {
     if (args.size() == 0) return this;
     return new Application(this, args);
   }
 
+  /** Applies the given substitution to the present term. */
+  public final Term substitute(ISubstitution subst) {
+    return subst.applySubstitution(this);
+  }
+
   /** This method verifies equality to another Term. */
-  public boolean equals(Term other) {
+  public final boolean equals(Term other) {
     if (other == null) return false;
     TreeMap<Variable,Integer> mu = new TreeMap<Variable,Integer>();
     TreeMap<Variable,Integer> xi = new TreeMap<Variable,Integer>();

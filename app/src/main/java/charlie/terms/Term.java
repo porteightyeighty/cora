@@ -312,6 +312,12 @@ public interface Term {
   /** The same as apply([other]) */
   Term apply(Term other);
 
+  /** Instantiated by Substitution (used to avoid a two-way dependency between packages). */
+  public interface ISubstitution { public Term applySubstitution(Term term); }
+
+  /** Applies the given substitution to the current term and yields the result. */
+  Term substitute(ISubstitution subst);
+
   /**
    * Provides a string representation of the current term.  Here, variables and meta-variables are
    * renamed as needed to avoid distinct (meta-)variables having the same name.

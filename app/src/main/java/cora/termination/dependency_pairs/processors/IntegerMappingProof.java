@@ -95,7 +95,7 @@ class IntegerMappingProof extends ProcessorProofObject {
     for (int varL = 0; varL < f.queryArity(); varL ++) {
       subst.extend(_argvars.get(f).get(varL), term.queryArgument(varL + 1));
     }
-    return subst.substitute(candidate);
+    return candidate.substitute(subst);
   }
 
   /** Helper function for justify: prints which DPs are oriented (and why). */

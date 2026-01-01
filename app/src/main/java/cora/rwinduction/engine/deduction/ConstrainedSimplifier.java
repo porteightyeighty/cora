@@ -257,7 +257,7 @@ class ConstrainedSimplifier {
       if (_substitution.get(x) != null) continue;
       Term t = myPair.snd();
       if (!allSubstituted(t)) continue;
-      Term tgamma = _substitution.substitute(t);
+      Term tgamma = t.substitute(_substitution);
       Term result = null;
       for (Pair<Variable,Term> pair : eqs) {
         if (tgamma.equals(pair.snd())) { result = pair.fst(); break; }
@@ -273,7 +273,7 @@ class ConstrainedSimplifier {
 
   /** This returns the term _right _substitution. */
   Term queryReduct() {
-    return _substitution.substitute(_right);
+    return _right.substitute(_substitution);
   }
 
   /**
@@ -300,7 +300,7 @@ class ConstrainedSimplifier {
       if (_substitution.get(x) != null) continue;
       Term t = pair.snd();
       if (!allSubstituted(t)) continue;
-      Term tgamma = _substitution.substitute(t);
+      Term tgamma = t.substitute(_substitution);
       Pair<Variable,String> ypair = derivativeChooser.apply(x);
       ret.add(new Pair<Pair<Variable,String>,Term>(ypair, tgamma));
       _substitution.extend(x, ypair.fst());
@@ -410,7 +410,7 @@ class ConstrainedSimplifier {
     for (Pair<Variable,Term> d : _definitions) {
       c = TheoryFactory.createConjunction(c, TheoryFactory.createEquality(d.fst(), d.snd()));
     }
-    Term substitutedconstr = _substitution.substitute(c);
+    Term substitutedconstr = c.substitute(_substitution);
     TermSmtTranslator translator = new TermSmtTranslator();
     translator.requireImplication(psi, substitutedconstr);
     if (solver.checkValidity(translator.queryProblem())) return true;
