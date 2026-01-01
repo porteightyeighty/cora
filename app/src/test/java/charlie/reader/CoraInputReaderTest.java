@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2025 Cynthia Kop
+ Copyright 2019--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -496,6 +496,20 @@ public class CoraInputReaderTest {
   }
 
   @Test
+  public void testReadLCSTRSWithSortDeclarations() {
+    TRS trs = CoraInputReader.readTrsFromString(
+      "sort list = nil | cons(Int, list) " +
+      "sort A " +
+      "map(F,cons(H,T)) -> cons(F(H),map(F,T)) " +
+      "map :: (Int -> Int) -> list -> list",
+      TrsFactory.LCSTRS);
+    assertTrue(trs.queryAlphabet().getSymbols().size() == 3); // nil, cons, map
+    assertTrue(trs.queryAlphabet().getSortConstructors().size() == 2);
+    assertTrue(trs.queryAlphabet().getSortConstructors().contains("A"));
+    assertTrue(trs.queryRule(0).toString().equals("map(F, cons(H, T)) → cons(F(H), map(F, T))"));
+  }
+
+  @Test
   public void testPrivateSymbol() {
     TRS trs = CoraInputReader.readTrsFromString(
       "public a :: Int private b :: Int c :: Int", TrsFactory.LCTRS);
@@ -547,6 +561,36 @@ public class CoraInputReaderTest {
     // now we can't read x as a variable, because we cannot update the renaming
     assertThrows(ParsingException.class, () ->
       CoraInputReader.readTermAndUpdateNaming("f(x)", renaming, trs));
+  }
+
+  @Test
+  public void testParseTrsWithInconsistentSortsOne() {
+    try {
+      CoraInputReader.readTrsFromString(
+      "sort list($a) = nil | cons($a, list)\n" +
+      "map :: (Int -> Int) -> list -> list\n");
+    }
+    catch (ParsingException e) {
+      assertTrue(e.getMessage().equals("Inconsistent occurrence of sort constructor list in " +
+        "function symbol cons: here occurs with arity 0 while it previously had arity 1.\n"));
+      return;
+    }
+    assertTrue(false);
+  }
+
+  @Test
+  public void testParseTrsWithInconsistentSortsTwo() {
+    try {
+      CoraInputReader.readTrsFromString(
+      "sort list = nil | cons(Int, list)\n" +
+      "map :: (Int -> Int) -> list(Int) -> list(Int)\n");
+    }
+    catch (ParsingException e) {
+      assertTrue(e.getMessage().equals("Inconsistent occurrence of sort constructor list in " +
+        "function symbol map: here occurs with arity 1 while it previously had arity 0.\n"));
+      return;
+    }
+    assertTrue(false);
   }
 }
 

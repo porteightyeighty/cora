@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2025 Cynthia Kop
+ Copyright 2025--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -23,6 +23,6 @@ import charlie.util.UserException;
 public class InconsistentSortException extends UserException {
   public InconsistentSortException(String name, String location, int oldArity, int newArity) {
     super("Inconsistent occurrence of sort constructor ", name, " in ", location, ": here " +
-      "occurs with arity ", newArity, " while it previously had arity ", oldArity);
+      "occurs with arity ", newArity, " while it previously had arity ", oldArity, ".");
   }
 }

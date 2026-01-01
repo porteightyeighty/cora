@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024--2025 Cynthia Kop
+ Copyright 2024--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -185,14 +185,14 @@ public class Alphabet {
           if (t.isBaseTheoryType()) continue;
           k = storeSortConstructor(builder, name, 0);
           if (k != 0) {
-            throw new InconsistentSortException(name, "function symbol " + f.queryName(), 0, k);
+            throw new InconsistentSortException(name, "function symbol " + f.queryName(), k, 0);
           }
           continue;
         case Data(String name, FixedList<Type> args):
           k = storeSortConstructor(builder, name, args.size());
           if (k != args.size()) {
             throw new InconsistentSortException(name, "function symbol " + f.queryName(),
-                                                args.size(), k);
+                                                k, args.size());
           }
           for (Type arg : args) stack.push(arg);
           if (tlevel == TypeLevel.SIMPLE) tlevel = TypeLevel.MONOMORPHIC;
@@ -281,6 +281,11 @@ public class Alphabet {
   public int querySortConstructorArity(String name) {
     if (!_sorts.containsKey(name)) return -1;
     return _sorts.get(name);
+  }
+
+  /** Returns the names of the sort constructors declared in the alphabet. */
+  public Collection<String> getSortConstructors() {
+    return _sorts.keySet();
   }
 
   /** Returns the maximum type level used by any sort used or declared in the alphabet. */
