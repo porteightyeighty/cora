@@ -63,7 +63,7 @@ public record Base(String name) implements Type {
   public void storeTypeVariables(Set<TVar> storage) { }
 
   @Override
-  public Type instantiate(Map<TVar,Type> typeSubstitution) { return this; }
+  public Type substitute(Map<TVar,Type> typeSubstitution) { return this; }
 
   @Override
   public boolean match(Type other, Map<TVar,Type> typeSubstitution) {

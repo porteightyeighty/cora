@@ -78,12 +78,12 @@ class TVarTest {
     Type a = new TVar("alpha");
     TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
     map.put(new TVar("beta"), new Base("a"));
-    assertTrue(a.instantiate(map) == a);
+    assertTrue(a.substitute(map) == a);
     map.put(new TVar("alpha"), null);
-    assertTrue(a.instantiate(map) == a);
+    assertTrue(a.substitute(map) == a);
     Base b = new Base("b");
     map.put(new TVar("alpha"), b);
-    assertTrue(a.instantiate(map) == b);
+    assertTrue(a.substitute(map) == b);
   }
 
   @Test

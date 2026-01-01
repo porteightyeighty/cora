@@ -90,9 +90,9 @@ public record Data(String name, FixedList<Type> args) implements Type {
   }
 
   @Override
-  public Type instantiate(Map<TVar,Type> typeSubstitution) {
+  public Type substitute(Map<TVar,Type> typeSubstitution) {
     FixedList.Builder<Type> argsBuilder = new FixedList.Builder<Type>();
-    for (Type arg : this.args) argsBuilder.add(arg.instantiate(typeSubstitution));
+    for (Type arg : this.args) argsBuilder.add(arg.substitute(typeSubstitution));
     return new Data(this.name, argsBuilder.build());
   }
 

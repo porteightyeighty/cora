@@ -98,8 +98,8 @@ public record Arrow(Type left, Type right) implements Type {
   }
 
   @Override
-  public Type instantiate(Map<TVar,Type> typeSubst) {
-    return new Arrow(this.left.instantiate(typeSubst), this.right.instantiate(typeSubst));
+  public Type substitute(Map<TVar,Type> typeSubst) {
+    return new Arrow(this.left.substitute(typeSubst), this.right.substitute(typeSubst));
   }
 
   @Override

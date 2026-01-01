@@ -100,7 +100,7 @@ class BaseTest {
     Type a = new Base("sort");
     TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
     map.put(new TVar("sort"), new Base("a"));
-    assertTrue(a.instantiate(map) == a);
+    assertTrue(a.substitute(map) == a);
   }
 
   @Test

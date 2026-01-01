@@ -181,7 +181,7 @@ class ArrowTest {
     TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
     map.put(new TVar("α"), new Base("b"));
     map.put(new TVar("β"), new Base("a"));
-    assertTrue(arr.instantiate(map).toString().equals("c(b, a) → a"));
+    assertTrue(arr.substitute(map).toString().equals("c(b, a) → a"));
     assertTrue(arr.toString().equals("c($α, $β) → $β"));  // unchanged by the call
   }
 

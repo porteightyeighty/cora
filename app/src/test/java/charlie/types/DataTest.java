@@ -176,7 +176,7 @@ class DataTest {
       TypeFactory.createSort("d", new Base("b"), new TVar("beta"), new TVar("alpha")));
     TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
     map.put(new TVar("alpha"), new Arrow(new Base("e"), new TVar("alpha")));
-    assertTrue(mytype.instantiate(map).toString().equals("c(e → $alpha, d(b, $beta, e → $alpha))"));
+    assertTrue(mytype.substitute(map).toString().equals("c(e → $alpha, d(b, $beta, e → $alpha))"));
     assertTrue(mytype.toString().equals("c($alpha, d(b, $beta, $alpha))"));  // unchanged
   }
 

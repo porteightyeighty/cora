@@ -154,7 +154,7 @@ public sealed interface Type extends Comparable<Type> permits
    *
    * (For non-polymorphic types, this just returns a copy of the type.)
    */
-  Type instantiate(Map<TVar,Type> typeSubstitution);
+  Type substitute(Map<TVar,Type> typeSubstitution);
 
   /**
    * ONLY RELEVANT FOR POLYMORPHIC TYPES: this function tries to extend typeSubstitution so that

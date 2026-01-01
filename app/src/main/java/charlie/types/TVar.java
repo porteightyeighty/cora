@@ -64,7 +64,7 @@ public record TVar(String name) implements Type {
   public void storeTypeVariables(Set<TVar> storage) { storage.add(this); }
 
   @Override
-  public Type instantiate(Map<TVar,Type> typeSubstitution) {
+  public Type substitute(Map<TVar,Type> typeSubstitution) {
     Type ret = typeSubstitution.get(this);
     if (ret == null) return this;
     else return ret;
