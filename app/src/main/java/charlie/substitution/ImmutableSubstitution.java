@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2025 Cynthia Kop
+ Copyright 2025--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -16,6 +16,8 @@
 package charlie.substitution;
 
 import java.util.Set;
+import charlie.types.Type;
+import charlie.types.TVar;
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.Term;
 
@@ -27,13 +29,16 @@ import charlie.terms.Term;
 public class ImmutableSubstitution implements Substitution {
   private MutableSubstitution _wrapped;
 
-  // the constructor is not public, since we should be created through makeImmutable()
+  /** the constructor is not public, since we should be created through makeImmutable() */
   ImmutableSubstitution(MutableSubstitution wrapme) { _wrapped = wrapme; }
   
   public Term get(Replaceable x) { return _wrapped.get(x); }
+  public Type get(TVar alpha) { return _wrapped.get(alpha); }
   public Term getReplacement(Replaceable x) { return _wrapped.getReplacement(x); }
+  public Type getReplacement(TVar alpha) { return _wrapped.getReplacement(alpha); }
   public Term applySubstitution(Term term) { return _wrapped.applySubstitution(term); }
   public Set<Replaceable> domain() { return _wrapped.domain(); }
+  public Set<TVar> typeDomain() { return _wrapped.typeDomain(); }
   public MutableSubstitution copy() { return _wrapped.copy(); }
   public Substitution makeImmutable() { return this; }
   public String toString() { return _wrapped.toString(); }

@@ -149,13 +149,13 @@ public final class AutoHypothesis {
       if (f == null || !hypo.getLhs().isFunctionalTerm() ||
           f.equals(hypo.getLhs().queryRoot())) {
         DeductionHypothesis step = DeductionHypothesis.createStep(proof, Optional.empty(), hypo,
-                 false, new EquationPosition(side, pos), new MutableSubstitution());
+                 false, new EquationPosition(side, pos), MutableSubstitution.createBasic());
         if (step != null && step.verify(Optional.empty())) ret.add(step);
       }
       if (f == null || !hypo.getRhs().isFunctionalTerm() ||
           f.equals(hypo.getRhs().queryRoot())) {
         DeductionHypothesis step = DeductionHypothesis.createStep(proof, Optional.empty(), hypo,
-                  true, new EquationPosition(side, pos), new MutableSubstitution());
+                  true, new EquationPosition(side, pos), MutableSubstitution.createBasic());
         if (step != null && step.verify(Optional.empty())) ret.add(step);
       }
     }

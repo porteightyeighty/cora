@@ -83,7 +83,7 @@ class ApproximateReducer {
    * purposes.)
    */
   static DP rename(DP dp) {
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     for (Variable x : dp.lhs().vars()) {
       if (subst.get(x) == null) subst.extend(x, TermFactory.createVar(x.queryName(), x.queryType()));
     }

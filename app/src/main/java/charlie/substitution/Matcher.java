@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2025 Cynthia Kop
+ Copyright 2025--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -39,7 +39,7 @@ public class Matcher {
    * The substitution is fresh, and may be changed at the caller's leisure.
    */
   public static MutableSubstitution match(Term pattern, Term instance) {
-    MutableSubstitution ret = new MutableSubstitution();
+    MutableSubstitution ret = MutableSubstitution.createBasic();
     if (extendMatch(pattern, instance, ret) == null) return ret;
     return null;
   }

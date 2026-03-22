@@ -320,7 +320,7 @@ public class CommandParsingStatus {
                                                 MutableRenaming valueNames,
                                                 OutputModule module) {
     status.expect(CoraTokenData.METAOPEN, "substitution opening bracket [");
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     boolean first = true;
     while (status.readNextIf(CoraTokenData.METACLOSE) == null) {
       if (first) first = false;

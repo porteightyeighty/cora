@@ -95,7 +95,7 @@ class ConstrainedSimplifier {
     _left = left;
     _right = right;
     _renaming = renaming.makeImmutable();
-    _substitution = subst == null ? new MutableSubstitution() : subst.copy();
+    _substitution = subst == null ? MutableSubstitution.createBasic() : subst.copy();
     _definitions = new ArrayList<Pair<Variable,Term>>();
     _constraint = splitEqualities(constraint, _definitions);
   }
@@ -206,7 +206,7 @@ class ConstrainedSimplifier {
    * the empty substitution will be stored instead.
    */
   void replaceSubstitution(Substitution subst) {
-    if (subst == null) _substitution = new MutableSubstitution();
+    if (subst == null) _substitution = MutableSubstitution.createBasic();
     else _substitution = subst.copy();
   }
 

@@ -80,7 +80,7 @@ public final class DeductionCase extends DeductionStep {
       return false;
     }
     Term notcaseterm = TheoryFactory.notSymbol.apply(caseterm);
-    Substitution empty = new MutableSubstitution();
+    Substitution empty = MutableSubstitution.createBasic();
     ret.add(new ExtraInfo(empty, caseterm, renaming));
     ret.add(new ExtraInfo(empty, notcaseterm, renaming));
     return true;
@@ -104,7 +104,7 @@ public final class DeductionCase extends DeductionStep {
     Term greater = TermFactory.createApp(TheoryFactory.greaterSymbol, caseterm, zero);
     Term equal = TermFactory.createApp(TheoryFactory.intEqualSymbol, caseterm, zero);
     Term smaller = TermFactory.createApp(TheoryFactory.smallerSymbol, caseterm, zero);
-    Substitution empty = new MutableSubstitution();
+    Substitution empty = MutableSubstitution.createBasic();
     ret.add(new ExtraInfo(empty, greater, renaming));
     ret.add(new ExtraInfo(empty, equal, renaming));
     ret.add(new ExtraInfo(empty, smaller, renaming));
@@ -149,7 +149,7 @@ public final class DeductionCase extends DeductionStep {
         args.add(x);
         t = t.querySubtype(2);
       }
-      MutableSubstitution subst = new MutableSubstitution();
+      MutableSubstitution subst = MutableSubstitution.createBasic();
       subst.extend(caseterm, c.apply(args));
       ret.add(new ExtraInfo(subst, TheoryFactory.trueValue, ren));
     }

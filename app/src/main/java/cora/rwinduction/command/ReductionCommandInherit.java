@@ -161,7 +161,7 @@ abstract class ReductionCommandInherit extends DeductionCommand {
 
     Substitution subst;
     if (arg != null && !arg.equals("with")) arg = input.nextWord();
-    if (arg == null) subst = new MutableSubstitution();
+    if (arg == null) subst = MutableSubstitution.createBasic();
     else if (!arg.equals("with")) {
       _module.println("Unexpected argument at position %a: expected \"with\" or end of command, " +
         "but got %a.", input.previousPosition(), arg);

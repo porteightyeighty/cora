@@ -69,7 +69,7 @@ class DeductionDisproveTheoryTest {
   @Test
   public void testHigherOrderNotOkay() {
     PartialProof pp = setupProof("A", "[+]", "true");
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     TRS trs = pp.getContext().getTRS();
     Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     subst.extend(renaming.getReplaceable("A"), TheoryFactory.timesSymbol);
@@ -83,7 +83,7 @@ class DeductionDisproveTheoryTest {
   @Test
   public void testIncompleteState() {
     PartialProof pp = setupProof("1", "0", "true");
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     OutputModule module = OutputModule.createUnitTestModule();
     Optional<OutputModule> o = Optional.of(module);
     // change the top equation to an incomplete one
@@ -98,7 +98,7 @@ class DeductionDisproveTheoryTest {
   @Test
   public void testSuccess() {
     PartialProof pp = setupProof("4", "A(y, 1)", "y > 2 ∧ y < 5");
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     subst.extend(renaming.getReplaceable("A"), TheoryFactory.plusSymbol);
     subst.extend(renaming.getReplaceable("y"), TheoryFactory.createValue(4));
@@ -120,7 +120,7 @@ class DeductionDisproveTheoryTest {
   public void testFailDueToEquality() {
     PartialProof pp = setupProof("4", "y + 1", "y > 2 ∧ y < 4");
     OutputModule module = OutputModule.createUnitTestModule();
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     subst.extend(renaming.getReplaceable("y"), TheoryFactory.createValue(3));
     Optional<OutputModule> o = Optional.of(module);
@@ -137,7 +137,7 @@ class DeductionDisproveTheoryTest {
   public void testFailDueToConstraint() {
     PartialProof pp = setupProof("4", "y + 1", "y > 2 ∧ y < 4");
     OutputModule module = OutputModule.createUnitTestModule();
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     Renaming renaming = pp.getProofState().getTopEquation().getRenaming();
     subst.extend(renaming.getReplaceable("y"), TheoryFactory.createValue(4));
     Optional<OutputModule> o = Optional.of(module);

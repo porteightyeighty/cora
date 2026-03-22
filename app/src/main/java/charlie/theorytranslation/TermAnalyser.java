@@ -90,7 +90,7 @@ public class TermAnalyser {
     translator.require(t);
     return switch (solver.checkSatisfiability(translator.queryProblem())) {
       case Answer.YES(Valuation val) -> {
-          MutableSubstitution ret = new MutableSubstitution();
+          MutableSubstitution ret = MutableSubstitution.createBasic();
           for (Variable x : t.vars()) {
             if (x.queryType().equals(TypeFactory.boolSort)) {
               BVar bvar = translator.getBVar(x);

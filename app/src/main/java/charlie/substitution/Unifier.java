@@ -35,7 +35,7 @@ public class Unifier {
   /** The constructor is private and only accessible inside the class. */
   private Unifier() {
     _equations = new LinkedList<>();
-    _partialMgu = new MutableSubstitution();;
+    _partialMgu = MutableSubstitution.createBasic();
   }
 
   /**
@@ -44,7 +44,8 @@ public class Unifier {
    */
   private boolean eliminateVariable(Variable x, Term t) {
     if (t.vars().contains(x)) return false;
-    MutableSubstitution sub = new MutableSubstitution(x, t);
+    MutableSubstitution sub = MutableSubstitution.createBasic();
+    sub.extend(x, t);
     /* Update remaining equations. */
     for (var iter = _equations.listIterator(); iter.hasNext(); ) {
       Pair<Term,Term> equ = iter.next();

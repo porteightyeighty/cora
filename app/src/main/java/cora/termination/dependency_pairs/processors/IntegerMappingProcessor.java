@@ -102,7 +102,7 @@ public class IntegerMappingProcessor implements Processor {
       Term root = lhs.queryRoot();
       // let subst be the substitution such that, if left = f l1 ... ln and li is a variable of
       // theory sort, then subst[li] = x_i^f
-      MutableSubstitution subst = new MutableSubstitution();
+      MutableSubstitution subst = MutableSubstitution.createBasic();
       for (int i = 1; i <= lhs.numberArguments(); i++) {
         Term argi = lhs.queryArgument(i);
         if (argi.isVariable() && argi.queryType().isBaseTheoryType()) {
@@ -189,7 +189,7 @@ public class IntegerMappingProcessor implements Processor {
    * this returns t[x_1^f:=s1,...,x_n^f:=sn].
    */
   private Term instantiateCandidate(Term candidate, Term term) {
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     FunctionSymbol f = term.queryRoot();
     for (int varL = 0; varL < f.queryArity(); varL ++) {
       subst.extend(_fnToFreshVar.get(f).get(varL), term.queryArgument(varL + 1));

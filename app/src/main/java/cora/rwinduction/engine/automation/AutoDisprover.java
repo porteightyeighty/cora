@@ -129,7 +129,7 @@ public final class AutoDisprover {
    * of the higher-order variables.
    */
   public static MutableSubstitution findHigherOrderSubstitution(Term l, Term r, Term c,
-                                      Optional<OutputModule> module, Renaming renaming) {
+                                           Optional<OutputModule> module, Renaming renaming) {
     ArrayList<Variable> variables = getHOVars(l, r);
     ArrayList<ArrayList<Term>> instances = getHOInstances(variables, renaming, module);
     if (instances == null) return null;
@@ -140,7 +140,7 @@ public final class AutoDisprover {
     // variables[i] := instances[i][ji]
     ArrayList<Integer> current = new ArrayList<Integer>();
     for (int i = 0; i < variables.size(); i++) current.add(0);
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     for (int pos = 0; pos >= 0; ) {
       if (pos == variables.size()) {
         if (findFirstOrderInstance(l, r, c, subst)) return subst;

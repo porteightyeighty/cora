@@ -196,7 +196,7 @@ public final class AutoDeleter {
                                                     Term constraint, Optional<Term> leftbound,
                                                     Optional<Term> rightbound, ProofState state) {
     int posArity = left.queryType().queryArity();
-    MutableSubstitution gamma = new MutableSubstitution();
+    MutableSubstitution gamma = MutableSubstitution.createBasic();
     for (Hypothesis hypo : state.getHypotheses()) {
       Term hypoLhs = hypo.getLhs();
       int hypoArity = hypoLhs.queryType().queryArity();

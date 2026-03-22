@@ -73,7 +73,7 @@ public class MatcherTest {
   public void testMatchKnownVar() {
     Variable x = TermFactory.createBinder("x", type("a"));
     Term t = unaryTerm("f", TermFactory.createConstant("u", type("b")), "a");
-    MutableSubstitution gamma = new MutableSubstitution(x, t);
+    MutableSubstitution gamma = MutableSubstitution.createBasic(x, t);
     assertTrue(Matcher.extendMatch(x, t, gamma) == null);
     assertTrue(gamma.get(x) == t);
     assertTrue(gamma.domain().size() == 1);
@@ -84,7 +84,7 @@ public class MatcherTest {
     Variable x = TermFactory.createVar("x", type("a"));
     Term t = unaryTerm("f", TermFactory.createConstant("u", type("b")), "a");
     Term q = unaryTerm("f", TermFactory.createConstant("v", type("b")), "a");
-    MutableSubstitution gamma = new MutableSubstitution(x, q);
+    MutableSubstitution gamma = MutableSubstitution.createBasic(x, q);
     assertTrue(Matcher.extendMatch(x, t, gamma).toString().equals(
       "Variable x is mapped both to f(v) and to f(u)."));
     assertTrue(gamma.get(x) == q);
@@ -95,7 +95,7 @@ public class MatcherTest {
   public void testVarWithBadType() {
     Variable x = TermFactory.createBinder("x", type("a"));
     Term t = unaryTerm("f", TermFactory.createConstant("u", type("b")), "b");
-    MutableSubstitution gamma = new MutableSubstitution();
+    MutableSubstitution gamma = MutableSubstitution.createBasic();
     assertTrue(Matcher.extendMatch(x, t, gamma).toString().equals(
       "Variable x has a different type from f(u)."));
   }
@@ -213,7 +213,7 @@ public class MatcherTest {
     MetaVariable f = TermFactory.createMetaVar("F", type("o -> o"), 1);
     Term t = TermFactory.createMeta(f, x);
     Term a = TermFactory.createConstant("a", type("o"));
-    MutableSubstitution subst = new MutableSubstitution(x, y);
+    MutableSubstitution subst = MutableSubstitution.createBasic(x, y);
     assertThrows(PatternRequiredException.class, () -> Matcher.extendMatch(t, a, subst));
   }
 
@@ -224,7 +224,7 @@ public class MatcherTest {
     Variable y = TermFactory.createBinder("y", type("o"));
     Variable z = TermFactory.createBinder("Z", type("o"));
     Term t = createTwoArgMeta(x, y);
-    MutableSubstitution subst = new MutableSubstitution(x, z);
+    MutableSubstitution subst = MutableSubstitution.createBasic(x, z);
     assertThrows(PatternRequiredException.class, () ->
       Matcher.extendMatch(t, TermFactory.createConstant("a", type("o")), subst));
   }
@@ -236,7 +236,7 @@ public class MatcherTest {
     Variable y = TermFactory.createBinder("y", type("o"));
     Variable z = TermFactory.createVar("Z", type("o"));
     Term t = createTwoArgMeta(x, y);
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     subst.extend(x, z);
     subst.extend(y, y);
     assertThrows(PatternRequiredException.class, () ->
@@ -248,7 +248,7 @@ public class MatcherTest {
     // F⟨x,x⟩ matched against y
     Variable x = TermFactory.createBinder("x", type("o"));
     Variable y = TermFactory.createBinder("y", type("o"));
-    MutableSubstitution subst = new MutableSubstitution(x, y);
+    MutableSubstitution subst = MutableSubstitution.createBasic(x, y);
     Term t = createTwoArgMeta(x, x);
     assertThrows(PatternRequiredException.class, () -> Matcher.extendMatch(t, y, subst));
   }
@@ -260,7 +260,7 @@ public class MatcherTest {
     Variable y = TermFactory.createBinder("y", type("o"));
     Variable z = TermFactory.createBinder("z", type("o"));
     Term t = createTwoArgMeta(x, y);
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     subst.extend(x, z);
     subst.extend(y, z);
     assertThrows(PatternRequiredException.class, () ->
@@ -273,7 +273,7 @@ public class MatcherTest {
     Variable x = TermFactory.createBinder("x", type("o"));
     Variable y = TermFactory.createBinder("y", type("o"));
     Term t = createTwoArgMeta(x, y);
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     subst.extend(x, x);
     subst.extend(y, y);
     Term h = TermFactory.createConstant("h", type("o -> o -> o"));
@@ -291,7 +291,7 @@ public class MatcherTest {
     Variable y = TermFactory.createBinder("y", type("o"));
     Variable z = TermFactory.createBinder("z", type("o"));
     Term t = createTwoArgMeta(x, y);
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     subst.extend(x, y);
     subst.extend(y, x);
     Term result = TermFactory.createApp(TermFactory.createConstant("h", type("o -> o -> o")), y, x);
@@ -335,9 +335,7 @@ public class MatcherTest {
     Term term = createTwoArgMeta(x, y);
     Term g = TermFactory.createConstant("g", type("o -> o -> o"));
     Term m = TermFactory.createApp(g, x, y);
-    MutableSubstitution subst = new MutableSubstitution();
-    subst.extend(x, x);
-    subst.extend(y, y);
+    MutableSubstitution subst = MutableSubstitution.createBasic(x, x, y, y);
     subst.extend(term.queryMetaVariable(), TermFactory.createAbstraction(x,
       TermFactory.createAbstraction(y, TermFactory.createApp(g, y, x))));
     assertTrue(Matcher.extendMatch(term, m, subst).toString().equals(
@@ -352,9 +350,7 @@ public class MatcherTest {
     Term term = createTwoArgMeta(x, y);
     Term g = TermFactory.createConstant("g", type("o -> o -> o"));
     Term m = TermFactory.createApp(g, x, y);
-    MutableSubstitution subst = new MutableSubstitution();
-    subst.extend(x, x);
-    subst.extend(y, y);
+    MutableSubstitution subst = MutableSubstitution.createBasic(x, x, y, y);
     subst.extend(term.queryMetaVariable(), TermFactory.createAbstraction(x,
       TermFactory.createAbstraction(y, TermFactory.createApp(g, x, y))));
     assertTrue(Matcher.extendMatch(term, m, subst) == null);
@@ -373,9 +369,7 @@ public class MatcherTest {
     Term g = TermFactory.createConstant("g", type("o -> o -> o"));
     Term h = TermFactory.createConstant("h", type("o -> o"));
     Term m = TermFactory.createApp(g, u, h.apply(v));
-    MutableSubstitution subst = new MutableSubstitution();
-    subst.extend(x, v);
-    subst.extend(y, u);
+    MutableSubstitution subst = MutableSubstitution.createBasic(x, v, y, u);
     subst.extend(term.queryMetaVariable(), TermFactory.createAbstraction(a,
       TermFactory.createAbstraction(b, TermFactory.createApp(g, b, h.apply(a)))));
     assertTrue(Matcher.extendMatch(term, m, subst) == null);
@@ -414,7 +408,7 @@ public class MatcherTest {
     Term term = TermFactory.createAbstraction(x, TermFactory.createApp(g, fx, fx));
     Term m = TermFactory.createAbstraction(y, TermFactory.createApp(g,
       TermFactory.createApp(h,z,y), TermFactory.createApp(h,y,z)));
-    String s = Matcher.extendMatch(term, m, new MutableSubstitution()).toString();
+    String s = Matcher.extendMatch(term, m, MutableSubstitution.createBasic()).toString();
     assertTrue(s.equals("Meta-variable F is mapped to both λy.h(y, z) and to λy.h(z, y)."));
   }
 
@@ -434,13 +428,13 @@ public class MatcherTest {
     Term m1 = TermFactory.createApp(h.apply(g.apply(x)), a, b);
     Term m2 = TermFactory.createApp(h.apply(g.apply(x)), b, a);
 
-    MutableSubstitution subst = new MutableSubstitution(x, x);
+    MutableSubstitution subst = MutableSubstitution.createBasic(x, x);
     assertTrue(Matcher.extendMatch(term, m1, subst) == null);
     assertTrue(subst.get(x) == x);
     assertTrue(subst.get(y) == b);
     assertTrue(subst.get(f).equals(TermFactory.createAbstraction(x, h.apply(g.apply(x)))));
 
-    subst = new MutableSubstitution(x, x);
+    subst = MutableSubstitution.createBasic(x, x);
     assertTrue(Matcher.extendMatch(term, m2, subst) != null);
   }
 
@@ -457,7 +451,7 @@ public class MatcherTest {
     Term g = TermFactory.createConstant("g", type("o -> o"));
     Term m = TermFactory.createAbstraction(y, TermFactory.createApp(f, y, g.apply(a)));
 
-    MutableSubstitution gamma = new MutableSubstitution();
+    MutableSubstitution gamma = MutableSubstitution.createBasic();
     assertNull(Matcher.extendMatch(term, m, gamma));
     assertNull(gamma.get(x));
     assertTrue(gamma.get(y).equals(g.apply(a)));
@@ -497,7 +491,7 @@ public class MatcherTest {
     Term m = TermFactory.createAbstraction(x, TermFactory.createAbstraction(y,
       TermFactory.createApp(f, TermFactory.createApp(f, a, x))));
 
-    MutableSubstitution gamma = new MutableSubstitution();
+    MutableSubstitution gamma = MutableSubstitution.createBasic();
     assertTrue(Matcher.extendMatch(term, m, gamma) == null);
     assertTrue(gamma.get(x) == null);
     assertTrue(gamma.get(y) == null);
@@ -528,7 +522,7 @@ public class MatcherTest {
     Variable y = TermFactory.createBinder("y", type("o"));
     Term m = TermFactory.createAbstraction(x, y);
 
-    MutableSubstitution gamma = new MutableSubstitution();
+    MutableSubstitution gamma = MutableSubstitution.createBasic();
     assertTrue(Matcher.extendMatch(term, m, gamma).toString().equals(
       "Binder variable x is mapped both to x and to y."));
   }
@@ -543,7 +537,7 @@ public class MatcherTest {
     // λx.x
     Term m = TermFactory.createAbstraction(x, x);
 
-    MutableSubstitution gamma = new MutableSubstitution();
+    MutableSubstitution gamma = MutableSubstitution.createBasic();
     assertTrue(Matcher.extendMatch(term, m, gamma).toString().equals(
       "Abstraction λx.y is not instantiated by λx.x because the induced mapping " +
       "[y := x] contains the binder variable of λx.x."));
@@ -563,7 +557,7 @@ public class MatcherTest {
     Term m =
       TermFactory.createAbstraction(z, TermFactory.createApp(f, z, TermFactory.createApp(g, z)));
 
-    MutableSubstitution gamma = new MutableSubstitution();
+    MutableSubstitution gamma = MutableSubstitution.createBasic();
     assertTrue(Matcher.extendMatch(term, m, gamma).toString().equals(
       "Abstraction λx.f(x, y) is not instantiated by λz.f(z, g(z)) because the induced mapping " +
       "[y := g(z)] contains the binder variable of λz.f(z, g(z))."));
@@ -584,7 +578,7 @@ public class MatcherTest {
     Term h = TermFactory.createConstant("h", type("o -> o -> o"));
     Term m = TermFactory.createAbstraction(y, g.apply(TermFactory.createApp(h, a.apply(y), z)));
 
-    MutableSubstitution gamma = new MutableSubstitution(z, z);
+    MutableSubstitution gamma = MutableSubstitution.createBasic(z, z);
     assertNull(Matcher.extendMatch(term, m, gamma));
     assertNull(gamma.get(x));
     assertNull(gamma.get(y));

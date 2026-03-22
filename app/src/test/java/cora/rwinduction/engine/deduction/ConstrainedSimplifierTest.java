@@ -71,7 +71,7 @@ class ConstrainedSimplifierTest {
       pp.getProofState().getTopEquation().getRhs(),
       pp.getProofState().getTopEquation().getConstraint(),
       pp.getProofState().getTopEquation().getRenaming(),
-      new MutableSubstitution());
+      MutableSubstitution.createBasic());
     assertFalse(simp.constraintIsTrue());
   }
 
@@ -79,7 +79,7 @@ class ConstrainedSimplifierTest {
   public void testMissingAndMatchSides() {
     PartialProof pp = setupProof("sum2(u) = iter(u, 0, 0)");
     Rule rule = pp.getContext().getRule("R3");
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     subst.extend(pp.getContext().getRenaming("R3").getReplaceable("i"),
                  CoraInputReader.readTerm("0", pp.getContext().getRenaming("R3"), _trs));
     ConstrainedSimplifier simp = new ConstrainedSimplifier(rule.queryLeftSide(),
@@ -100,7 +100,7 @@ class ConstrainedSimplifierTest {
   public void testMatchFailure() {
     PartialProof pp = setupProof("sum2(z) = iter(z, 0, 0) | z < 0");
     Rule rule = pp.getContext().getRule("R3");
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     subst.extend(pp.getContext().getRenaming("R3").getReplaceable("x"),
                  CoraInputReader.readTerm("0", pp.getContext().getRenaming("R3"), _trs));
     ConstrainedSimplifier simp = new ConstrainedSimplifier(rule.queryLeftSide(),
@@ -120,7 +120,7 @@ class ConstrainedSimplifierTest {
     Term constraint = CoraInputReader.readTermAndUpdateNaming(
       "a > 1 ∧ d = a - b ∧ b != 0 ∧ d + 1 = e", renaming, _trs);
     ConstrainedSimplifier simp = new ConstrainedSimplifier(left, right, constraint, renaming,
-                                                           new MutableSubstitution());
+                                                           MutableSubstitution.createBasic());
     assertTrue(simp.matchLeft(pp.getProofState().getTopEquation().getLhs()) == null);
     assertTrue(simp.matchEqualitiesInConstraint(
       pp.getProofState().getTopEquation().getConstraint()));
@@ -182,7 +182,7 @@ class ConstrainedSimplifierTest {
     Term left = CoraInputReader.readTermAndUpdateNaming("iter(x, 0, 0)", renaming, _trs);
     Term right = CoraInputReader.readTermAndUpdateNaming("iter(x, y, z)", renaming, _trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("z > 0 ∧ a != 0", renaming, _trs);
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     subst.extend(renaming.getReplaceable("x"), TheoryFactory.createValue(7));
     subst.extend(renaming.getReplaceable("z"), TheoryFactory.createValue(13));
     ConstrainedSimplifier simp = new ConstrainedSimplifier(left, right, constraint, renaming, null);
@@ -201,7 +201,7 @@ class ConstrainedSimplifierTest {
     Term right = CoraInputReader.readTermAndUpdateNaming("iter(x, y, z)", renaming, _trs);
     Term constraint = CoraInputReader.readTermAndUpdateNaming("z > 0 ∧ a != 0", renaming, _trs);
     Renaming eqnaming = pp.getProofState().getTopEquation().getRenaming();
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     subst.extend(renaming.getReplaceable("z"), TheoryFactory.createValue(7));
     subst.extend(renaming.getReplaceable("a"), (Variable)eqnaming.getReplaceable("z"));
     subst.extend(renaming.getReplaceable("x"), (Variable)eqnaming.getReplaceable("z"));
@@ -231,7 +231,7 @@ class ConstrainedSimplifierTest {
   public void testConstraintVariableMappedToComplexTerm() {
     PartialProof pp = setupProof("sum1(z) = 0 + sum1(z) | z < 0");
     Rule rule = pp.getContext().getRule("R1");
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     Renaming eqnaming = pp.getProofState().getTopEquation().getRenaming();
     subst.extend(pp.getContext().getRenaming("R1").getReplaceable("x"),
                  CoraInputReader.readTerm("z + 0", eqnaming, _trs));
@@ -256,7 +256,7 @@ class ConstrainedSimplifierTest {
       rule.queryRightSide(), rule.queryConstraint(), pp.getContext().getRenaming("R3"), null);
     assertTrue(simp.matchLeft(pp.getProofState().getTopEquation().getLhs()) == null);
     assertFalse(simp.checkSemiConstructorSubstitution(pp.getContext()));
-    simp.replaceSubstitution(new MutableSubstitution());
+    simp.replaceSubstitution(MutableSubstitution.createBasic());
     assertTrue(simp.matchLeft(pp.getProofState().getTopEquation().getLhs().queryArgument(1))
                == null);
     assertTrue(simp.checkSemiConstructorSubstitution(pp.getContext()));

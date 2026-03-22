@@ -81,7 +81,7 @@ public final class AutoSimplifier {
     int k = proof.getContext().queryRuleArity(f);
     if (numberArguments < k) return null;
     EquationPosition ep = posMaker.apply(numberArguments - k);
-    MutableSubstitution empty = new MutableSubstitution();
+    MutableSubstitution empty = MutableSubstitution.createBasic();
     Optional<OutputModule> m = Optional.empty();
     Set<String> names = proof.getContext().queryRuleNamesByFunction(f);
     if (names == null) return null;

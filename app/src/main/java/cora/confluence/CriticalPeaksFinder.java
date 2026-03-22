@@ -158,7 +158,7 @@ public class CriticalPeaksFinder {
    * variables, not meta-variables.)
    */
   private static Rule renameRule(Rule rule) {
-    MutableSubstitution subst = new MutableSubstitution();
+    MutableSubstitution subst = MutableSubstitution.createBasic();
     for (var x : rule.queryAllReplaceables()) {
       subst.extend(x, TermFactory.createVar(x.queryName(), x.queryType()));
     }
