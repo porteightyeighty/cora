@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import charlie.types.TypeFactory;
 import charlie.terms.*;
 
-public class ReplaceableListTest {
+public class ReplaceableSetTest {
   private MetaVariable makeMetaVar(String name) {
     return TermFactory.createMetaVar(name,
       TypeFactory.createArrow(TypeFactory.createSort("a"), TypeFactory.createSort("a")), 1);
@@ -36,7 +36,7 @@ public class ReplaceableListTest {
     vars.add(x);
     vars.add(y);
     vars.add(x);
-    ReplaceableList lst = new ReplaceableList(vars);
+    ReplaceableSet lst = new ReplaceableSet(vars);
     assertTrue(lst.contains(x));
     assertTrue(lst.contains(y));
     assertTrue(lst.size() == 2);
@@ -47,7 +47,7 @@ public class ReplaceableListTest {
   @Test
   public void testSingleCreation() {
     MetaVariable x = makeMetaVar("x");
-    ReplaceableList lst = new ReplaceableList(x);
+    ReplaceableSet lst = new ReplaceableSet(x);
     assertTrue(lst.contains(x));
     assertTrue(lst.size() == 1);
   }
@@ -57,9 +57,9 @@ public class ReplaceableListTest {
     Variable x = TermFactory.createVar("x", TypeFactory.createSort("a"));
     Replaceable y = makeMetaVar("y");
     Replaceable z = TermFactory.createVar("z", TypeFactory.createSort("a"));
-    ReplaceableList lst1 = new ReplaceableList(x);
-    ReplaceableList lst2 = lst1.add(y);
-    ReplaceableList lst3 = lst2.add(z);
+    ReplaceableSet lst1 = new ReplaceableSet(x);
+    ReplaceableSet lst2 = lst1.add(y);
+    ReplaceableSet lst3 = lst2.add(z);
     assertTrue(lst1.size() == 1);
     assertTrue(lst2.size() == 2);
     assertTrue(lst3.size() == 3);
@@ -76,9 +76,9 @@ public class ReplaceableListTest {
     vars.add(x);
     vars.add(y);
     vars.add(z);
-    ReplaceableList lst3 = new ReplaceableList(vars);
-    ReplaceableList lst2 = lst3.remove(x);
-    ReplaceableList lst1 = lst2.remove(z);
+    ReplaceableSet lst3 = new ReplaceableSet(vars);
+    ReplaceableSet lst2 = lst3.remove(x);
+    ReplaceableSet lst1 = lst2.remove(z);
     assertTrue(lst1.size() == 1);
     assertTrue(lst2.size() == 2);
     assertTrue(lst3.size() == 3);
@@ -94,9 +94,9 @@ public class ReplaceableListTest {
     ArrayList<Replaceable> reps = new ArrayList<Replaceable>();
     reps.add(x);
     reps.add(y);
-    ReplaceableList a = new ReplaceableList(reps);
+    ReplaceableSet a = new ReplaceableSet(reps);
     reps.add(z);
-    ReplaceableList b = new ReplaceableList(reps);
+    ReplaceableSet b = new ReplaceableSet(reps);
     assertTrue(a.combine(b) == b);
     assertTrue(b.combine(a) == b);
   }
@@ -109,10 +109,10 @@ public class ReplaceableListTest {
     ArrayList<Replaceable> reps = new ArrayList<Replaceable>();
     reps.add(x);
     reps.add(y);
-    ReplaceableList a = new ReplaceableList(reps);
+    ReplaceableSet a = new ReplaceableSet(reps);
     reps.set(1, z);
-    ReplaceableList b = new ReplaceableList(reps);
-    ReplaceableList c = a.combine(b);
+    ReplaceableSet b = new ReplaceableSet(reps);
+    ReplaceableSet c = a.combine(b);
     assertTrue(a.size() == 2);
     assertTrue(b.size() == 2);
     assertTrue(c.size() == 3);
@@ -131,12 +131,12 @@ public class ReplaceableListTest {
     reps1.add(x);
     reps1.add(y);
     reps1.add(u);
-    ReplaceableList l1 = new ReplaceableList(reps1);
+    ReplaceableSet l1 = new ReplaceableSet(reps1);
     ArrayList<Replaceable> reps2 = new ArrayList<Replaceable>();
     reps2.add(z);
     reps2.add(y);
     reps2.add(u);
-    ReplaceableList l2 = new ReplaceableList(reps2);
+    ReplaceableSet l2 = new ReplaceableSet(reps2);
 
     TreeSet<Replaceable> overlap = l1.getOverlap(l2);
     assertTrue(overlap.size() == 2);

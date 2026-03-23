@@ -25,7 +25,7 @@ import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.terms.position.Position;
 import charlie.terms.position.MetaPos;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 
 /**
  * A MetaApplication is a term of the form Z⟨s1,...,sk⟩ where Z is a meta-variable with arity
@@ -70,10 +70,10 @@ class MetaApplication extends TermInherit {
       }
     }
     _args = new ArrayList<Term>();
-    ReplaceableList empty = ReplaceableList.EMPTY;
-    ReplaceableList start = new ReplaceableList(_metavar);
-    ReplaceableList frees = calculateFreeReplaceablesForSubterms(args, start);
-    ReplaceableList bounds = calculateBoundVariablesAndRefreshSubs(args, empty, frees, _args);
+    ReplaceableSet empty = ReplaceableSet.EMPTY;
+    ReplaceableSet start = new ReplaceableSet(_metavar);
+    ReplaceableSet frees = calculateFreeReplaceablesForSubterms(args, start);
+    ReplaceableSet bounds = calculateBoundVariablesAndRefreshSubs(args, empty, frees, _args);
     setVariables(frees, bounds);
   }
 

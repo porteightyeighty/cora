@@ -23,7 +23,7 @@ import charlie.types.Type;
 import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.terms.replaceable.Replaceable;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 import charlie.terms.position.Position;
 import charlie.trs.TrsProperties.*;
 
@@ -133,8 +133,8 @@ class RuleRestrictions {
     }
     // fresh (meta-)variables
     _fresh = FreshRight.NONE;
-    ReplaceableList inleft = left.freeReplaceables();
-    ReplaceableList incons = constraint.freeReplaceables();
+    ReplaceableSet inleft = left.freeReplaceables();
+    ReplaceableSet incons = constraint.freeReplaceables();
     for (Replaceable x : right.freeReplaceables()) {
       if (!inleft.contains(x)) {
         if (incons.contains(x)) _fresh = FreshRight.CVARS;

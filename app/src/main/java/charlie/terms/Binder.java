@@ -19,7 +19,7 @@ import java.util.Map;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.terms.replaceable.Replaceable;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 
 /**
  * Binders are variables in Vbinder: variables that are only meant to be used as binders in an
@@ -43,7 +43,7 @@ final class Binder extends LeafTermInherit implements Variable {
     _index = COUNTER;
     COUNTER++;
     if (name == null) throw new NullStorageException("Binder", "name");
-    setVariables(new ReplaceableList(this));
+    setVariables(new ReplaceableSet(this));
   }
 
   /** Create a binder variable without a name; a name will be automatically generated. */
@@ -52,7 +52,7 @@ final class Binder extends LeafTermInherit implements Variable {
     _name = "x{" + COUNTER + "}";
     _index = COUNTER;
     COUNTER++;
-    setVariables(new ReplaceableList(this));
+    setVariables(new ReplaceableSet(this));
   }
 
   /** @return true */

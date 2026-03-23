@@ -18,7 +18,7 @@ package charlie.terms;
 import java.util.Map;
 import charlie.types.Base;
 import charlie.types.TypeFactory;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 
 /**
  * Values are constants of a theory sorts that cannot be rewritten; they are the representations of
@@ -27,7 +27,7 @@ import charlie.terms.replaceable.ReplaceableList;
 public abstract class ValueInherit extends LeafTermInherit implements Value {
   protected ValueInherit(Base mysort) {
     super(mysort);
-    setVariables(ReplaceableList.EMPTY);
+    setVariables(ReplaceableSet.EMPTY);
   }
 
   /** The type of a Value is always one of the theory sorts. */

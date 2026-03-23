@@ -20,30 +20,30 @@ import java.util.Iterator;
 import java.util.TreeSet;
 
 /**
- * A ReplaceableList is an immutable set of Replaceables.
- * The names used within a replaceable list are not necessarily unique.
+ * A ReplaceableSet is an immutable set of Replaceables.
+ * The names used within a replaceable set are not necessarily unique.
  */
-public class ReplaceableList implements Iterable<Replaceable> {
+public class ReplaceableSet implements Iterable<Replaceable> {
   private final TreeSet<Replaceable> _elements;
-  public static final ReplaceableList EMPTY = new ReplaceableList();
+  public static final ReplaceableSet EMPTY = new ReplaceableSet();
 
-  /** Constructs the empty list */
-  public ReplaceableList() {
+  /** Constructs the empty set */
+  public ReplaceableSet() {
     _elements = new TreeSet<Replaceable>();
   }
 
-  /** Constructs the list with just the given replaceable. */
-  public ReplaceableList(Replaceable x) {
+  /** Constructs the set with just the given replaceable. */
+  public ReplaceableSet(Replaceable x) {
     _elements = new TreeSet<Replaceable>();
     _elements.add(x);
   }
 
-  /** Constructs the list with a copy of the given replaceables. */
-  public ReplaceableList(Collection<Replaceable> elems) {
+  /** Constructs the set with a copy of the given replaceables. */
+  public ReplaceableSet(Collection<Replaceable> elems) {
     _elements = new TreeSet<Replaceable>(elems);
   }
 
-  /** Returns whether the given replaceable is an element of this list. */
+  /** Returns whether the given replaceable is an element of this set. */
   public boolean contains(Replaceable x) {
     return _elements.contains(x);
   }
@@ -58,36 +58,36 @@ public class ReplaceableList implements Iterable<Replaceable> {
     return _elements.iterator();
   }
 
-  /** Returns a copy of this list with the given element added. */
-  public ReplaceableList add(Replaceable x) {
+  /** Returns a copy of this set with the given element added. */
+  public ReplaceableSet add(Replaceable x) {
     if (_elements.contains(x)) return this;
-    ReplaceableList ret = new ReplaceableList(_elements);
+    ReplaceableSet ret = new ReplaceableSet(_elements);
     ret._elements.add(x);
     return ret;
   }
 
-  /** Returns a copy of this list with the given replaceable removed. */
-  public ReplaceableList remove(Replaceable x) {
+  /** Returns a copy of this set with the given replaceable removed. */
+  public ReplaceableSet remove(Replaceable x) {
     if (!_elements.contains(x)) return this;
-    ReplaceableList ret = new ReplaceableList(_elements);
+    ReplaceableSet ret = new ReplaceableSet(_elements);
     ret._elements.remove(x);
     return ret;
   }
 
-  /** Returns a combination of the current list with the given list. */
-  public ReplaceableList combine(ReplaceableList other) {
+  /** Returns a combination of the current set with the given set. */
+  public ReplaceableSet combine(ReplaceableSet other) {
     if (size() < other.size()) return other.combine(this);
-    ReplaceableList ret = null;
+    ReplaceableSet ret = null;
     for (Replaceable x : other) {
       if (_elements.contains(x)) continue;
-      if (ret == null) ret = new ReplaceableList(_elements);
+      if (ret == null) ret = new ReplaceableSet(_elements);
       ret._elements.add(x);
     }
     if (ret == null) return this;
     return ret;
   }
 
-  /** Returns the set of Replaceables that occur both in this list and the given iterable. */
+  /** Returns the set of Replaceables that occur both in this set and the given iterable. */
   public TreeSet<Replaceable> getOverlap(Iterable<Replaceable> other) {
     TreeSet<Replaceable> ret = new TreeSet<Replaceable>();
     for (Replaceable x : other) {

@@ -18,7 +18,7 @@ package charlie.terms;
 import java.util.Map;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 
 /**
  * Constants are the default kind of FunctionSymbol.
@@ -37,7 +37,7 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
     if (name == null) throw new NullStorageException("Constant", "name");
     if (name.equals("")) throw new IllegalArgumentException("Constant::constructor -- " +
       "Function Symbol created with empty name.");
-    setVariables(ReplaceableList.EMPTY);
+    setVariables(ReplaceableSet.EMPTY);
   }
 
   /** Returns the name of the current user-defined symbol. */

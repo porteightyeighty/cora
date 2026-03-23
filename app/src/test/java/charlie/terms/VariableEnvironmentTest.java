@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.replaceable.Replaceable;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 
 public class VariableEnvironmentTest {
   private Type baseType(String name) {
@@ -42,7 +42,7 @@ public class VariableEnvironmentTest {
     TreeSet<Replaceable> set = new TreeSet<Replaceable>();
     set.add(x);
     set.add(z);
-    VariableEnvironment env = new VariableEnvironment(new ReplaceableList(set));
+    VariableEnvironment env = new VariableEnvironment(new ReplaceableSet(set));
     assertTrue(env.contains(x));
     assertFalse(env.contains(y));
     assertTrue(env.contains(z));
@@ -61,7 +61,7 @@ public class VariableEnvironmentTest {
     TreeSet<Replaceable> set = new TreeSet<Replaceable>();
     set.add(y);
     set.add(z);
-    VariableEnvironment env = new VariableEnvironment(new ReplaceableList(set));
+    VariableEnvironment env = new VariableEnvironment(new ReplaceableSet(set));
     assertTrue(env.size() == 0);
     for (Variable v : env) { assertTrue(false); }
   }
@@ -75,7 +75,7 @@ public class VariableEnvironmentTest {
     set.add(x);
     set.add(y);
     set.add(z);
-    VariableEnvironment env = new VariableEnvironment(new ReplaceableList(set));
+    VariableEnvironment env = new VariableEnvironment(new ReplaceableSet(set));
     assertTrue(env.size() == 2);
     ArrayList<Variable> parts = new ArrayList<Variable>();
     for (Variable v : env) parts.add(v);

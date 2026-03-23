@@ -26,7 +26,7 @@ import charlie.util.Pair;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.terms.position.*;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 
 public class ApplicationTest extends TermTestFoundation {
   @Test
@@ -479,7 +479,7 @@ public class ApplicationTest extends TermTestFoundation {
     Term jy = TermFactory.createMeta(j, y);
     Term hlambdazcz = new Application(h, new Abstraction(z2, c.apply(z2)));
     Term s = new Application(z, new Application(z, x, hlambdazcz), new Application(g, jy, x));
-    ReplaceableList lst = s.freeReplaceables();
+    ReplaceableSet lst = s.freeReplaceables();
     assertTrue(lst.contains(x));
     assertTrue(lst.contains(y));
     assertTrue(lst.contains(z));
@@ -520,8 +520,8 @@ public class ApplicationTest extends TermTestFoundation {
     Term aZx = new Abstraction(x, new Application(bZ, x));
     Term fterm = new Application(f, aZx, bY).apply(gterm);
 
-    ReplaceableList freeVars = fterm.freeReplaceables();
-    ReplaceableList boundVars = fterm.boundVars();
+    ReplaceableSet freeVars = fterm.freeReplaceables();
+    ReplaceableSet boundVars = fterm.boundVars();
     assertTrue(freeVars.size() == 3);
     assertTrue(boundVars.size() == 3);
     assertTrue(boundVars.contains(x));

@@ -27,7 +27,7 @@ import charlie.types.TypeFactory;
 import charlie.terms.position.Position;
 import charlie.terms.position.LambdaPos;
 import charlie.terms.replaceable.Replaceable;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 
 /** Abstractions are terms of the form λx.s where x is a variable and s a term. */
 class Abstraction extends TermInherit {
@@ -53,8 +53,8 @@ class Abstraction extends TermInherit {
     _binder = binder;
     _subterm = subterm;
     _type = TypeFactory.createArrow(binder.queryType(), subterm.queryType());
-    ReplaceableList frees = subterm.freeReplaceables().remove(binder);
-    ReplaceableList bounds = subterm.boundVars().add(binder);
+    ReplaceableSet frees = subterm.freeReplaceables().remove(binder);
+    ReplaceableSet bounds = subterm.boundVars().add(binder);
     setVariables(frees, bounds);
   }
 

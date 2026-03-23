@@ -23,7 +23,7 @@ import java.util.TreeSet;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.replaceable.Replaceable;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 
 public class MetaVariableEnvironmentTest {
   private Type baseType(String name) {
@@ -42,7 +42,7 @@ public class MetaVariableEnvironmentTest {
     TreeSet<Replaceable> set = new TreeSet<Replaceable>();
     set.add(x);
     set.add(z);
-    MetaVariableEnvironment env = new MetaVariableEnvironment(new ReplaceableList(set));
+    MetaVariableEnvironment env = new MetaVariableEnvironment(new ReplaceableSet(set));
     assertTrue(env.size() == 0);
     for (MetaVariable v : env) { assertTrue(false); }
   }
@@ -55,7 +55,7 @@ public class MetaVariableEnvironmentTest {
     TreeSet<Replaceable> set = new TreeSet<Replaceable>();
     set.add(x);
     set.add(z);
-    MetaVariableEnvironment env = new MetaVariableEnvironment(new ReplaceableList(set));
+    MetaVariableEnvironment env = new MetaVariableEnvironment(new ReplaceableSet(set));
     assertFalse(env.contains(y));
     assertTrue(env.contains(z));
     assertTrue(env.size() == 1);
@@ -73,7 +73,7 @@ public class MetaVariableEnvironmentTest {
     set.add(x);
     set.add(y);
     set.add(z);
-    MetaVariableEnvironment env = new MetaVariableEnvironment(new ReplaceableList(set));
+    MetaVariableEnvironment env = new MetaVariableEnvironment(new ReplaceableSet(set));
     assertTrue(env.size() == 3);
     ArrayList<MetaVariable> parts = new ArrayList<MetaVariable>();
     for (MetaVariable v : env) parts.add(v);
@@ -91,7 +91,7 @@ public class MetaVariableEnvironmentTest {
     set.add(x);
     set.add(y);
     set.add(z);
-    MetaVariableEnvironment env = new MetaVariableEnvironment(new ReplaceableList(set));
+    MetaVariableEnvironment env = new MetaVariableEnvironment(new ReplaceableSet(set));
     assertTrue(env.size() == 2);
     ArrayList<MetaVariable> parts = new ArrayList<MetaVariable>();
     for (MetaVariable v : env) parts.add(v);

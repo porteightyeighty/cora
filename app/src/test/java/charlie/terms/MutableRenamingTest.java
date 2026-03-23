@@ -240,9 +240,9 @@ public class MutableRenamingTest {
     renaming.setName(x, "x");
     renaming.setName(y, "q");
 
-    ReplaceableList a = new ReplaceableList(x);
-    ReplaceableList b = new ReplaceableList(Set.of(x, z));
-    ReplaceableList c = new ReplaceableList(Set.of(w, z));
+    ReplaceableSet a = new ReplaceableSet(x);
+    ReplaceableSet b = new ReplaceableSet(Set.of(x, z));
+    ReplaceableSet c = new ReplaceableSet(Set.of(w, z));
 
     renaming.limitDomain(a, b, c);
 

@@ -34,7 +34,7 @@ import java.util.TreeSet;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.terms.position.*;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 import charlie.terms.*;
 import charlie.substitution.Substitution;
 import charlie.trs.*;
@@ -204,7 +204,7 @@ public class HelperFunctionTransformer {
    * This returns a list with single-replacement substitutions: one for each variable that occurs
    * at a candidate position in the given term, provided it also occurs in the given varlist.
    */
-  private ArrayList<Substitution> getReplacementSubstitutions(Term term, ReplaceableList okay,
+  private ArrayList<Substitution> getReplacementSubstitutions(Term term, ReplaceableSet okay,
                                                               List<Candidate> cands) {
     ArrayList<Substitution> ret = new ArrayList<Substitution>();
     for (Pair<Term,Position> sub : term.querySubterms()) {

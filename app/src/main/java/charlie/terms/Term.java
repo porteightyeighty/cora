@@ -25,7 +25,7 @@ import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.terms.position.Position;
 import charlie.terms.replaceable.Replaceable;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 
 /**
  * Terms are the main object to be rewritten, or used to construct rules.  There are various kinds
@@ -269,7 +269,7 @@ public interface Term {
    * This function is primarily meant for package-internal use, but may be used outside the package
    * by some classes.  If you want either variables or meta-variables, use vars() or mvars().
    */
-  ReplaceableList freeReplaceables();
+  ReplaceableSet freeReplaceables();
 
   /**
    * This adds all function symbols in the current term to the given set.
@@ -348,7 +348,7 @@ public interface Term {
    * This is efficient, as it returns a cached set.
    * It is meant for package-internal use only.  Use vars() or mvars() outside the package.
    */
-  ReplaceableList boundVars();
+  ReplaceableSet boundVars();
 
   /** Determines the =_α^{μ,ξ,k} relation as described in the documentation. */
   boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k);

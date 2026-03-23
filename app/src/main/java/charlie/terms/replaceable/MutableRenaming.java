@@ -135,13 +135,13 @@ public class MutableRenaming implements Renaming {
     return new ImmutableRenaming(this);
   }
 
-  /** Limits the Renaming to only the replaceables that occur in any of the given lists. */
-  public void limitDomain(ReplaceableList ...lists) {
+  /** Limits the Renaming to only the replaceables that occur in any of the given sets. */
+  public void limitDomain(ReplaceableSet ...sets) {
     TreeSet<Replaceable> remove = new TreeSet<Replaceable>();
     for (Replaceable r : _repToName.keySet()) {
       boolean ok = false;
-      for (ReplaceableList l : lists) {
-        if (l.contains(r)) {
+      for (ReplaceableSet s : sets) {
+        if (s.contains(r)) {
           ok = true;
           break;
         }

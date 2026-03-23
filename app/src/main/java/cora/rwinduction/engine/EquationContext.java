@@ -99,12 +99,12 @@ public class EquationContext implements PrintableObject {
     _rightGeq = rightgr;
     _index = index;
     MutableRenaming varnaming = naming.copy();
-    varnaming.limitDomain(leftgr.isEmpty() ? ReplaceableList.EMPTY
+    varnaming.limitDomain(leftgr.isEmpty() ? ReplaceableSet.EMPTY
                                            : leftgr.get().freeReplaceables(),
                           _equation.getLhs().freeReplaceables(),
                           _equation.getRhs().freeReplaceables(),
                           _equation.getConstraint().freeReplaceables(),
-                          rightgr.isEmpty() ? ReplaceableList.EMPTY
+                          rightgr.isEmpty() ? ReplaceableSet.EMPTY
                                             : rightgr.get().freeReplaceables());
     _varNaming = varnaming.makeImmutable();
     checkReplaceableNaming();

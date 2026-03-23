@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2025 Cynthia Kop
+ Copyright 2019--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -24,7 +24,7 @@ import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.position.*;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 
 public class VarTest extends TermTestFoundation {
   @Test
@@ -104,7 +104,7 @@ public class VarTest extends TermTestFoundation {
   @Test
   public void testTermVarReplaceables() {
     Variable x = new Var("x", baseType("oo"));
-    ReplaceableList lst = x.freeReplaceables();
+    ReplaceableSet lst = x.freeReplaceables();
     assertTrue(lst.size() == 1);
     assertTrue(lst.contains(x));
     assertTrue(x.boundVars().size() == 0);

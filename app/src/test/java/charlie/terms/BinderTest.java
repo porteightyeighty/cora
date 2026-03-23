@@ -24,7 +24,7 @@ import charlie.util.Pair;
 import charlie.util.NullStorageException;
 import charlie.types.TypeFactory;
 import charlie.terms.position.*;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 
 public class BinderTest extends TermTestFoundation {
   @Test
@@ -150,7 +150,7 @@ public class BinderTest extends TermTestFoundation {
   @Test
   public void testTermVarFreeReplaceables() {
     Variable x = new Binder("x", baseType("oo"));
-    ReplaceableList lst = x.freeReplaceables();
+    ReplaceableSet lst = x.freeReplaceables();
     assertTrue(lst.size() == 1);
     assertTrue(lst.contains(x));
     assertTrue(x.boundVars().size() == 0);

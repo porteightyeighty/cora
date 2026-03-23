@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2025 Cynthia Kop
+ Copyright 2019--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -26,7 +26,7 @@ import charlie.util.Pair;
 import charlie.terms.position.Position;
 import charlie.terms.position.FinalPos;
 import charlie.terms.replaceable.Replaceable;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 
 /**
  * A TermInherit supplies default functionality for all instances of Term.
@@ -43,37 +43,37 @@ import charlie.terms.replaceable.ReplaceableList;
  * calculateBoundVariablesAndRefreshSubs can be used for this purpose.
  */
 abstract class TermInherit implements Term {
-  private ReplaceableList _freeReplaceables;
-  private ReplaceableList _boundVariables;
+  private ReplaceableSet _freeReplaceables;
+  private ReplaceableSet _boundVariables;
 
   /**
    * Sets the set of all meta-variables and free variables occurring in this term to vs, and the
    * set of bound variables to empty.
    * One of the setVariables functions should be called from the constructor, and only there.
    */
-  protected final void setVariables(ReplaceableList vs) {
-    if (_freeReplaceables != null) throw new RuntimeException("Setting ReplaceableList twice for " +
+  protected final void setVariables(ReplaceableSet vs) {
+    if (_freeReplaceables != null) throw new RuntimeException("Setting ReplaceableSet twice for " +
       this.getClass().getSimpleName());
     _freeReplaceables = vs;
-    _boundVariables = ReplaceableList.EMPTY;
+    _boundVariables = ReplaceableSet.EMPTY;
   }
 
   /**
    * Sets the sets of all free/meta and all bound variables occuring in this term.
    * One of the setVariables functions should be called from the constructor, and only there.
    */
-  protected final void setVariables(ReplaceableList frees, ReplaceableList bounds) {
-    if (_freeReplaceables != null) throw new RuntimeException("Setting ReplaceableList twice for " +
+  protected final void setVariables(ReplaceableSet frees, ReplaceableSet bounds) {
+    if (_freeReplaceables != null) throw new RuntimeException("Setting ReplaceableSet twice for " +
       this.getClass().getSimpleName());
     _freeReplaceables = frees;
-    if (bounds == null) _boundVariables = ReplaceableList.EMPTY;
+    if (bounds == null) _boundVariables = ReplaceableSet.EMPTY;
     else _boundVariables = bounds;
   }
 
   /** Returns a combined replaceable list for the given subterms, which also includes extra. */
-  protected static ReplaceableList calculateFreeReplaceablesForSubterms(List<Term> subs,
-                                                                        ReplaceableList extra) {
-    ReplaceableList largest = extra;
+  protected static ReplaceableSet calculateFreeReplaceablesForSubterms(List<Term> subs,
+                                                                        ReplaceableSet extra) {
+    ReplaceableSet largest = extra;
     int best = 0;
     for (int i = 0; i < subs.size(); i++) {
       if (subs.get(i).freeReplaceables().size() > largest.size()) {
@@ -82,7 +82,7 @@ abstract class TermInherit implements Term {
       }
     }
     // combine the rest into it!
-    ReplaceableList frees = largest;
+    ReplaceableSet frees = largest;
     if (best != 0) frees = frees.combine(extra);
     for (int i = 0; i < subs.size(); i++) {
       if (best != i + 1) frees = frees.combine(subs.get(i).freeReplaceables());
@@ -98,12 +98,12 @@ abstract class TermInherit implements Term {
    * Note that subs itself is not changed.  The function returns the resulting combined set of
    * bound variables, including all those in "include".
    */
-  protected static ReplaceableList calculateBoundVariablesAndRefreshSubs(List<Term> subs,
-                                        ReplaceableList include, ReplaceableList avoid,
+  protected static ReplaceableSet calculateBoundVariablesAndRefreshSubs(List<Term> subs,
+                                        ReplaceableSet include, ReplaceableSet avoid,
                                         List<Term> updatedSubs) {
     for (int i = 0; i < subs.size(); i++) {
       Term sub = subs.get(i);
-      ReplaceableList vs = sub.boundVars();
+      ReplaceableSet vs = sub.boundVars();
       if (vs.size() > 0) {
         if (!vs.getOverlap(avoid).isEmpty()) {
           sub = sub.renameAndRefreshBinders(new TreeMap<Variable,Variable>());
@@ -132,14 +132,14 @@ abstract class TermInherit implements Term {
   }
 
   /** Returns the set of all meta-variables and variables occurring free in the current term. */
-  public final ReplaceableList freeReplaceables() {
+  public final ReplaceableSet freeReplaceables() {
     if (_freeReplaceables == null) throw new RuntimeException("Replaceable list has not been set " +
       "up for " + this.getClass().getSimpleName() + " when requesting free replaceables.");
     return _freeReplaceables;
   }
 
   /** Returns the set of all variables occurring bound in the current term. */
-  public final ReplaceableList boundVars() {
+  public final ReplaceableSet boundVars() {
     if (_freeReplaceables == null) throw new RuntimeException("Replaceable list has not been set " +
       "up for " + this.getClass().getSimpleName() + " when requesting bound variables");
     return _boundVariables;
@@ -152,7 +152,7 @@ abstract class TermInherit implements Term {
 
   /** Returns true if freeReplaceables() contains no binder variables. */
   public final boolean isClosed() {
-    ReplaceableList vs = freeReplaceables();
+    ReplaceableSet vs = freeReplaceables();
     for (Replaceable x : vs) {
       if (x.queryReplaceableKind() == Replaceable.Kind.BINDER) return false;
     }
@@ -173,7 +173,7 @@ abstract class TermInherit implements Term {
 
   /** Returns true if freeReplaceables() contains no meta-variables. */
   public final boolean isTrueTerm() {
-    ReplaceableList vs = freeReplaceables();
+    ReplaceableSet vs = freeReplaceables();
     for (Replaceable x : vs) {
       if (x.queryReplaceableKind() == Replaceable.Kind.METAVAR) return false;
     }

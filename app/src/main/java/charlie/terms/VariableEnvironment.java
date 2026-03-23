@@ -18,21 +18,21 @@ package charlie.terms;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import charlie.terms.replaceable.Replaceable;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 
 /**
- * VariableEnvironment is an Environment of Variables.  It is based on a ReplaceableList, and
- * essentially lists the Variables occurring in that list.
+ * VariableEnvironment is an Environment of Variables.  It is based on a ReplaceableSet, and
+ * essentially lists the Variables occurring in that set.
  */
 class VariableEnvironment implements Environment<Variable> {
-  private final ReplaceableList _lst;
+  private final ReplaceableSet _lst;
 
-  /** Constructs an environment for the given list. */
-  VariableEnvironment(ReplaceableList lst) {
+  /** Constructs an environment for the given set. */
+  VariableEnvironment(ReplaceableSet lst) {
     _lst = lst;
   }
 
-  /** Returns whether the given Variable occurs in the underlying ReplaceableList. */
+  /** Returns whether the given Variable occurs in the underlying ReplaceableSet. */
   public boolean contains(Variable x) {
     return _lst.contains(x);
   }

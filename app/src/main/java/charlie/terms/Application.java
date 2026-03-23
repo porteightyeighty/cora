@@ -27,7 +27,7 @@ import charlie.types.Arrow;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
 import charlie.terms.position.*;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 
 /** An Application is a term of the form h(s1,...,sn) where h is not an application. */
 class Application extends TermInherit {
@@ -44,8 +44,8 @@ class Application extends TermInherit {
    * rather, sets up the result of that function.
    */
   private void setupReplaceables(List<Term> args) {
-    ReplaceableList frees = calculateFreeReplaceablesForSubterms(args, _head.freeReplaceables());
-    ReplaceableList bounds = _head.boundVars();
+    ReplaceableSet frees = calculateFreeReplaceablesForSubterms(args, _head.freeReplaceables());
+    ReplaceableSet bounds = _head.boundVars();
     if (bounds.size() > 0 && !bounds.getOverlap(frees).isEmpty()) {
       _head = _head.renameAndRefreshBinders(new TreeMap<Variable,Variable>());
       bounds = _head.boundVars();

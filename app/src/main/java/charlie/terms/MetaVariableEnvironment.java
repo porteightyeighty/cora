@@ -18,21 +18,21 @@ package charlie.terms;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import charlie.terms.replaceable.Replaceable;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 
 /**
- * MetaVariableEnvironment is an Environment of MetaVariables.  It is based on a ReplaceableList,
+ * MetaVariableEnvironment is an Environment of MetaVariables.  It is based on a ReplaceableSet,
  * and essentially lists the MetaVariables occurring in that list.
  */
 class MetaVariableEnvironment implements Environment<MetaVariable> {
-  private final ReplaceableList _lst;
+  private final ReplaceableSet _lst;
 
   /** Constructs an environment for the given list. */
-  MetaVariableEnvironment(ReplaceableList lst) {
+  MetaVariableEnvironment(ReplaceableSet lst) {
     _lst = lst;
   }
 
-  /** Returns whether the given MetaVariable occurs in the underlying ReplaceableList. */
+  /** Returns whether the given MetaVariable occurs in the underlying ReplaceableSet. */
   public boolean contains(MetaVariable x) {
     return _lst.contains(x);
   }

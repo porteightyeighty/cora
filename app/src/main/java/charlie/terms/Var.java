@@ -19,7 +19,7 @@ import java.util.Map;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.terms.replaceable.Replaceable;
-import charlie.terms.replaceable.ReplaceableList;
+import charlie.terms.replaceable.ReplaceableSet;
 
 /**
  * Non-binder variables are both used as parts of constraints, as generic expressions in terms, and
@@ -45,7 +45,7 @@ final class Var extends LeafTermInherit implements Variable, MetaVariable {
     _index = COUNTER;
     COUNTER++;
     if (name == null) throw new NullStorageException("Var", "name");
-    setVariables(new ReplaceableList(this));
+    setVariables(new ReplaceableSet(this));
   }
 
   /** Create a non-binder variable without a name; a name will be automatically generated. */
@@ -54,7 +54,7 @@ final class Var extends LeafTermInherit implements Variable, MetaVariable {
     _name = "X";
     _index = COUNTER;
     COUNTER++;
-    setVariables(new ReplaceableList(this));
+    setVariables(new ReplaceableSet(this));
   }
 
   /** @return true */
