@@ -30,15 +30,17 @@ import charlie.terms.replaceable.ReplaceableList;
 
 /**
  * A TermInherit supplies default functionality for all instances of Term.
- * This is the functionality that calls other functions in Term to for instance build up a
- * substitution or environment.  It also includes some functionality that is meant to be
- * overwritten in only specific kinds of subterms, e.g., providing a default value false for
- * the function isConstant().
+ * 
+ * This is the functionality that calls other functions in Term to for instance build up an
+ * environment.  It also includes some functionality that is meant to be overwritten in only
+ * specific kinds of subterms, e.g., providing a default value false for the function
+ * isConstant().
+ *
  * All inheriting classes should make sure to call setVariables in their constructor, to set up
- * the set of variables (both free and bound!) and meta-variables occurring in the term.  Moreover,
- * they should make sure that the term is well-behaved; that is, that the same variable does not
- * occur both free and bound in the term.  The function calculateBoundVariablesAndRefreshSubs can
- * be used for this purpose.
+ * the set of variables (both free and bound!), meta-variables and type variables occurring in the
+ * term.  Moreover, they should make sure that the term is well-behaved; that is, that the same
+ * variable does not occur both free and bound in the term.  The function
+ * calculateBoundVariablesAndRefreshSubs can be used for this purpose.
  */
 abstract class TermInherit implements Term {
   private ReplaceableList _freeReplaceables;

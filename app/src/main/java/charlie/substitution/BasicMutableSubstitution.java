@@ -38,9 +38,8 @@ final class BasicMutableSubstitution extends MutableSubstitution {
   }
 
   /** Creates a copy of the given subtitution */
-  private BasicMutableSubstitution(MutableSubstitution copyme) {
-    super();
-    _mapping = new HashMap<Replaceable,Term>(copyme._mapping);
+  private BasicMutableSubstitution(BasicMutableSubstitution copyme) {
+    super(copyme);
   }
 
   /** Returns a copy of the current substitution */
@@ -75,8 +74,8 @@ final class BasicMutableSubstitution extends MutableSubstitution {
    * This will return false and do nothing if there is an existing value for the key.
    */
   public boolean extend(Replaceable key, Term value) {
-    if (key == null) throw new NullStorageException("MutableSubstitution", "key");
-    if (value == null) throw new NullStorageException("MutableSubstitution", "value");
+    if (key == null) throw new NullStorageException("BasicMutableSubstitution", "key");
+    if (value == null) throw new NullStorageException("BasicMutableSubstitution", "value");
     if (!key.queryType().equals(value.queryType())) {
       throw new TypingException("Cannot map key ", key, " (of type ", key.queryType(), ") to " +
         "value ", value, " (of type ", value.queryType(), ") in substitution.");

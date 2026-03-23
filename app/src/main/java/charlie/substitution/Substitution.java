@@ -64,6 +64,10 @@ public interface Substitution extends Term.ISubstitution {
    *
    * Note that the result of substituting is a term where all binders in lambdas are freshly
    * generated.
+   *
+   * WARNING: in the case of a term with type variables and a polymorphic substitution, this may
+   * throw a PolymorphicSubstitutionException when a variable is *not* substituted but some type
+   * variable occurring in its type is.
    */
   Term applySubstitution(Term term);
 

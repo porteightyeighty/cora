@@ -50,6 +50,11 @@ public sealed abstract class MutableSubstitution implements Substitution
     _mapping = new HashMap<Replaceable,Term>();
   }
 
+  /** Creates a mutable substitution with a copy of the mapping from the given substitution */
+  protected MutableSubstitution(MutableSubstitution copyme) {
+    _mapping = new HashMap<Replaceable,Term>(copyme._mapping);
+  }
+
   /** Returns a copy of the current substitution */
   public abstract MutableSubstitution copy();
 
@@ -60,10 +65,19 @@ public sealed abstract class MutableSubstitution implements Substitution
 
   /**
    * Adds the key/value pair to the substitution.
-   * This will check that the mapping is permitted, e.g., the types of key and value match.
-   * If not, a TypingException or PolymorphicSubstitutionException will be thrown.
+   *
+   * In the case of a NON-POLYMORPHIC substitution:
+   * This will check that the mapping is permitted, i.e., the types of key and value match.
+   * If not, a TypingException will be thrown.
    * Then, if there is an existing value for the key, false is returned (and no update made); and
    * if there is not, then true is returned and the key/value pair added.
+   *
+   * In the case of a POLYMORPHIC substitution:
+   * This will extend the underlying type mapping ξ so that type(key) ξ = type(value), if possible
+   * (if not, a TypingException will be thrown).
+   * This will check that the types of key, *substituted by the underlying type substitution* and
+   * value match.  If not, a TypingException or PolymorphicSubstitutionException will be thrown.
+   * If any type variables in the type of key do not yet occur in the 
    */
   public abstract boolean extend(Replaceable key, Term value);
 
