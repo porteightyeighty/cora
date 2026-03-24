@@ -42,6 +42,7 @@ class Application extends TermInherit {
    * the given set args (perhaps renaming bound variables in some of them).
    * Meant for use in the constructors, so it cannot use the freeReplaceables() function, but
    * rather, sets up the result of that function.
+   * This assumes hat _outputType has already been set!
    */
   private void setupReplaceables(List<Term> args) {
     ReplaceableSet frees = calculateFreeReplaceablesForSubterms(args, _head.freeReplaceables());
@@ -52,7 +53,7 @@ class Application extends TermInherit {
     }
     _args = new ArrayList<Term>();
     bounds = calculateBoundVariablesAndRefreshSubs(args, bounds, frees, _args);
-    setVariables(frees, bounds);
+    setVariables(frees, bounds, calculateTypeVariablesForSubterms(args, _outputType));
   }
 
   /**

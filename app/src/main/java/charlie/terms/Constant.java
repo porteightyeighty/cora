@@ -18,6 +18,7 @@ package charlie.terms;
 import java.util.Map;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
+import charlie.types.TVarSet;
 import charlie.terms.replaceable.ReplaceableSet;
 
 /**
@@ -37,7 +38,7 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
     if (name == null) throw new NullStorageException("Constant", "name");
     if (name.equals("")) throw new IllegalArgumentException("Constant::constructor -- " +
       "Function Symbol created with empty name.");
-    setVariables(ReplaceableSet.EMPTY);
+    setVariables(ReplaceableSet.EMPTY, TVarSet.of(type));
   }
 
   /** Returns the name of the current user-defined symbol. */

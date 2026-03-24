@@ -25,6 +25,8 @@ import java.util.TreeSet;
 import charlie.util.Pair;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
+import charlie.types.TypeFactory;
+import charlie.types.TVarSet;
 import charlie.terms.position.*;
 import charlie.terms.replaceable.ReplaceableSet;
 
@@ -131,6 +133,7 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(t.toString().equals("f(c, g(d))"));
     Term q = null;
     assertFalse(t.equals(q));
+    assertTrue(t.isMonomorphic());
   }
 
   @Test
@@ -154,6 +157,7 @@ public class ApplicationTest extends TermTestFoundation {
     assertFalse(t.isGround());
     assertTrue(t.isTrueTerm());
     assertTrue(t.isLinear());
+    assertTrue(t.isMonomorphic());
   }
 
   @Test
@@ -588,6 +592,34 @@ public class ApplicationTest extends TermTestFoundation {
     assertTrue(mvars.contains(z));
     mvars = yb.mvars();
     assertTrue(mvars.size() == 1);
+  }
+
+  @Test
+  public void testTypeVars() {
+    // let's create f(x_alpha, g(y_{d(beta)}, z_alpha)) :: gamma
+    Type a = TypeFactory.createVariable("alpha");
+    Type b = TypeFactory.createVariable("beta");
+    Type c = TypeFactory.createVariable("gamma");
+    Type d = TypeFactory.createSort("d", b);
+    Type o = TypeFactory.createSort("o");
+    Variable x = new Binder("x", a);
+    Variable y = new Var("y", d);
+    Variable z = new Var("z", a);
+    FunctionSymbol g = new Constant("g", arrowType(d, arrowType(a, o)));
+    FunctionSymbol f = new Constant("f", arrowType(a, arrowType(o, c)));
+    Term gterm = new Application(g, y, z);
+    Term fterm = new Application(f, x, gterm);
+    TVarSet tvars = fterm.typeVars();
+    assertTrue(tvars.size() == 3);
+    assertTrue(tvars.contains(TypeFactory.createVariable("alpha")));
+    assertFalse(gterm.isMonomorphic());
+
+    // check reuse as well
+    FunctionSymbol h = new Constant("h", arrowType(a, arrowType(o, o)));
+    Term hterm = new Application(h, x, gterm);
+    tvars = hterm.typeVars();
+    assertTrue(tvars.size() == 2);
+    assertTrue(tvars == gterm.typeVars());
   }
 
   @Test

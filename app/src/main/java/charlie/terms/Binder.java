@@ -18,6 +18,7 @@ package charlie.terms;
 import java.util.Map;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
+import charlie.types.TVarSet;
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.ReplaceableSet;
 
@@ -43,7 +44,7 @@ final class Binder extends LeafTermInherit implements Variable {
     _index = COUNTER;
     COUNTER++;
     if (name == null) throw new NullStorageException("Binder", "name");
-    setVariables(new ReplaceableSet(this));
+    setVariables(new ReplaceableSet(this), TVarSet.of(type));
   }
 
   /** Create a binder variable without a name; a name will be automatically generated. */
@@ -52,7 +53,7 @@ final class Binder extends LeafTermInherit implements Variable {
     _name = "x{" + COUNTER + "}";
     _index = COUNTER;
     COUNTER++;
-    setVariables(new ReplaceableSet(this));
+    setVariables(new ReplaceableSet(this), TVarSet.of(type));
   }
 
   /** @return true */

@@ -111,6 +111,13 @@ public class VarTest extends TermTestFoundation {
   }
 
   @Test
+  public void testTypeVariables() {
+    Variable x = new Var("x", TypeFactory.createVariable("alpha"));
+    assertTrue(x.typeVars().size() == 1);
+    assertTrue(x.typeVars().contains(TypeFactory.createVariable("alpha")));
+  }
+
+  @Test
   public void testTermVarEquality() {
     Var x = new Var("x", baseType("o"));
     Term s1 = x;

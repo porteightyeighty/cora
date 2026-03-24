@@ -29,8 +29,17 @@ class TVarSetTest {
   }
 
   @Test
-  public void testSingular() {
-    TVarSet set = new TVarSet(new TVar("alpha"));
+  public void testCreateWithSet() {
+    TVarSet set = new TVarSet(Set.of(new TVar("alpha"), new TVar("gamma")));
+    assertTrue(set.size() == 2);
+    assertTrue(set.contains(new TVar("alpha")));
+    assertFalse(set.contains(new TVar("beta")));
+    assertTrue(set.contains(new TVar("gamma")));
+  }
+
+  @Test
+  public void testCreateWithSingleVariable() {
+    TVarSet set = TVarSet.of(new TVar("alpha"));
     assertTrue(set.size() == 1);
     assertTrue(set.contains(new TVar("alpha")));
     assertFalse(set.contains(new TVar("beta")));
@@ -43,17 +52,19 @@ class TVarSetTest {
   }
 
   @Test
-  public void testMultiple() {
-    TVarSet set = new TVarSet(Set.of(new TVar("alpha"), new TVar("gamma")));
-    assertTrue(set.size() == 2);
+  public void testCreateWithType() {
+    TVarSet set = TVarSet.of(TypeFactory.createArrow(new TVar("alpha"),
+      TypeFactory.createSort("d", new TVar("beta"),
+        TypeFactory.createSort("d", new TVar("gamma"), new TVar("beta")))));
+    assertTrue(set.size() == 3);
     assertTrue(set.contains(new TVar("alpha")));
-    assertFalse(set.contains(new TVar("beta")));
+    assertTrue(set.contains(new TVar("beta")));
     assertTrue(set.contains(new TVar("gamma")));
   }
 
   @Test
   public void testAddOne() {
-    TVarSet set = new TVarSet(new TVar("alpha"));
+    TVarSet set = TVarSet.of(new TVar("alpha"));
     TVarSet newset =
       set.add(TypeFactory.createArrow(TypeFactory.createSort("base"), new TVar("beta")));
     assertTrue(set.size() == 1);
@@ -66,7 +77,7 @@ class TVarSetTest {
 
   @Test
   public void testAddNothingNew() {
-    TVarSet set = new TVarSet(new TVar("alpha"));
+    TVarSet set = TVarSet.of(new TVar("alpha"));
     TVarSet newset = set.add(TypeFactory.createSort("c", TypeFactory.createSort("base"),
                                         new TVar("alpha"), TypeFactory.createSort("q")));
     assertTrue(set == newset);

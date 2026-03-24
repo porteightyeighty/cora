@@ -61,6 +61,7 @@ public class ValueTest extends TermTestFoundation {
     assertTrue(b.mvars().size() == 0);
     assertTrue(s.freeReplaceables().size() == 0);
     assertTrue(b.boundVars().size() == 0);
+    assertTrue(s.typeVars().size() == 0);
     assertTrue(v.replaceSubterm(Position.empty, new IntegerValue(20)).toString().equals("20"));
     assertTrue(s.querySubterm(Position.empty) == s);
     assertTrue(v.toString().equals("-37"));

@@ -161,7 +161,7 @@ public class ConstantTest extends TermTestFoundation {
   public void testTermBasics() {
     Type a = baseType("a");
     Type b = baseType("b");
-    Type c = baseType("c3");
+    Type c = TypeFactory.createVariable("c");
     Type combi = arrowType(a, arrowType(b, c));
     Term f = new Constant("ff", combi);
     Variable x = new Var("ff", combi);
@@ -180,6 +180,7 @@ public class ConstantTest extends TermTestFoundation {
     assertTrue(f.renameAndRefreshBinders(new TreeMap<Variable,Variable>()) == f);
     assertTrue(f.freeReplaceables().size() == 0);
     assertTrue(f.boundVars().size() == 0);
+    assertTrue(f.typeVars().size() == 1);
     assertTrue(f.hasSubterm(f));
     Term aa = new Constant("g", a);
     assertTrue(aa.isFirstOrder());

@@ -66,7 +66,7 @@ public class TypeFactory {
   }
 
   /** Creates a type variable by the given name (which should not include the starting $). */
-  public static Type createVariable(String name) {
+  public static TVar createVariable(String name) {
     return new TVar(name);
   }
 

@@ -24,6 +24,7 @@ import charlie.util.NullStorageException;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
+import charlie.types.TVarSet;
 import charlie.terms.position.Position;
 import charlie.terms.position.LambdaPos;
 import charlie.terms.replaceable.Replaceable;
@@ -55,7 +56,8 @@ class Abstraction extends TermInherit {
     _type = TypeFactory.createArrow(binder.queryType(), subterm.queryType());
     ReplaceableSet frees = subterm.freeReplaceables().remove(binder);
     ReplaceableSet bounds = subterm.boundVars().add(binder);
-    setVariables(frees, bounds);
+    TVarSet tvars = subterm.typeVars().add(binder.queryType());
+    setVariables(frees, bounds, tvars);
   }
 
   /** @return <type of binder> → <type of subterm> */

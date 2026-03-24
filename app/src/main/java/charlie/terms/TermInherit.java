@@ -23,6 +23,8 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import charlie.util.Pair;
+import charlie.types.Type;
+import charlie.types.TVarSet;
 import charlie.terms.position.Position;
 import charlie.terms.position.FinalPos;
 import charlie.terms.replaceable.Replaceable;
@@ -43,36 +45,50 @@ import charlie.terms.replaceable.ReplaceableSet;
  * calculateBoundVariablesAndRefreshSubs can be used for this purpose.
  */
 abstract class TermInherit implements Term {
+  private TVarSet _typeVariables;
   private ReplaceableSet _freeReplaceables;
   private ReplaceableSet _boundVariables;
 
   /**
-   * Sets the set of all meta-variables and free variables occurring in this term to vs, and the
-   * set of bound variables to empty.
+   * Sets the set of all meta-variables and free variables occurring in this term to vs, the
+   * set of bound variables to empty, and the set of type variables to ts.
    * One of the setVariables functions should be called from the constructor, and only there.
    */
-  protected final void setVariables(ReplaceableSet vs) {
+  protected final void setVariables(ReplaceableSet vs, TVarSet ts) {
     if (_freeReplaceables != null) throw new RuntimeException("Setting ReplaceableSet twice for " +
       this.getClass().getSimpleName());
+    _typeVariables = ts;
     _freeReplaceables = vs;
     _boundVariables = ReplaceableSet.EMPTY;
   }
 
   /**
-   * Sets the sets of all free/meta and all bound variables occuring in this term.
+   * Sets the sets of all free/meta and all bound variables, as well as all type variables,
+   * occuring in this term.  Bounds is allowed to be null, in which case the empty set is used.
    * One of the setVariables functions should be called from the constructor, and only there.
    */
-  protected final void setVariables(ReplaceableSet frees, ReplaceableSet bounds) {
+  protected final void setVariables(ReplaceableSet frees, ReplaceableSet bounds, TVarSet types) {
     if (_freeReplaceables != null) throw new RuntimeException("Setting ReplaceableSet twice for " +
       this.getClass().getSimpleName());
     _freeReplaceables = frees;
     if (bounds == null) _boundVariables = ReplaceableSet.EMPTY;
     else _boundVariables = bounds;
+    _typeVariables = types;
   }
 
-  /** Returns a combined replaceable list for the given subterms, which also includes extra. */
+  /** Returns a combined type variable set for the given subterms, which also includes extra. */
+  protected static TVarSet calculateTypeVariablesForSubterms(List<Term> subs, Type extra) {
+    if (subs.size() == 0) return TVarSet.of(extra);
+    TVarSet result = subs.get(0).typeVars();
+    for (int i = 1; i < subs.size(); i++) {
+      result = result.combine(subs.get(i).typeVars());
+    }
+    return result.add(extra);
+  }
+
+  /** Returns a combined replaceable set for the given subterms, which also includes extra. */
   protected static ReplaceableSet calculateFreeReplaceablesForSubterms(List<Term> subs,
-                                                                        ReplaceableSet extra) {
+                                                                       ReplaceableSet extra) {
     ReplaceableSet largest = extra;
     int best = 0;
     for (int i = 0; i < subs.size(); i++) {
@@ -133,16 +149,23 @@ abstract class TermInherit implements Term {
 
   /** Returns the set of all meta-variables and variables occurring free in the current term. */
   public final ReplaceableSet freeReplaceables() {
-    if (_freeReplaceables == null) throw new RuntimeException("Replaceable list has not been set " +
+    if (_freeReplaceables == null) throw new RuntimeException("Replaceable set has not been set " +
       "up for " + this.getClass().getSimpleName() + " when requesting free replaceables.");
     return _freeReplaceables;
   }
 
   /** Returns the set of all variables occurring bound in the current term. */
   public final ReplaceableSet boundVars() {
-    if (_freeReplaceables == null) throw new RuntimeException("Replaceable list has not been set " +
+    if (_freeReplaceables == null) throw new RuntimeException("Replaceable set has not been set " +
       "up for " + this.getClass().getSimpleName() + " when requesting bound variables");
     return _boundVariables;
+  }
+
+  /** Returns the set of all type variables that occur in the current term. */
+  public final TVarSet typeVars() {
+    if (_typeVariables == null) throw new RuntimeException("Type variable set has not been " +
+      "set up for " + this.getClass().getSimpleName());
+    return _typeVariables;
   }
 
   /** Returns true if there are no free variables or meta-variables. */
@@ -159,6 +182,10 @@ abstract class TermInherit implements Term {
     return true;
   }
 
+  /**
+   * Returns true if every meta-variable occurring freely occurs only once
+   * (where non-binder variables are also counted as meta-variables, but binders are not!)
+   */
   public final boolean isLinear() {
     TreeSet<MetaVariable> mvars = new TreeSet<MetaVariable>();
     for (Pair<Term,Position> p : querySubterms()) {
@@ -171,13 +198,18 @@ abstract class TermInherit implements Term {
     return true;
   }
 
-  /** Returns true if freeReplaceables() contains no meta-variables. */
+  /** Returns true if freeReplaceables() contains no meta-variables other than variables. */
   public final boolean isTrueTerm() {
     ReplaceableSet vs = freeReplaceables();
     for (Replaceable x : vs) {
       if (x.queryReplaceableKind() == Replaceable.Kind.METAVAR) return false;
     }
     return true;
+  }
+
+  /** Returns true if no type variables occur in the present term. */
+  public final boolean isMonomorphic() {
+    return _typeVariables.size() == 0;
   }
 
   /** Helper function to return the current classname for use in Exceptions. */

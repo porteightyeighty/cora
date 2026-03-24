@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2025 Cynthia Kop
+ Copyright 2019--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import charlie.util.Pair;
 import charlie.types.Type;
+import charlie.types.TVarSet;
 import charlie.terms.position.Position;
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.ReplaceableSet;
@@ -92,6 +93,9 @@ public interface Term {
 
   /** Returns true if each free variable or meta-variable occurs only once. */
   boolean isLinear();
+
+  /** Returns true if this term is free of type variables. */
+  boolean isMonomorphic();
 
  /**
   * Returns the number of arguments; that is, n for a term h(s1,...,sn) where h is not an
@@ -270,6 +274,12 @@ public interface Term {
    * by some classes.  If you want either variables or meta-variables, use vars() or mvars().
    */
   ReplaceableSet freeReplaceables();
+
+  /**
+   * Returns the set of all type variables that occur anywhere in the current term.
+   * This is efficient, as it returns a cached set.
+   */
+  TVarSet typeVars();
 
   /**
    * This adds all function symbols in the current term to the given set.

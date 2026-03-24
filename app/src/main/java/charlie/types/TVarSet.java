@@ -19,7 +19,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.TreeSet;
 
-/** A TVarSet is an immutable set of TVars. */
+/**
+ * A TVarSet is an immutable set of TVars, specialised with functions to easily (and efficiently)
+ * add the type variables in any given type.
+ */
 public class TVarSet implements Iterable<TVar> {
   private final TreeSet<TVar> _elements;
   public static final TVarSet EMPTY = new TVarSet();
@@ -29,15 +32,14 @@ public class TVarSet implements Iterable<TVar> {
     _elements = new TreeSet<TVar>();
   }
 
-  /** Constructs the set with just the given type variable. */
-  public TVarSet(TVar x) {
-    _elements = new TreeSet<TVar>();
-    _elements.add(x);
-  }
-
   /** Constructs the set with a copy of the given type variables. */
   public TVarSet(Collection<TVar> elems) {
     _elements = new TreeSet<TVar>(elems);
+  }
+
+  /** Returns the set containing all the type variables in the given type. */
+  public static TVarSet of(Type type) {
+    return EMPTY.add(type);
   }
 
   /** Returns whether the given type variable is an element of this set. */
@@ -66,7 +68,7 @@ public class TVarSet implements Iterable<TVar> {
     return ret;
   }
 
-  /** Helper function for add(type) */
+  /** Helper function for add(type). */
   private TVarSet addVariablesIn(Type type, TVarSet set) {
     if (type instanceof TVar alpha) {
       if (set == null) {
@@ -95,6 +97,11 @@ public class TVarSet implements Iterable<TVar> {
     }
     if (ret == null) return this;
     return ret;
+  }
+  
+  /** Only for debugging, not for printing to the user! */
+  public String toString() {
+    return _elements.toString();
   }
 }
 

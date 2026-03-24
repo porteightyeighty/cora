@@ -26,6 +26,7 @@ import charlie.util.NullStorageException;
 import charlie.util.Pair;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
+import charlie.types.TVarSet;
 import charlie.terms.position.*;
 import charlie.terms.replaceable.ReplaceableSet;
 
@@ -605,6 +606,37 @@ class MetaApplicationTest extends TermTestFoundation {
     Term abs2 = new Abstraction(x, x);
     Term term = TermFactory.createMeta(z, abs1, abs2);
     assertTrue(term.boundVars() == abs1.boundVars());
+  }
+
+  @Test
+  public void testTypeVariables() {
+    // let's create Z⟨f(x),y)
+    Variable x = new Binder("x", TypeFactory.createVariable("alpha"));
+    Variable y = new Var("y", TypeFactory.createVariable("beta"));
+    Term sub = unaryTerm("f", baseType("A"), x);
+    MetaVariable z = TermFactory.createMetaVar("Z", arrowType(baseType("A"),
+      arrowType(TypeFactory.createVariable("beta"), TypeFactory.createVariable("gamma"))), 2);
+    Term term = TermFactory.createMeta(z, sub, y);
+    assertTrue(term.typeVars().size() == 3);
+    assertTrue(term.typeVars().contains(TypeFactory.createVariable("beta")));
+  }
+
+  @Test
+  public void testTypeVariablesReuse() {
+    // a monomorphic term should have THE empty set of type variables
+    assertTrue(twoArgVarTerm().typeVars() == TVarSet.EMPTY);
+    // let's create Z⟨x,f(x,y),y)
+    Type alpha = TypeFactory.createVariable("alpha");
+    Type beta = TypeFactory.createVariable("beta");
+    Type o = baseType("o");
+    Variable x = new Binder("x", TypeFactory.createVariable("alpha"));
+    Variable y = new Var("y", TypeFactory.createVariable("beta"));
+    FunctionSymbol f = new Constant("f", arrowType(alpha, arrowType(beta, o)));
+    Term sub = new Application(f, x, y);
+    MetaVariable z = TermFactory.createMetaVar("Z", arrowType(alpha, arrowType(o,
+      arrowType(beta, TypeFactory.createSort("pair", o, alpha)))), 3);
+    Term term = TermFactory.createMeta(z, List.of(x, sub, y));
+    assertTrue(term.typeVars() == sub.typeVars());
   }
 
   @Test

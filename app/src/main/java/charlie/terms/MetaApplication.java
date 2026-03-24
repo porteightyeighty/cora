@@ -74,7 +74,7 @@ class MetaApplication extends TermInherit {
     ReplaceableSet start = new ReplaceableSet(_metavar);
     ReplaceableSet frees = calculateFreeReplaceablesForSubterms(args, start);
     ReplaceableSet bounds = calculateBoundVariablesAndRefreshSubs(args, empty, frees, _args);
-    setVariables(frees, bounds);
+    setVariables(frees, bounds, calculateTypeVariablesForSubterms(args, mvar.queryOutputType()));
   }
 
   /** @return the output type of the meta-variable. */

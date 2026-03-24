@@ -80,6 +80,26 @@ class AbstractionTest extends TermTestFoundation {
   }
 
   @Test
+  public void testTypeVars() {
+    Type a = TypeFactory.createVariable("alpha");
+    Type b = TypeFactory.createVariable("beta");
+    Type arrow =
+      TypeFactory.createArrow(a, TypeFactory.createArrow(b, TypeFactory.createSort("c")));
+    Variable x = TermFactory.createBinder("x", a);
+    Variable y = TermFactory.createVar("y", b);
+    Term f = TermFactory.createConstant("f", arrow);
+    // λx.f(x, y)
+    Term fxy = new Application(f, x, y);
+    Term abs1 = new Abstraction(x, fxy);
+    assertTrue(abs1.typeVars().size() == 2);
+    assertTrue(abs1.typeVars() == fxy.typeVars());
+    // λx.y
+    Term abs2 = new Abstraction(x, y);
+    assertTrue(abs2.typeVars().size() == 2);
+    assertTrue(abs2.typeVars() != y.typeVars());
+  }
+
+  @Test
   void testWellbehavedness() {
     // λx.f(x, f(g(λx.x), g(λx.f(x,x))))
     Variable x = new Binder("x", baseType("o"));

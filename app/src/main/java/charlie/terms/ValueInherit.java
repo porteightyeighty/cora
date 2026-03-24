@@ -18,6 +18,7 @@ package charlie.terms;
 import java.util.Map;
 import charlie.types.Base;
 import charlie.types.TypeFactory;
+import charlie.types.TVarSet;
 import charlie.terms.replaceable.ReplaceableSet;
 
 /**
@@ -27,7 +28,7 @@ import charlie.terms.replaceable.ReplaceableSet;
 public abstract class ValueInherit extends LeafTermInherit implements Value {
   protected ValueInherit(Base mysort) {
     super(mysort);
-    setVariables(ReplaceableSet.EMPTY);
+    setVariables(ReplaceableSet.EMPTY, TVarSet.EMPTY);
   }
 
   /** The type of a Value is always one of the theory sorts. */

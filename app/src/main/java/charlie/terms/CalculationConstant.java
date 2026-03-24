@@ -17,6 +17,7 @@ package charlie.terms;
 
 import java.util.Map;
 import charlie.types.Type;
+import charlie.types.TVarSet;
 import charlie.terms.replaceable.ReplaceableSet;
 
 /** A Constant that happens to be a Calculation Symbol. */
@@ -33,7 +34,7 @@ public class CalculationConstant extends LeafTermInherit implements CalculationS
     _kind = mykind;
     _assoc = assoc;
     _priority = infixPriority;
-    setVariables(ReplaceableSet.EMPTY);
+    setVariables(ReplaceableSet.EMPTY, TVarSet.EMPTY);
   }
 
   /** @return the kind of calculation symbol this is. */

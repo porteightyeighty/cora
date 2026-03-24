@@ -18,6 +18,7 @@ package charlie.terms;
 import java.util.Map;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
+import charlie.types.TVarSet;
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.ReplaceableSet;
 
@@ -45,7 +46,7 @@ final class Var extends LeafTermInherit implements Variable, MetaVariable {
     _index = COUNTER;
     COUNTER++;
     if (name == null) throw new NullStorageException("Var", "name");
-    setVariables(new ReplaceableSet(this));
+    setVariables(new ReplaceableSet(this), TVarSet.of(type));
   }
 
   /** Create a non-binder variable without a name; a name will be automatically generated. */
@@ -54,7 +55,7 @@ final class Var extends LeafTermInherit implements Variable, MetaVariable {
     _name = "X";
     _index = COUNTER;
     COUNTER++;
-    setVariables(new ReplaceableSet(this));
+    setVariables(new ReplaceableSet(this), TVarSet.of(type));
   }
 
   /** @return true */
