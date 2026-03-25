@@ -51,7 +51,7 @@ public class SubstitutionTest {
   @Test
   public void testNullValueCreation() {
     assertThrows(NullStorageException.class, () ->
-      MutableSubstitution.createBasic(TermFactory.createVar("x", type("Int")), null));
+      new MutableSubstitution(TermFactory.createVar("x", type("Int")), null));
   }
 
   @Test
@@ -65,19 +65,19 @@ public class SubstitutionTest {
   public void testIncorrectArityInCreation() {
     MetaVariable x = TermFactory.createMetaVar("x", type("o -> o"), 1);
     Term xterm = constantTerm("a", type("o -> o"));
-    assertThrows(TypingException.class, () -> MutableSubstitution.createBasic(x, xterm));
+    assertThrows(TypingException.class, () -> new MutableSubstitution(x, xterm));
   }
  
   @Test
   public void testNullKeyExtension() {
-    MutableSubstitution gamma = MutableSubstitution.createBasic();
+    MutableSubstitution gamma = new MutableSubstitution();
     Variable x = TermFactory.createVar("x", type("o"));
     assertThrows(NullStorageException.class, () -> gamma.extend(null, x));
   }
 
   @Test
   public void testNullValueExtension() {
-    MutableSubstitution gamma = MutableSubstitution.createBasic();
+    MutableSubstitution gamma = new MutableSubstitution();
     Variable x = TermFactory.createVar("x", type("o"));
     assertThrows(NullStorageException.class, () -> gamma.extend(x, null));
   }
@@ -86,7 +86,7 @@ public class SubstitutionTest {
   public void testIncorrectArityExtension() {
     MetaVariable z = TermFactory.createMetaVar("z", type("o -> o"), 0);
     Term zterm = constantTerm("a", type("o -> o"));
-    MutableSubstitution gamma = MutableSubstitution.createBasic(z, zterm);
+    MutableSubstitution gamma = new MutableSubstitution(z, zterm);
     MetaVariable y = TermFactory.createMetaVar("y", type("o -> o"), 1);
     assertThrows(TypingException.class, () -> gamma.extend(y, zterm));
   }
@@ -95,7 +95,7 @@ public class SubstitutionTest {
   public void testIllTypedExtension() {
     Variable x = TermFactory.createVar("x", type("Int"));
     Term xterm = constantTerm("37", type("Int"));
-    MutableSubstitution gamma = MutableSubstitution.createBasic(x, xterm);
+    MutableSubstitution gamma = new MutableSubstitution(x, xterm);
     assertThrows(TypingException.class, () -> gamma.extend(
       TermFactory.createVar("y", type("Int")), constantTerm("false", type("Bool"))));
   }
@@ -104,7 +104,7 @@ public class SubstitutionTest {
   public void testNullKeyReplacement() {
     Variable x = TermFactory.createVar("x", type("Int"));
     Term xterm = constantTerm("37", type("Int"));
-    MutableSubstitution gamma = MutableSubstitution.createBasic(x, xterm);
+    MutableSubstitution gamma = new MutableSubstitution(x, xterm);
     assertThrows(NullStorageException.class, () -> gamma.replace(null, xterm));
   }
   
@@ -112,7 +112,7 @@ public class SubstitutionTest {
   public void testNullValueReplacement1() {
     Variable x = TermFactory.createVar("x", type("Int"));
     Term xterm = constantTerm("37", type("Int"));
-    MutableSubstitution gamma = MutableSubstitution.createBasic(x, xterm);
+    MutableSubstitution gamma = new MutableSubstitution(x, xterm);
     assertThrows(NullStorageException.class, () -> gamma.replace(x, null));
   }
 
@@ -120,7 +120,7 @@ public class SubstitutionTest {
   public void testIllTypedReplacement() {
     Variable x = TermFactory.createVar("x", type("Int"));
     Term xterm = constantTerm("37", type("Int"));
-    MutableSubstitution gamma = MutableSubstitution.createBasic(x, xterm);
+    MutableSubstitution gamma = new MutableSubstitution(x, xterm);
     assertThrows(TypingException.class, () ->
       gamma.replace(x, constantTerm("false", type("Bool"))));
   }
@@ -130,7 +130,7 @@ public class SubstitutionTest {
     MetaVariable z = TermFactory.createMetaVar("z", type("o -> o"), 1);
     Variable x = TermFactory.createBinder("x", type("o"));
     Term zterm = TermFactory.createAbstraction(x, x);
-    MutableSubstitution gamma = MutableSubstitution.createBasic(z, zterm);
+    MutableSubstitution gamma = new MutableSubstitution(z, zterm);
     assertThrows(TypingException.class, () ->
       gamma.replace(z, constantTerm("37", zterm.queryType())));
   }
@@ -151,7 +151,7 @@ public class SubstitutionTest {
     Term xterm = constantTerm("37", type("Int"));
     Term yterm = z;
 
-    MutableSubstitution gamma = MutableSubstitution.createBasic(x, xterm);
+    MutableSubstitution gamma = new MutableSubstitution(x, xterm);
     assertTrue(gamma.extend(y, yterm));
     assertTrue(gamma.get(x).equals(xterm));
     assertTrue(gamma.get(y).equals(yterm));
@@ -162,7 +162,7 @@ public class SubstitutionTest {
   public void testCopy() {
     Variable x = TermFactory.createVar("x", type("Int"));
     Term xterm = constantTerm("37", type("Int"));
-    Substitution gamma = MutableSubstitution.createBasic(x, xterm);
+    Substitution gamma = new MutableSubstitution(x, xterm);
     MutableSubstitution delta = gamma.copy();
     Variable y = TermFactory.createVar("y", type("o"));
     Term yterm = TermFactory.createVar("z", type("o"));
@@ -178,7 +178,7 @@ public class SubstitutionTest {
     MetaVariable z = TermFactory.createMetaVar("z", type("o -> o"), 1);
     Variable x = TermFactory.createBinder("x", type("o"));
     Term zterm = TermFactory.createAbstraction(x, x);
-    MutableSubstitution gamma = MutableSubstitution.createBasic(z, zterm);
+    MutableSubstitution gamma = new MutableSubstitution(z, zterm);
     MetaVariable y = TermFactory.createMetaVar("y", type("o -> o"), 1);
     assertTrue(gamma.get(z).equals(zterm));
     assertTrue(gamma.get(y) == null);
@@ -191,7 +191,7 @@ public class SubstitutionTest {
     Term xterm = constantTerm("37", type("Int"));
     Term xxterm = constantTerm("42", type("Int"));
 
-    MutableSubstitution gamma = MutableSubstitution.createBasic(x, xterm);
+    MutableSubstitution gamma = new MutableSubstitution(x, xterm);
 
     assertFalse(gamma.extend(x, xxterm));
     assertTrue(gamma.getReplacement(x).equals(xterm));
@@ -205,7 +205,7 @@ public class SubstitutionTest {
     Term xterm = constantTerm("37", type("Int"));
     Term yterm = z;
 
-    MutableSubstitution gamma = MutableSubstitution.createBasic(x, xterm);
+    MutableSubstitution gamma = new MutableSubstitution(x, xterm);
     assertFalse(gamma.replace(y, yterm));
     assertTrue(gamma.get(x).equals(xterm));
     assertTrue(gamma.get(y).equals(yterm));
@@ -218,7 +218,7 @@ public class SubstitutionTest {
     Term xterm = constantTerm("37", type("Int"));
     Term xxterm = constantTerm("42", type("Int"));
 
-    MutableSubstitution gamma = MutableSubstitution.createBasic(x, xterm);
+    MutableSubstitution gamma = new MutableSubstitution(x, xterm);
 
     assertTrue(gamma.replace(x, xxterm));
     assertTrue(gamma.get(x).equals(xxterm));
@@ -233,7 +233,7 @@ public class SubstitutionTest {
     Term xterm = constantTerm("37", type("Int"));
     Term yterm = z;
 
-    MutableSubstitution gamma = MutableSubstitution.createBasic();
+    MutableSubstitution gamma = new MutableSubstitution();
     assertTrue(gamma.extend(x, xterm));
     assertTrue(gamma.extend(y, yterm));
     gamma.delete(y);
@@ -253,7 +253,7 @@ public class SubstitutionTest {
     Term xterm = constantTerm("37", type("Int"));
     Term yterm = z;
 
-    MutableSubstitution gamma = MutableSubstitution.createBasic();
+    MutableSubstitution gamma = new MutableSubstitution();
     gamma.extend(x, xterm);
     gamma.extend(y, yterm);
     Set<Replaceable> domain = gamma.domain();
@@ -283,10 +283,10 @@ public class SubstitutionTest {
     FunctionSymbol f = TermFactory.createConstant("f", type("Int -> Int -> Int"));
     Term one = TheoryFactory.createValue(1);
     Term two = TheoryFactory.createValue(2);
-    MutableSubstitution gamma = MutableSubstitution.createBasic();
+    MutableSubstitution gamma = new MutableSubstitution();
     gamma.extend(x, f.apply(y).apply(z));                     // γ(x) = f(y, z)
     gamma.extend(y, f.apply(z).apply(f.apply(one).apply(a))); // γ(y) = f(z, f(1, a))
-    MutableSubstitution delta = MutableSubstitution.createBasic();
+    MutableSubstitution delta = new MutableSubstitution();
     delta.extend(y, two);                                     // δ(y) = 2
     delta.extend(z, f.apply(x).apply(one));                   // δ(z) = f(x, 1)
     delta.extend(b, a);                                       // δ(b) = a
@@ -313,7 +313,7 @@ public class SubstitutionTest {
     Term xterm = constantTerm("37", type("Int"));
     Term yterm = z;
 
-    MutableSubstitution gamma = MutableSubstitution.createBasic();
+    MutableSubstitution gamma = new MutableSubstitution();
     Substitution delta = gamma.makeImmutable();
     gamma.extend(x, xterm);
     gamma.extend(y, yterm);
@@ -334,7 +334,7 @@ public class SubstitutionTest {
       TermFactory.createAbstraction(z, z)).apply(y));
 
     // [x:=y, y:=x]
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     subst.extend(x, y); 
     subst.extend(y, x); 
     Term term = subst.applySubstitution(abs);  // now term = λu.f(u, λz.z, x)
@@ -361,7 +361,7 @@ public class SubstitutionTest {
     Variable y = TermFactory.createVar("y", type("Int"));
     Variable z = TermFactory.createBinder("z", type("Bool"));
     Term xterm = constantTerm("37", type("Int"));
-    MutableSubstitution gamma = MutableSubstitution.createBasic(x, xterm);
+    MutableSubstitution gamma = new MutableSubstitution(x, xterm);
     gamma.extend(y, x); 
     assertTrue(gamma.applySubstitution(x).equals(xterm));
     assertTrue(gamma.applySubstitution(y).equals(x));
@@ -379,7 +379,7 @@ public class SubstitutionTest {
     Term g = constantTerm("g", type("o -> Int -> Bool -> Int"));
     Term t = g.apply(constantTerm("c", type("o")));
 
-    MutableSubstitution gamma = MutableSubstitution.createBasic(x, thirtyseven);
+    MutableSubstitution gamma = new MutableSubstitution(x, thirtyseven);
     gamma.extend(y, x);
     gamma.extend(z, t);
 
@@ -402,7 +402,7 @@ public class SubstitutionTest {
     // [X := λxy.h(y, z), y := a, z := g(a, y)]
     Term h = constantTerm("h", type("o -> o -> o -> o"));
     Variable x1 = TermFactory.createBinder("x", type("o"));
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     subst.extend(x, TermFactory.createAbstraction(x1,
       TermFactory.createAbstraction(y, h.apply(List.of(y, z)))));
     subst.extend(y, a);
@@ -427,7 +427,7 @@ public class SubstitutionTest {
     // [X := λxy.h(y, z), y := a, z := g(a, y)]
     Term h = constantTerm("h", type("o -> o -> o -> o"));
     Variable x1 = TermFactory.createBinder("x", type("o"));
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     subst.extend(x, TermFactory.createAbstraction(x1,
       TermFactory.createAbstraction(y, h.apply(List.of(y, z)))));
     subst.extend(y, a);
@@ -448,7 +448,7 @@ public class SubstitutionTest {
     MetaVariable z = TermFactory.createMetaVar("Z", type("(A -> A) -> (A -> A) -> A"), 2);
     Term term = TermFactory.createMeta(z, abs, f);
     // first try [x:=0, y:=1, F:=λz.h(z, x)]; this should be pretty simple
-    MutableSubstitution gamma = MutableSubstitution.createBasic();
+    MutableSubstitution gamma = new MutableSubstitution();
     gamma.extend(x, constantTerm("0", type("A")));
     gamma.extend(y, constantTerm("1", type("B")));
     Variable z2 = TermFactory.createBinder("z", type("A"));

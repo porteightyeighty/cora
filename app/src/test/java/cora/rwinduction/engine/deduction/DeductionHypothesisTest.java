@@ -102,7 +102,7 @@ class DeductionHypothesisTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
-                            EquationPosition.TOPLEFT, MutableSubstitution.createBasic());
+                            EquationPosition.TOPLEFT, new MutableSubstitution());
     assertTrue(step.commandDescription().equals("hypothesis H8 l with [z := x]"));
     assertTrue(module.toString().equals(""));
     FixedAnswerValidityChecker solver = new FixedAnswerValidityChecker(true);
@@ -131,7 +131,7 @@ class DeductionHypothesisTest {
       "sum1(y)", "sum1(z) = iter(z, 0, y) | z ≥ 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     subst.extend(getVariable("y", pp.getProofState().getHypotheses().get(0).getRenaming()),
                  TheoryFactory.createValue(0));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
@@ -159,7 +159,7 @@ class DeductionHypothesisTest {
     PartialProof pp = setupProof("sum1(x) = sum2(x) | x > 0", "iter(z, a, 0) = sum2(z)| z ≥ 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     subst.extend(getVariable("a", pp.getProofState().getHypotheses().get(0).getRenaming()),
                  TheoryFactory.createValue(1));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
@@ -182,7 +182,7 @@ class DeductionHypothesisTest {
       "sum1(y)", "iter(z, 0, y) = sum1(y) | z ≥ 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     subst.extend(getVariable("z", pp.getProofState().getHypotheses().get(0).getRenaming()),
                  TheoryFactory.createValue(12));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
@@ -205,7 +205,7 @@ class DeductionHypothesisTest {
       "iter(z, 0, y) = sum1(y) | z ≥ 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     subst.extend(getVariable("z", pp.getProofState().getHypotheses().get(0).getRenaming()),
                  TheoryFactory.createValue(12));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
@@ -228,7 +228,7 @@ class DeductionHypothesisTest {
       "sum1(x)", "sum1(y) = iter(z, 0, y) | z > 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     subst.extend(getVariable("z", pp.getProofState().getHypotheses().get(0).getRenaming()),
                  TheoryFactory.createValue(7));
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
@@ -251,7 +251,7 @@ class DeductionHypothesisTest {
       "sum2(y)", "iter(z, 0, y) = sum1(y) | z ≥ 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     subst.extend(getVariable("z", pp.getProofState().getHypotheses().get(0).getRenaming()),
                  TheoryFactory.createValue(12));
     Settings.smtSolver = new FixedAnswerValidityChecker(true);
@@ -275,7 +275,7 @@ class DeductionHypothesisTest {
       "sum2(x) = 0 + sum1(x)");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
                                                        EquationPosition.parse("l"), subst);
     assertTrue(step.commandDescription().equals("hypothesis H8 l with [x := x]"));
@@ -293,7 +293,7 @@ class DeductionHypothesisTest {
       "iter(x, x, 0)", "sum1(z) = sum2(z)");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
                                                        EquationPosition.parse("l2"), subst);
     assertTrue(step.commandDescription().equals("hypothesis H8^{-1} l2 with [z := x]"));
@@ -311,7 +311,7 @@ class DeductionHypothesisTest {
       "sum1(x) = sum2(x) | x ≥ 0");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     assertTrue(DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
                                               EquationPosition.TOPLEFT, subst) == null);
     assertTrue(module.toString().equals("The hypothesis cannot be applied, as it would cause an " +
@@ -324,7 +324,7 @@ class DeductionHypothesisTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
-                       EquationPosition.TOPLEFT, MutableSubstitution.createBasic()) == null);
+                       EquationPosition.TOPLEFT, new MutableSubstitution()) == null);
     assertTrue(module.toString().equals("The induction hypothesis does not apply due to failed " +
       "matching (matching debug info says: The term x does not instantiate sum1(x) as it " +
       "is not an application.)" +
@@ -337,7 +337,7 @@ class DeductionHypothesisTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     assertTrue(DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
-                       EquationPosition.TOPLEFT, MutableSubstitution.createBasic()) == null);
+                       EquationPosition.TOPLEFT, new MutableSubstitution()) == null);
     assertTrue(module.toString().equals("The induction hypothesis does not apply due to failed " +
       "matching (matching debug info says: Constant sum2 is not instantiated by sum1.)\n\n"));
   }
@@ -348,7 +348,7 @@ class DeductionHypothesisTest {
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
     DeductionHypothesis step = DeductionHypothesis.createStep(pp, Optional.of(module), h8, true,
-                           EquationPosition.TOPRIGHT, MutableSubstitution.createBasic());
+                           EquationPosition.TOPRIGHT, new MutableSubstitution());
     assertTrue(module.toString().equals(""));
     Settings.smtSolver = new FixedAnswerValidityChecker(false, false);
     assertFalse(step.verifyAndExecute(pp, Optional.of(module)));
@@ -362,7 +362,7 @@ class DeductionHypothesisTest {
       "sum1(y)", "sum1(z) = iter(z, 0, y) | z ≥ a");
     Hypothesis h8 = pp.getProofState().getHypothesisByName("H8");
     OutputModule module = OutputModule.createUnitTestModule();
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     assertTrue(DeductionHypothesis.createStep(pp, Optional.of(module), h8, false,
                             EquationPosition.parse("r2"), subst) == null);
     assertTrue(subst.domain().size() == 0);

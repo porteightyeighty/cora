@@ -180,7 +180,7 @@ public class ConstantTest extends TermTestFoundation {
     assertTrue(f.renameAndRefreshBinders(new TreeMap<Variable,Variable>()) == f);
     assertTrue(f.freeReplaceables().size() == 0);
     assertTrue(f.boundVars().size() == 0);
-    assertTrue(f.typeVars().size() == 1);
+    assertTrue(f.queryTypeVars().size() == 1);
     assertTrue(f.hasSubterm(f));
     Term aa = new Constant("g", a);
     assertTrue(aa.isFirstOrder());

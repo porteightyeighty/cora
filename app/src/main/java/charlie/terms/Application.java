@@ -53,7 +53,8 @@ class Application extends TermInherit {
     }
     _args = new ArrayList<Term>();
     bounds = calculateBoundVariablesAndRefreshSubs(args, bounds, frees, _args);
-    setVariables(frees, bounds, calculateTypeVariablesForSubterms(args, _outputType));
+    setVariables(frees, bounds,
+                 calculateTypeVariablesForSubterms(args, _head.queryTypeVars()));
   }
 
   /**

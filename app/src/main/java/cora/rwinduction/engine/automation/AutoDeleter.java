@@ -22,7 +22,6 @@ import charlie.terms.position.*;
 import charlie.terms.Term;
 import charlie.terms.TheoryFactory;
 import charlie.substitution.Substitution;
-import charlie.substitution.MutableSubstitution;
 import charlie.theorytranslation.TermAnalyser;
 import cora.config.Settings;
 import cora.io.OutputModule;
@@ -196,7 +195,7 @@ public final class AutoDeleter {
                                                     Term constraint, Optional<Term> leftbound,
                                                     Optional<Term> rightbound, ProofState state) {
     int posArity = left.queryType().queryArity();
-    MutableSubstitution gamma = MutableSubstitution.createBasic();
+    Substitution gamma = Substitution.of();
     for (Hypothesis hypo : state.getHypotheses()) {
       Term hypoLhs = hypo.getLhs();
       int hypoArity = hypoLhs.queryType().queryArity();

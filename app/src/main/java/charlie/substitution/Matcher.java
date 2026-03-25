@@ -39,7 +39,7 @@ public class Matcher {
    * The substitution is fresh, and may be changed at the caller's leisure.
    */
   public static MutableSubstitution match(Term pattern, Term instance) {
-    MutableSubstitution ret = MutableSubstitution.createBasic();
+    MutableSubstitution ret = new MutableSubstitution();
     if (extendMatch(pattern, instance, ret) == null) return ret;
     return null;
   }

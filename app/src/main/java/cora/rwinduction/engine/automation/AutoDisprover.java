@@ -140,7 +140,7 @@ public final class AutoDisprover {
     // variables[i] := instances[i][ji]
     ArrayList<Integer> current = new ArrayList<Integer>();
     for (int i = 0; i < variables.size(); i++) current.add(0);
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     for (int pos = 0; pos >= 0; ) {
       if (pos == variables.size()) {
         if (findFirstOrderInstance(l, r, c, subst)) return subst;

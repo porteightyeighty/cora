@@ -198,7 +198,7 @@ public class PrinterTest {
     Renaming renaming = printer.generateUniqueNaming(faxy, lfzx, zz0);
 
     // []
-    MutableSubstitution gamma = MutableSubstitution.createBasic();
+    MutableSubstitution gamma = new MutableSubstitution();
     printer.add(new Pair<Substitution,Renaming>(gamma, renaming));
     printer.add("\n");
     assertTrue(printer.toString().equals("[]\n"));
@@ -234,7 +234,7 @@ public class PrinterTest {
     Renaming keys = printer.generateUniqueNaming(x, zz0);
     Renaming values = printer.generateUniqueNaming(faxy, lfzx);
 
-    MutableSubstitution gamma = MutableSubstitution.createBasic();
+    MutableSubstitution gamma = new MutableSubstitution();
     PrintableObject o = printer.makePrintable(gamma, keys, values);
 
     // []
@@ -256,10 +256,10 @@ public class PrinterTest {
 
   @Test
   public void testMissingKeyInSubstitutionPrint() {
-    MutableSubstitution gamma = MutableSubstitution.createBasic();
+    MutableSubstitution gamma = new MutableSubstitution();
     TRS trs = exampleTrs();
     Term fx3 = CoraInputReader.readTerm("f(x, 3)", trs);
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     subst.extend(TermFactory.createVar("x", CoraInputReader.readType("Int")), fx3);
     Printer printer = PrinterFactory.createUnicodePrinter(trs);
     Renaming renaming = printer.generateUniqueNaming(fx3);
@@ -275,7 +275,7 @@ public class PrinterTest {
     assertThrows(Printer.PrintingUnknownObjectException.class, () ->
       printer.add("this is optional", java.util.Optional.of(TermFactory.createVar("x")), "see?"));
     assertThrows(Printer.PrintingUnknownObjectException.class, () ->
-      printer.add(List.of("x", MutableSubstitution.createBasic())));
+      printer.add(List.of("x", new MutableSubstitution())));
     assertThrows(Printer.PrintingUnknownObjectException.class, () ->
       printer.add(new Pair<String,String>("a", "b")));
   }

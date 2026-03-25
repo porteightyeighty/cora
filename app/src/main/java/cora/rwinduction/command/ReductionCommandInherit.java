@@ -26,7 +26,6 @@ import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
 import charlie.substitution.Substitution;
-import charlie.substitution.MutableSubstitution;
 import charlie.substitution.Matcher;
 import charlie.trs.Rule;
 import charlie.printer.Printer;
@@ -161,7 +160,7 @@ abstract class ReductionCommandInherit extends DeductionCommand {
 
     Substitution subst;
     if (arg != null && !arg.equals("with")) arg = input.nextWord();
-    if (arg == null) subst = MutableSubstitution.createBasic();
+    if (arg == null) subst = Substitution.of();
     else if (!arg.equals("with")) {
       _module.println("Unexpected argument at position %a: expected \"with\" or end of command, " +
         "but got %a.", input.previousPosition(), arg);

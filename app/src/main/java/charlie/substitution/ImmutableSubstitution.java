@@ -37,6 +37,7 @@ public class ImmutableSubstitution implements Substitution {
   public Term getReplacement(Replaceable x) { return _wrapped.getReplacement(x); }
   public Type getReplacement(TVar alpha) { return _wrapped.getReplacement(alpha); }
   public Term applySubstitution(Term term) { return _wrapped.applySubstitution(term); }
+  public Type applySubstitution(Type type) { return _wrapped.applySubstitution(type); }
   public Set<Replaceable> domain() { return _wrapped.domain(); }
   public Set<TVar> typeDomain() { return _wrapped.typeDomain(); }
   public MutableSubstitution copy() { return _wrapped.copy(); }

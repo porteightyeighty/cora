@@ -279,7 +279,7 @@ public interface Term {
    * Returns the set of all type variables that occur anywhere in the current term.
    * This is efficient, as it returns a cached set.
    */
-  TVarSet typeVars();
+  TVarSet queryTypeVars();
 
   /**
    * This adds all function symbols in the current term to the given set.

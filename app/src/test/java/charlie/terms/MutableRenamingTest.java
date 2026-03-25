@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 import charlie.util.Pair;
 import charlie.types.Type;
+import charlie.types.TVarSet;
 import charlie.parser.CoraParser;
 
 /**
@@ -50,6 +51,7 @@ public class MutableRenamingTest {
     public Kind queryReplaceableKind() { return _arity == 0 ? Kind.BASEVAR : Kind.METAVAR; }
     public String queryName() { return _name; }
     public Type queryType() { return _type; }
+    public boolean isMonomorphic() { return _type.isMonomorphic(); }
     public int queryArity() { return _arity; }
     public int queryIndex() { return _index; }
     public boolean equals(Replaceable x) { return x.queryIndex() == _index; }

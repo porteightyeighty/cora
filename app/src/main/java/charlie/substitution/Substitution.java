@@ -31,6 +31,9 @@ import charlie.terms.Term;
  * so will yield a PolymorphicSubstitutionException.)
  */
 public interface Substitution extends Term.ISubstitution {
+  /** This stores a fixed empty immutable substitution (also accessible through the of() method). */
+  public static Substitution EMPTY = new MutableSubstitution().makeImmutable();
+
   /** Returns the Term that x is mapped to, or null if x is not mapped to anything. */
   Term get(Replaceable x);
 
@@ -72,6 +75,13 @@ public interface Substitution extends Term.ISubstitution {
   Term applySubstitution(Term term);
 
   /**
+   * This method replaces each type variable alpha in the type by get(alpha) (or leaves alpha
+   * alone if alpha is not in our domain).  The result is returned, and neither the substitution
+   * itself nor the given type are altered.
+   */
+  Type applySubstitution(Type type);
+
+  /**
    * Returns the set of replaceables which are mapped to a term, including those which are mapped
    * to themselves.
    */
@@ -96,23 +106,28 @@ public interface Substitution extends Term.ISubstitution {
 
   /** Creates an empty immutable substitution */
   public static Substitution of() {
-    return MutableSubstitution.createBasic().makeImmutable();
+    return EMPTY;
   }
 
   /** Creates an immutable substitution [x:=value] */
   public static Substitution of(Replaceable x, Term value) {
-    return MutableSubstitution.createBasic(x, value).makeImmutable();
+    return new MutableSubstitution(x, value).makeImmutable();
   }
 
   /** Creates an immutable substitution [x1:=s1,x2:=s2] */
   public static Substitution of(Replaceable x1, Term s1, Replaceable x2, Term s2) {
-    return MutableSubstitution.createBasic(x1, s1, x2, s2).makeImmutable();
+    MutableSubstitution ret = new MutableSubstitution(x1, s1);
+    ret.extend(x2, s2);
+    return ret.makeImmutable();
   }
 
   /** Creates an immutable substitution [x1:=s1,x2:=s2,x3:=s3] */
   public static Substitution of(Replaceable x1, Term s1, Replaceable x2, Term s2,
                                 Replaceable x3, Term s3) {
-    return MutableSubstitution.createBasic(x1, s1, x2, s2, x3, s3).makeImmutable();
+    MutableSubstitution ret = new MutableSubstitution(x1, s1);
+    ret.extend(x2, s2);
+    ret.extend(x3, s3);
+    return ret.makeImmutable();
   }
 }
 

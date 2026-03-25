@@ -91,12 +91,12 @@ class AbstractionTest extends TermTestFoundation {
     // λx.f(x, y)
     Term fxy = new Application(f, x, y);
     Term abs1 = new Abstraction(x, fxy);
-    assertTrue(abs1.typeVars().size() == 2);
-    assertTrue(abs1.typeVars() == fxy.typeVars());
+    assertTrue(abs1.queryTypeVars().size() == 2);
+    assertTrue(abs1.queryTypeVars() == fxy.queryTypeVars());
     // λx.y
     Term abs2 = new Abstraction(x, y);
-    assertTrue(abs2.typeVars().size() == 2);
-    assertTrue(abs2.typeVars() != y.typeVars());
+    assertTrue(abs2.queryTypeVars().size() == 2);
+    assertTrue(abs2.queryTypeVars() != y.queryTypeVars());
   }
 
   @Test

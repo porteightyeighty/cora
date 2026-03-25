@@ -171,13 +171,13 @@ public class BinderTest extends TermTestFoundation {
   @Test
   public void testTypeVariables() {
     Variable x = new Binder("x", baseType("oo"));
-    assertTrue(x.typeVars().size() == 0);
+    assertTrue(x.queryTypeVars().size() == 0);
     Variable y = new Binder("y", arrowType(TypeFactory.createVariable("alpha"),
                                            TypeFactory.createVariable("beta")));
-    assertTrue(y.typeVars().size() == 2);
-    assertTrue(y.typeVars().contains(TypeFactory.createVariable("alpha")));
-    assertTrue(y.typeVars().contains(TypeFactory.createVariable("beta")));
-    assertTrue(y.typeVars() == y.typeVars());
+    assertTrue(y.queryTypeVars().size() == 2);
+    assertTrue(y.queryTypeVars().contains(TypeFactory.createVariable("alpha")));
+    assertTrue(y.queryTypeVars().contains(TypeFactory.createVariable("beta")));
+    assertTrue(y.queryTypeVars() == y.queryTypeVars());
   }
 
   @Test

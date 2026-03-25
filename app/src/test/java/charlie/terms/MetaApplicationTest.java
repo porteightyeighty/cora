@@ -617,26 +617,28 @@ class MetaApplicationTest extends TermTestFoundation {
     MetaVariable z = TermFactory.createMetaVar("Z", arrowType(baseType("A"),
       arrowType(TypeFactory.createVariable("beta"), TypeFactory.createVariable("gamma"))), 2);
     Term term = TermFactory.createMeta(z, sub, y);
-    assertTrue(term.typeVars().size() == 3);
-    assertTrue(term.typeVars().contains(TypeFactory.createVariable("beta")));
+    assertTrue(term.queryTypeVars().size() == 3);
+    assertTrue(term.queryTypeVars().contains(TypeFactory.createVariable("beta")));
   }
 
   @Test
   public void testTypeVariablesReuse() {
     // a monomorphic term should have THE empty set of type variables
-    assertTrue(twoArgVarTerm().typeVars() == TVarSet.EMPTY);
-    // let's create Z⟨x,f(x,y),y)
+    assertTrue(twoArgVarTerm().queryTypeVars() == TVarSet.EMPTY);
+    // let's create Z⟨x,f(x,y,u),y)
     Type alpha = TypeFactory.createVariable("alpha");
     Type beta = TypeFactory.createVariable("beta");
+    Type gamma = TypeFactory.createVariable("gamma");
     Type o = baseType("o");
     Variable x = new Binder("x", TypeFactory.createVariable("alpha"));
     Variable y = new Var("y", TypeFactory.createVariable("beta"));
-    FunctionSymbol f = new Constant("f", arrowType(alpha, arrowType(beta, o)));
-    Term sub = new Application(f, x, y);
+    Variable u = new Var("u", TypeFactory.createVariable("gamma"));
+    FunctionSymbol f = new Constant("f", arrowType(alpha, arrowType(beta, arrowType(gamma, o))));
+    Term sub = new Application(f, x, y).apply(u);
     MetaVariable z = TermFactory.createMetaVar("Z", arrowType(alpha, arrowType(o,
       arrowType(beta, TypeFactory.createSort("pair", o, alpha)))), 3);
     Term term = TermFactory.createMeta(z, List.of(x, sub, y));
-    assertTrue(term.typeVars() == sub.typeVars());
+    assertTrue(term.queryTypeVars() == sub.queryTypeVars());
   }
 
   @Test

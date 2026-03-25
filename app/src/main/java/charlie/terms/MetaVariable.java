@@ -16,6 +16,7 @@
 package charlie.terms;
 
 import charlie.types.Type;
+import charlie.types.TVarSet;
 import charlie.terms.replaceable.Replaceable;
 
 /**
@@ -53,5 +54,8 @@ public interface MetaVariable extends Replaceable {
 
   /** @return σ_1 → ... → σ_k → τ if the current meta-variable has a type [σ_1 x ... x σ_k] → τ */
   Type queryType();
+
+  /** @return a cached set of type variables occurring in queryType() */
+  TVarSet queryTypeVars();
 }
 

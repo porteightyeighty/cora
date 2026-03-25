@@ -46,6 +46,13 @@ public interface Replaceable extends Comparable<Replaceable> {
   Type queryType();
 
   /**
+   * @return true if the type is free of type variables.
+   * This should always be implemented in an efficient way (using caching) so that it can be called
+   * many times without necessarily doing a deep search on each occasion.
+   */
+  boolean isMonomorphic();
+
+  /**
    * @return the number of arguments this replaceable object needs to be given
    * (this is necessarily 0 for a binder or base variable)
    */

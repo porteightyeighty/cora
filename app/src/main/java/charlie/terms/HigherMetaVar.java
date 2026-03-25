@@ -20,6 +20,7 @@ import charlie.util.FixedList;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TypeFactory;
+import charlie.types.TVarSet;
 import charlie.terms.replaceable.Replaceable;
 
 /**
@@ -31,6 +32,7 @@ final class HigherMetaVar implements MetaVariable {
   private final FixedList<Type> _inputs;
   private final Type _output;
   private final int _index;
+  private final TVarSet _typeVars;
   private Type _mytype;
 
   HigherMetaVar(String name, FixedList<Type> inputs, Type output) {
@@ -50,6 +52,7 @@ final class HigherMetaVar implements MetaVariable {
     for (int i = _inputs.size()-1; i >= 0; i--) {
       _mytype = TypeFactory.createArrow(_inputs.get(i), _mytype);
     }
+    _typeVars = TVarSet.of(_mytype);
   }
 
   public String queryName() {
@@ -82,6 +85,14 @@ final class HigherMetaVar implements MetaVariable {
 
   public Type queryType() {
     return _mytype;
+  }
+
+  public TVarSet queryTypeVars() {
+    return _typeVars;
+  }
+
+  public boolean isMonomorphic() {
+    return _typeVars.isEmpty();
   }
 
   public Term makeTerm() {

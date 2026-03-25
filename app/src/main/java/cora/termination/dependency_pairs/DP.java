@@ -98,7 +98,7 @@ public record DP(Term lhs, Term rhs, Term constraint, Set<Variable> lvars)
    * @return a DP that is structurally equivalent to the present one but uses fresh variables
    */
   public DP getRenamed() {
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     for (Variable x : getAllVariables()) {
       subst.extend(x, TermFactory.createVar(x.queryName(), x.queryType()));
     }

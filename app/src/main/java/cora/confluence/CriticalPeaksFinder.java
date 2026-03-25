@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2025 Cynthia Kop & Liye Guo
+ Copyright 2025--2026 Cynthia Kop & Liye Guo
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -158,7 +158,7 @@ public class CriticalPeaksFinder {
    * variables, not meta-variables.)
    */
   private static Rule renameRule(Rule rule) {
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     for (var x : rule.queryAllReplaceables()) {
       subst.extend(x, TermFactory.createVar(x.queryName(), x.queryType()));
     }

@@ -609,17 +609,28 @@ public class ApplicationTest extends TermTestFoundation {
     FunctionSymbol f = new Constant("f", arrowType(a, arrowType(o, c)));
     Term gterm = new Application(g, y, z);
     Term fterm = new Application(f, x, gterm);
-    TVarSet tvars = fterm.typeVars();
+    TVarSet tvars = fterm.queryTypeVars();
     assertTrue(tvars.size() == 3);
     assertTrue(tvars.contains(TypeFactory.createVariable("alpha")));
     assertFalse(gterm.isMonomorphic());
 
+    // what about (λu,v.k(f(u, v)))(x_alpha, g(y_{d(beta)}, z_alpha)) :: o?
+    // (so the γ is hidden inside the head)
+    Variable u = new Binder("u", a);
+    Variable v = new Binder("v", o);
+    Term sub = unaryTerm("k", o, new Application(f, u, v));
+    Term abs = new Abstraction(u, new Abstraction(v, sub));
+    Term appl = new Application(abs, x, gterm);
+    tvars = appl.queryTypeVars();
+    assertTrue(tvars.size() == 3);
+    assertTrue(tvars.contains(TypeFactory.createVariable("gamma")));
+
     // check reuse as well
     FunctionSymbol h = new Constant("h", arrowType(a, arrowType(o, o)));
     Term hterm = new Application(h, x, gterm);
-    tvars = hterm.typeVars();
+    tvars = hterm.queryTypeVars();
     assertTrue(tvars.size() == 2);
-    assertTrue(tvars == gterm.typeVars());
+    assertTrue(tvars == gterm.queryTypeVars());
   }
 
   @Test

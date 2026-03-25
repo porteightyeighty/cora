@@ -21,7 +21,7 @@ import charlie.util.Pair;
 import charlie.terms.position.*;
 import charlie.terms.Term;
 import charlie.terms.FunctionSymbol;
-import charlie.substitution.MutableSubstitution;
+import charlie.substitution.Substitution;
 import charlie.trs.Rule;
 import cora.io.OutputModule;
 import cora.rwinduction.engine.*;
@@ -81,7 +81,7 @@ public final class AutoSimplifier {
     int k = proof.getContext().queryRuleArity(f);
     if (numberArguments < k) return null;
     EquationPosition ep = posMaker.apply(numberArguments - k);
-    MutableSubstitution empty = MutableSubstitution.createBasic();
+    Substitution empty = Substitution.of();
     Optional<OutputModule> m = Optional.empty();
     Set<String> names = proof.getContext().queryRuleNamesByFunction(f);
     if (names == null) return null;

@@ -139,10 +139,10 @@ class DeductionContextTest {
     Optional<OutputModule> o = Optional.of(module);
     Settings.setStrategy(Settings.Strategy.Full);
     DeductionSimplify simpl = DeductionSimplify.createStep(pp, o, "R8",
-      EquationPosition.TOPLEFT, MutableSubstitution.createBasic());
+      EquationPosition.TOPLEFT, new MutableSubstitution());
     assertTrue(simpl.verifyAndExecute(pp, o));
     simpl = DeductionSimplify.createStep(pp, o, "R8",
-      EquationPosition.TOPRIGHT, MutableSubstitution.createBasic());
+      EquationPosition.TOPRIGHT, new MutableSubstitution());
     assertTrue(simpl.verifyAndExecute(pp, o));
     assertTrue(DeductionContext.createStep(pp, o, true) == null);
     assertTrue(module.toString().equals("The semiconstructor rule can only be applied if both " +

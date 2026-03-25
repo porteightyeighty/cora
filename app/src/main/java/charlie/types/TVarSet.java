@@ -52,6 +52,11 @@ public class TVarSet implements Iterable<TVar> {
     return _elements.size();
   }
 
+  /** Returns true if size() == 0 */
+  public boolean isEmpty() {
+    return _elements.isEmpty();
+  }
+
   /** Returns an iterator over all type variables in the set. */
   public Iterator<TVar> iterator() {
     return _elements.iterator();

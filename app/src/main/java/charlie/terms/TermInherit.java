@@ -77,13 +77,12 @@ abstract class TermInherit implements Term {
   }
 
   /** Returns a combined type variable set for the given subterms, which also includes extra. */
-  protected static TVarSet calculateTypeVariablesForSubterms(List<Term> subs, Type extra) {
-    if (subs.size() == 0) return TVarSet.of(extra);
-    TVarSet result = subs.get(0).typeVars();
-    for (int i = 1; i < subs.size(); i++) {
-      result = result.combine(subs.get(i).typeVars());
+  protected static TVarSet calculateTypeVariablesForSubterms(List<Term> subs, TVarSet extra) {
+    TVarSet result = extra;
+    for (int i = 0; i < subs.size(); i++) {
+      result = result.combine(subs.get(i).queryTypeVars());
     }
-    return result.add(extra);
+    return result;
   }
 
   /** Returns a combined replaceable set for the given subterms, which also includes extra. */
@@ -162,7 +161,7 @@ abstract class TermInherit implements Term {
   }
 
   /** Returns the set of all type variables that occur in the current term. */
-  public final TVarSet typeVars() {
+  public final TVarSet queryTypeVars() {
     if (_typeVariables == null) throw new RuntimeException("Type variable set has not been " +
       "set up for " + this.getClass().getSimpleName());
     return _typeVariables;
@@ -209,7 +208,7 @@ abstract class TermInherit implements Term {
 
   /** Returns true if no type variables occur in the present term. */
   public final boolean isMonomorphic() {
-    return _typeVariables.size() == 0;
+    return _typeVariables.isEmpty();
   }
 
   /** Helper function to return the current classname for use in Exceptions. */

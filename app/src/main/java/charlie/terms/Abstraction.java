@@ -56,7 +56,7 @@ class Abstraction extends TermInherit {
     _type = TypeFactory.createArrow(binder.queryType(), subterm.queryType());
     ReplaceableSet frees = subterm.freeReplaceables().remove(binder);
     ReplaceableSet bounds = subterm.boundVars().add(binder);
-    TVarSet tvars = subterm.typeVars().add(binder.queryType());
+    TVarSet tvars = subterm.queryTypeVars().add(binder.queryType());
     setVariables(frees, bounds, tvars);
   }
 

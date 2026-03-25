@@ -90,7 +90,7 @@ class IntegerMappingProof extends ProcessorProofObject {
    * this returns t[x_1^f:=s1,...,x_n^f:=sn].
    */
   private Term instantiateCandidate(Term candidate, Term term) {
-    MutableSubstitution subst = MutableSubstitution.createBasic();
+    MutableSubstitution subst = new MutableSubstitution();
     FunctionSymbol f = term.queryRoot();
     for (int varL = 0; varL < f.queryArity(); varL ++) {
       subst.extend(_argvars.get(f).get(varL), term.queryArgument(varL + 1));
