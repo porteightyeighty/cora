@@ -16,36 +16,38 @@
 package charlie.substitution;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map;
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.Set;
 import charlie.util.NullStorageException;
 import charlie.types.TVar;
 import charlie.types.Type;
 import charlie.terms.replaceable.Replaceable;
-import charlie.terms.MetaVariable;
-import charlie.terms.Term;
-import charlie.terms.Variable;
-import charlie.terms.TermFactory;
-import charlie.terms.TypingException;
+import charlie.terms.*;
 
 /**
  * A MutableSubstitution is a substitution that can have mappings added, changed and
- * (in the case of replaceables) also removed.
+ * removed.
  */
 public class MutableSubstitution implements Substitution {
   private HashMap<Replaceable,Term> _mapping;
   private final HashMap<TVar,Type> _typeMapping;
+  private final Map<TVar,Type> _unmodifiableTypeMapping;
 
   /** Creates an empty mutable substitution, thus far with empty domain. */
   public MutableSubstitution() {
     _mapping = new HashMap<Replaceable,Term>();
     _typeMapping = new HashMap<TVar,Type>();
+    _unmodifiableTypeMapping = Collections.unmodifiableMap(_typeMapping);
   }
 
   /** Creates a mutable substitution [x:=s] */
   public MutableSubstitution(Replaceable x, Term s) {
     _mapping = new HashMap<Replaceable,Term>();
     _typeMapping = new HashMap<TVar,Type>();
+    _unmodifiableTypeMapping = Collections.unmodifiableMap(_typeMapping);
     extend(x, s);
   }
 
@@ -53,6 +55,7 @@ public class MutableSubstitution implements Substitution {
   private MutableSubstitution(MutableSubstitution copyme) {
     _mapping = new HashMap<Replaceable,Term>(copyme._mapping);
     _typeMapping = new HashMap<TVar,Type>(copyme._typeMapping);
+    _unmodifiableTypeMapping = Collections.unmodifiableMap(_typeMapping);
   }
 
   /** Returns a copy of the current substitution */
@@ -108,13 +111,31 @@ public class MutableSubstitution implements Substitution {
   }
 
   /**
-   * Adds the key/value pair to the substitution.
-   * This will return false and do nothing if there is an existing value for the key.
-   * If they type of key and value do not match, a TypingException will be thrown instead.
+   * Adds the key/value pair to the type component of the substitution.  If the key is already
+   * mapped, then false is returned and nothing is done.
+   * Hence, it is NOT POSSIBLE to change existing type mappings.  This is very deliberate, as it
+   * would also necessarily change all the (meta-)variable mappings that are already in the
+   * Substitution.
+   */
+  public boolean extend(TVar key, Type value) {
+    if (key == null) throw new NullStorageException("MutableSubstitution", "type key");
+    if (value == null) throw new NullStorageException("MutableSubstitution", "type value");
+    if (_typeMapping.containsKey(key)) return false;
+    _typeMapping.put(key, value);
+    return true;
+  }
+
+  /**
+   * Adds the key/value pair to the substitution.  If the key is already mapped, then false is
+   * returned instead and nothing done.
    *
-   * POLYMORPHISM NOTE: if the type of key has type variables in this, then the type component of
-   * the substitution may be expanded to match value, and only if this is not possible a
-   * TypingException will be thrown.  For example, if the current substitution is γ:
+   * If the type of key and value do not match, a TypingException will be thrown instead.  (This
+   * check does not happen if the key is already mapped.)
+   *
+   * POLYMORPHISM NOTE: if the type of key has type variables in it, then the type component of
+   * the substitution may be expanded so that the type of key matches the type of value, and only
+   * if this is not possible a TypingException will be thrown.  For example, if the current
+   * substitution is γ:
    * - if key = X_{α → β} and value is a term of type Int → Bool → Bool, and γ(α) = Int while
    *   β is not in the domain, then this call to extend will set γ(β) := Bool → Bool and
    *   γ(X) = value
@@ -123,36 +144,13 @@ public class MutableSubstitution implements Substitution {
    * Hence, we preserve the invariant that if a variable is in the domain, then all its type
    * variables are as well.  These type variable mappings are not removed if the variable should
    * ever be removed from the domain!
-   *
-   * TODO; considerations:
-   * - if I *fail* to extend, the type variables should not be added either, so I cannot just use
-   *   a match; I'd have to create a new type mapping for that (probably handle this in a separate
-   *   function to avoid polluting this one)
-   * - we use extend/remove as part of substituting abstractions; if we remove a binder from the
-   *   substitution, we also need to remove the type variables we added for its sake (or rather:
-   *   we probably should not be adding type variables for it in the first place!)
    */
   public boolean extend(Replaceable key, Term value) {
     if (key == null) throw new NullStorageException("MutableSubstitution", "key");
     if (value == null) throw new NullStorageException("MutableSubstitution", "value");
-    if (!key.queryType().equals(value.queryType())) {
-      throw new TypingException("Cannot map key ", key, " (of type ", key.queryType(), ") to " +
-        "value ", value, " (of type ", value.queryType(), ") in substitution.");
-    }
-    int a = key.queryArity();
-    if (a > 0) {
-      Term tmp = value;
-      while (a > 0) {
-        if (!tmp.isAbstraction()) {
-          throw new TypingException("Cannot map meta-variable ", key, " (with arity " +
-            key.queryArity() + ") to value ", value, " in substitution: the value should be an " +
-            "abstraction with at least " + key.queryArity() + " abstracted variables.");
-        }
-        a--;
-        tmp = tmp.queryAbstractionSubterm();
-      }
-    }
     if (_mapping.get(key) != null) return false;
+    arityCheck(key, value);
+    extendType(key, value);
     _mapping.put(key, value);
     return true;
   }
@@ -160,17 +158,89 @@ public class MutableSubstitution implements Substitution {
   /**
    * Adds the key/value pair to the substitution, replacing an existing pair for key if there is
    * one (in this case true is returned, in the alternative case false).
+   *
+   * POLYMORPHISM NOTE: in case the key is not already in the domain, see comments for extend.
+   * (If the key _is_ in the domain, so we are truly replacing instead of extending, then all
+   * type variables in the type of key are already mapped, so the type component of the
+   * substitution should remain unaltered).
    */
   public boolean replace(Replaceable key, Term value) {
-    boolean overriding = !extend(key, value);
-    if (overriding) _mapping.put(key, value);
-    return overriding;
+    if (extend(key, value)) return false;
+
+    arityCheck(key, value);
+
+    if (!value.queryType().equals(_mapping.get(key).queryType())) {
+      throw new TypingException("Cannot replace mapping for ", key,
+        key.isMonomorphic() ? " (of type " : " (of instantiated type ",
+        _mapping.get(key).queryType(), ") to value ", value, " (of type ", value.queryType(),
+        ") in substitution.");
+    }
+    _mapping.put(key, value);
+
+    return true;
+  }
+
+
+  /**
+   * Helper function for extend and replace: given that key has arity n, this checkss if the given
+   * term value has a shape λx_1...x_n.sub (where sub is still allowed to be an abstraction).
+   *
+   * If so, nothing happens.  If not, a TypingException is thrown.
+   */
+  private void arityCheck(Replaceable key, Term value) {
+    int arity = key.queryArity();
+    Term tmp = value;
+    while (arity > 0) {
+      if (!tmp.isAbstraction()) {
+      throw new TypingException("Cannot map meta-variable ", key, " (with arity " +
+        key.queryArity() + ") to value ", value, " in substitution: the value should be an " +
+        "abstraction with at least " + key.queryArity() + " abstracted variables.");
+      }
+      arity--;
+      tmp = tmp.queryAbstractionSubterm();
+    }
+  }
+
+  /**
+   * Helper function for extend: this checks if we can extend the type variable component of the
+   * present substitution γ so that type(key) γ = type(value) γ.
+   * If not, a TypingException is thrown since key cannot be mapped to value.  The current
+   * substitution is not changed.
+   * If so, the present substitution is extended accordingly!
+   */
+  private void extendType(Replaceable key, Term value) {
+    if (key.isMonomorphic()) {
+      if (key.queryType().equals(value.queryType())) return;  // they're equal, nothing to extend
+    }
+    else {
+      TreeMap<TVar,Type> newtypes = new TreeMap<TVar,Type>();
+      if (key.queryType().match(value.queryType(), newtypes)) {
+        for (TVar alpha : newtypes.keySet()) {
+          Type t = _typeMapping.get(alpha);
+          if (t != null && !t.equals(newtypes.get(alpha))) {
+            throw new TypingException("Cannot instantiate the type ", key.queryType(), " of key ",
+              key, " in substitution to type ", value.queryType(), " since a prior mapping " +
+              "assigned type variable ", alpha, " to ", _typeMapping.get(alpha), " instead of ",
+              newtypes.get(alpha), ".");
+          }
+        }
+        for (TVar alpha : newtypes.keySet()) {
+          _typeMapping.put(alpha, newtypes.get(alpha));
+        }
+        return; // we've finished extending
+      }
+    }
+    // fallthrough for both cases!
+    throw new TypingException("Cannot map key ", key, " (of type ", key.queryType(), ") to " +
+      "value ", value, " (of type ", value.queryType(), ") in substitution.");
   }
 
   /**
    * This replaces each mapping [x:=s] by [x := s delta], and moreover extends the substitution
    * with all mappings [y:=t] in delta where y does not yet occur in our domain.  That is, if we
    * are γ, then this results in the substitution γ δ.
+   *
+   * TODO: this does not accurately consider all cases yet
    */
   public void combine(Substitution delta) {
     // handle type mappings
@@ -198,9 +268,8 @@ public class MutableSubstitution implements Substitution {
 
   /** Applies the current substitution to the given term and returns the result. */
   public Term applySubstitution(Term term) {
-    /** TODO: deal with the case that the variable has type variables in it */
-    if (term.isVariable()) return getReplacement(term.queryVariable());
-    else if (term.isConstant()) return term;
+    if (term.isVariable()) return substituteVariable(term.queryVariable());
+    else if (term.isConstant()) return substituteConstant(term.queryRoot());
     else if (term.isMetaApplication()) {
       return substituteMetaApplication(term.queryMetaVariable(), term.queryMetaArguments());
     }
@@ -214,13 +283,67 @@ public class MutableSubstitution implements Substitution {
       "that does not have any of the standard term shapes!");
   }
 
-  /** TODO: deal with the case where z has type variables in it */
+  /**
+   * If a variable or meta-variable is NOT substituted, then the substitution can only be applied
+   * on it if all its type variables are unaltered by the substitution.
+   * Hence, it is for instance not allowed to have a variable x_α and apply a substitution
+   * [α:=β] on it; it *would* be allowed to apply either [α:=β,x_α:=y_β] or [α:=α].
+   *
+   * This function checks if this requirement is satisfied, and if not, throws
+   * a PolymorphicSubstitutionException.
+   */
+  private void checkLegalNonSubstitution(Replaceable x) {
+    for (TVar alpha : x.queryTypeVars()) {
+      if (!getReplacement(alpha).equals(alpha)) {
+        throw new PolymorphicSubstitutionException(x, alpha);
+      }
+    }
+  }
+
+  /**
+   * This returns get(x), or x itself if x is not substituted.
+   *
+   * POLYMORPHISM NOTE: if x is not substituted, but does have type variables which are substituted,
+   * this will throw a PolymorphicSubstitutionException because it is not possible to apply the
+   * substitution properly.  For a substitution applied on a non-monomorphic term, it is mandatory
+   * that all polymorphic variables should be in the domain of the substitution.
+   */
+  private Term substituteVariable(Variable x) {
+    Term ret = _mapping.get(x);
+    if (ret != null) return ret;
+    checkLegalNonSubstitution(x);
+    return x;
+  }
+
+  /**
+   * If f is monomorphic, this returns f unmodified.
+   *
+   * If f is not monomorphic, so we can write f_σ for some polymorphic type σ, then this returns
+   * f_{σγ}, where γ is the type component of the current substitution.
+   */
+  private Term substituteConstant(FunctionSymbol f) {
+    if (f.isMonomorphic()) return f;
+    return f.substituteType(_unmodifiableTypeMapping);
+  }
+
+  /**
+   * If z is substituted to λx1...xn.t, this returns t[x1:=arg1,...,xn:=argsn].  If z is not
+   * substituted, this returns z[args1 subst, ..., argsn subst].
+   *
+   * POLYMORPHISM NOTE: if z is not substituted, but does have type variables which are substituted,
+   * this will throw a PolymorphicSubstitutionException because it is not possible to apply the
+   * substitution properly.  For a substitution applied on a non-monomorphic term, it is mandatory
+   * that all polymorphic meta-variables should be in the domain of the substitution.
+   */
   private Term substituteMetaApplication(MetaVariable z, ArrayList<Term> args) {
     // set the args to the substituted arguments
     for (int i = 0; i < args.size(); i++) args.set(i, applySubstitution(args.get(i)));
     // if we're not substituting Z, then just create a new meta-application with the updated args
     Term value = _mapping.get(z);
-    if (value == null) return TermFactory.createMeta(z, args);
+    if (value == null) {
+      checkLegalNonSubstitution(z);
+      return TermFactory.createMeta(z, args);
+    }
     // if Z is mapped to λx1...xn.t, then create t[x1:=args1,...,xn:=argsn]
     MutableSubstitution delta = new MutableSubstitution();
     for (int i = 0; i < args.size(); i++) {

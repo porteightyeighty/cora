@@ -17,6 +17,7 @@ package charlie.terms;
 
 import java.util.Map;
 import charlie.types.Type;
+import charlie.types.TVar;
 import charlie.types.TVarSet;
 import charlie.terms.replaceable.ReplaceableSet;
 
@@ -81,6 +82,9 @@ public class CalculationConstant extends LeafTermInherit implements CalculationS
 
   /** @return this */
   public CalculationSymbol toCalculationSymbol() { return this; }
+
+  /** @return this, since a calculation symbol is not polymorphic, so substituting has no effect */
+  public FunctionSymbol substituteType(Map<TVar,Type> typeMapping) { return this; }
 
   /** Throws an error, because a calculation symbol is not a variable (or associated with one). */
   public Variable queryVariable() {

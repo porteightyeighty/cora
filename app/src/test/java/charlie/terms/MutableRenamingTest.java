@@ -56,6 +56,7 @@ public class MutableRenamingTest {
     public int queryIndex() { return _index; }
     public boolean equals(Replaceable x) { return x.queryIndex() == _index; }
     public int compareTo(Replaceable x) { return _index - x.queryIndex(); }
+    public TVarSet queryTypeVars() { return TVarSet.EMPTY; }
   }
 
   private Replaceable makeVar(String name, Type type) {

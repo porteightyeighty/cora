@@ -20,6 +20,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import charlie.types.Type;
+import charlie.types.TVar;
 import charlie.types.TypeFactory;
 import charlie.terms.position.*;
 
@@ -69,6 +71,9 @@ public class ValueTest extends TermTestFoundation {
     assertTrue(s.toString().equals("\"Hello\\nworld\""));
     assertTrue(b.renameAndRefreshBinders(new TreeMap<Variable,Variable>()) == b);
     assertTrue(v.apply(new ArrayList<Term>()) == v);
+    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
+    map.put(TypeFactory.createVariable("alpha"), TypeFactory.intSort);
+    assertTrue(v.substituteType(map) == v);
   }
 
   @Test

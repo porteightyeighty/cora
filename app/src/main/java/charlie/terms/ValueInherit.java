@@ -16,9 +16,7 @@
 package charlie.terms;
 
 import java.util.Map;
-import charlie.types.Base;
-import charlie.types.TypeFactory;
-import charlie.types.TVarSet;
+import charlie.types.*;
 import charlie.terms.replaceable.ReplaceableSet;
 
 /**
@@ -66,6 +64,9 @@ public abstract class ValueInherit extends LeafTermInherit implements Value {
 
   /** @return null, since a value is not a calculation symbol */
   public CalculationSymbol toCalculationSymbol() { return null; }
+
+  /** @return this, since a value is not polymorphic, so substituting has no effect */
+  public FunctionSymbol substituteType(Map<TVar,Type> typeMapping) { return this; }
 
   public boolean isIntegerValue() { return queryType().equals(TypeFactory.intSort); }
 

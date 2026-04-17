@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -17,6 +17,7 @@ package charlie.terms.replaceable;
 
 import java.lang.Comparable;
 import charlie.types.Type;
+import charlie.types.TVarSet;
 
 /**
  * A Replaceable is an object with an index, arity and type.  In particular, this is an object that
@@ -66,5 +67,8 @@ public interface Replaceable extends Comparable<Replaceable> {
    * This is mostly intended for internal use, to support a total ordering on replaceables.
    */
   int queryIndex();
+
+  /** @return a cached set of type variables occurring in queryType() */
+  TVarSet queryTypeVars();
 }
 

@@ -17,8 +17,9 @@ package charlie.terms;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.TreeMap;
 import java.util.TreeSet;
-import charlie.types.TypeFactory;
+import charlie.types.*;
 import charlie.terms.position.*;
 
 public class CalculationTest extends TermTestFoundation {
@@ -114,5 +115,13 @@ public class CalculationTest extends TermTestFoundation {
     FunctionSymbol plus = TheoryFactory.plusSymbol;
     assertThrows(InvalidPositionException.class, () ->
       plus.replaceSubterm(new ArgumentPos(1, Position.empty), new Constant("a", baseType("a"))));
+  }
+
+  @Test
+  public void testSubstituteType() {
+    FunctionSymbol equal = TheoryFactory.intEqualSymbol;
+    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
+    map.put(TypeFactory.createVariable("alpha"), TypeFactory.intSort);
+    assertTrue(equal.substituteType(map) == equal);
   }
 }

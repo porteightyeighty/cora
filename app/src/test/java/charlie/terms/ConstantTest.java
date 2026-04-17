@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
+import charlie.types.TVar;
 import charlie.types.TypeFactory;
 import charlie.terms.position.*;
 
@@ -262,5 +263,21 @@ public class ConstantTest extends TermTestFoundation {
     set.add(a1);
     assertTrue(set.contains(a1));
     assertTrue(set.contains(a2));
+  }
+
+  @Test
+  public void testSubstituteTypes() {
+    // create f_{α → c(β, Int)}
+    TVar beta = TypeFactory.createVariable("β");
+    Type tuple = TypeFactory.createSort("c", beta, TypeFactory.intSort);
+    Type mytype = TypeFactory.createArrow(TypeFactory.createVariable("α"), tuple);
+    FunctionSymbol f = TermFactory.createConstant("f", mytype);
+    // create [β := c(β,β)]
+    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
+    map.put(beta, TypeFactory.createSort("c", beta, beta));
+    // substitute!
+    FunctionSymbol g = f.substituteType(map);
+    assertTrue(f.queryType() == mytype);
+    assertTrue(g.queryType().toString().equals("$α → c(c($β, $β), Int)"));
   }
 }

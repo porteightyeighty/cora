@@ -16,7 +16,9 @@
 package charlie.terms;
 
 import java.lang.Comparable;
+import java.util.Map;
 import charlie.types.Type;
+import charlie.types.TVar;
 
 /**
  * FunctionSymbols are the primary ingredient to construct terms.
@@ -43,6 +45,9 @@ public interface FunctionSymbol extends Term, Comparable<FunctionSymbol> {
 
   /** Casts the symbol to a CalculationSymbol if it is one, otherwise returns null. */
   public CalculationSymbol toCalculationSymbol();
+
+  /** Returns a copy of this function symbol with the type substituted (for polymorphic systems) */
+  public FunctionSymbol substituteType(Map<TVar,Type> typeMapping);
 
   /**
    * Returns a string that uniquely identifies the function symbol (which just the name does not).

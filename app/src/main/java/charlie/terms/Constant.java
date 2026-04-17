@@ -18,6 +18,7 @@ package charlie.terms;
 import java.util.Map;
 import charlie.util.NullStorageException;
 import charlie.types.Type;
+import charlie.types.TVar;
 import charlie.types.TVarSet;
 import charlie.terms.replaceable.ReplaceableSet;
 
@@ -102,6 +103,11 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
   /** @return null, since this is not a calculation symbol */
   public CalculationSymbol toCalculationSymbol() {
     return null;
+  }
+
+  /** @return a new constant, with the current constant's type substituted */
+  public FunctionSymbol substituteType(Map<TVar,Type> typeMapping) {
+    return new Constant(_name, queryType().substitute(typeMapping));
   }
 
   /** Returns the current symbol f, which is the root of the corresponding term f(). */
