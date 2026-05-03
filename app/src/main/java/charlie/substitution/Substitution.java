@@ -20,19 +20,21 @@ import charlie.types.Type;
 import charlie.types.TVar;
 import charlie.terms.replaceable.Replaceable;
 import charlie.terms.Term;
+import charlie.terms.TermFactory;
 
 /**
  * A substitution is a function that maps a finite set of replaceables to terms of the same type.
- * Substitutions can be both mutable and immutable.
+ * Substitutions can be both immutable, extendable (but not otherwise changeable), or fully mutable
+ * (in which case also existing mappings can be altered).
  *
  * In polymorphic systems, substitutions may also map type variables to types.  In this case, some
- * care should be taken with applying the substitution, for it is not permitted to substitute a type
+ * care should be taken when applying the substitution, for it is not permitted to substitute a type
  * variable in the type of a replaceable without also substituting the replaceable itself.  (Doing
  * so will yield a PolymorphicSubstitutionException.)
  */
 public interface Substitution extends Term.ISubstitution {
   /** This stores a fixed empty immutable substitution (also accessible through the of() method). */
-  public static Substitution EMPTY = new MutableSubstitution().makeImmutable();
+  public static Substitution EMPTY = new ExtendableSubstitution().makeImmutable();
 
   /** Returns the Term that x is mapped to, or null if x is not mapped to anything. */
   Term get(Replaceable x);
@@ -45,13 +47,21 @@ public interface Substitution extends Term.ISubstitution {
    * returns either x itself (if x is a variable) or λy1...yn.x[y1,...,yn] (if x is a meta-variable of
    * arity n).
    */
-  Term getReplacement(Replaceable x);
+  default Term getReplacement(Replaceable x) {
+    Term ret = get(x);
+    if (ret == null) return TermFactory.makeTerm(x);
+    return ret;
+  }
 
   /**
    * Returns the Type that alpha is mapped to, if any, and alpha itself if the substitution does not
    * map this type variable to anything.
    */
-  Type getReplacement(TVar alpha);
+  default Type getReplacement(TVar alpha) {
+    Type ret = get(alpha);
+    if (ret == null) return alpha;
+    return ret;
+  }
 
   /** 
    * This method replaces each variable x in the term by get(x) (or leaves x alone if x is not
@@ -94,7 +104,7 @@ public interface Substitution extends Term.ISubstitution {
   Set<TVar> typeDomain();
 
   /** Returns a copy of the current substitution. */
-  public MutableSubstitution copy();
+  public ExtendableSubstitution copy();
 
   /**
    * Puts an immutable wrapper around the present Substitution.  Beware: this does not create a
@@ -111,12 +121,12 @@ public interface Substitution extends Term.ISubstitution {
 
   /** Creates an immutable substitution [x:=value] */
   public static Substitution of(Replaceable x, Term value) {
-    return new MutableSubstitution(x, value).makeImmutable();
+    return new ExtendableSubstitution(x, value).makeImmutable();
   }
 
   /** Creates an immutable substitution [x1:=s1,x2:=s2] */
   public static Substitution of(Replaceable x1, Term s1, Replaceable x2, Term s2) {
-    MutableSubstitution ret = new MutableSubstitution(x1, s1);
+    ExtendableSubstitution ret = new ExtendableSubstitution(x1, s1);
     ret.extend(x2, s2);
     return ret.makeImmutable();
   }
@@ -124,7 +134,7 @@ public interface Substitution extends Term.ISubstitution {
   /** Creates an immutable substitution [x1:=s1,x2:=s2,x3:=s3] */
   public static Substitution of(Replaceable x1, Term s1, Replaceable x2, Term s2,
                                 Replaceable x3, Term s3) {
-    MutableSubstitution ret = new MutableSubstitution(x1, s1);
+    ExtendableSubstitution ret = new ExtendableSubstitution(x1, s1);
     ret.extend(x2, s2);
     ret.extend(x3, s3);
     return ret.makeImmutable();

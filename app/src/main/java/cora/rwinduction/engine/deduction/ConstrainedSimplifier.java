@@ -24,7 +24,7 @@ import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.*;
 import charlie.substitution.Substitution;
-import charlie.substitution.MutableSubstitution;
+import charlie.substitution.ExtendableSubstitution;
 import charlie.substitution.Matcher;
 import charlie.printer.Printer;
 import charlie.printer.PrintableObject;
@@ -62,7 +62,7 @@ class ConstrainedSimplifier {
   private Term _right;
   private Term _constraint;
   private Renaming _renaming;
-  private MutableSubstitution _substitution;
+  private ExtendableSubstitution _substitution;
 
   /**
    * We may choose to split off some equalities of the form x = t from _constraint (in this case
@@ -95,7 +95,7 @@ class ConstrainedSimplifier {
     _left = left;
     _right = right;
     _renaming = renaming.makeImmutable();
-    _substitution = subst == null ? new MutableSubstitution() : subst.copy();
+    _substitution = subst == null ? new ExtendableSubstitution() : subst.copy();
     _definitions = new ArrayList<Pair<Variable,Term>>();
     _constraint = splitEqualities(constraint, _definitions);
   }
@@ -206,7 +206,7 @@ class ConstrainedSimplifier {
    * the empty substitution will be stored instead.
    */
   void replaceSubstitution(Substitution subst) {
-    if (subst == null) _substitution = new MutableSubstitution();
+    if (subst == null) _substitution = new ExtendableSubstitution();
     else _substitution = subst.copy();
   }
 

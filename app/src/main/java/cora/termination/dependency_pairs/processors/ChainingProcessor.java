@@ -18,7 +18,7 @@ import charlie.terms.replaceable.Replaceable;
 import charlie.terms.replaceable.Renaming;
 import charlie.terms.replaceable.MutableRenaming;
 import charlie.terms.*;
-import charlie.substitution.MutableSubstitution;
+import charlie.substitution.ExtendableSubstitution;
 import charlie.substitution.Matcher;
 import charlie.trs.TRS;
 import cora.io.OutputModule;
@@ -212,7 +212,7 @@ public class ChainingProcessor implements Processor {
     Term dp1Rhs = dp1.rhs();
     Term dp2Lhs = dp2.lhs();
 
-    MutableSubstitution matcher = Matcher.match(dp2Lhs, dp1Rhs);
+    ExtendableSubstitution matcher = Matcher.match(dp2Lhs, dp1Rhs);
     if (matcher == null) {
       return Optional.empty();
     }

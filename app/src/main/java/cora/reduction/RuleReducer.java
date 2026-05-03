@@ -21,7 +21,7 @@ import charlie.types.Type;
 import charlie.terms.Term;
 import charlie.terms.Variable;
 import charlie.substitution.Substitution;
-import charlie.substitution.MutableSubstitution;
+import charlie.substitution.ExtendableSubstitution;
 import charlie.substitution.Matcher;
 import charlie.trs.Rule;
 import charlie.theorytranslation.TermAnalyser;
@@ -77,7 +77,7 @@ class RuleReducer implements ReduceObject {
     int k = findHeadAdditions(t);
     if (k == -1 || n < k) return null;
     Term head = t.queryImmediateHeadSubterm(n-k);
-    MutableSubstitution subst = Matcher.match(_rule.queryLeftSide(), head);
+    ExtendableSubstitution subst = Matcher.match(_rule.queryLeftSide(), head);
     if (subst == null) return null;
 
     // check the constraint and rhs variables

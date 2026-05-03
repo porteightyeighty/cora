@@ -169,7 +169,7 @@ public class SubstitutionTest {
     Variable x = TermFactory.createVar("x", type("Int"));
     Term xterm = constantTerm("37", type("Int"));
     Substitution gamma = new MutableSubstitution(x, xterm);
-    MutableSubstitution delta = gamma.copy();
+    ExtendableSubstitution delta = gamma.copy();
     Variable y = TermFactory.createVar("y", type("o"));
     Term yterm = TermFactory.createVar("z", type("o"));
     delta.extend(y, yterm);
