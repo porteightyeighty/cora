@@ -140,29 +140,79 @@ public final class AutoDisprover {
     // variables[i] := instances[i][ji]
     ArrayList<Integer> current = new ArrayList<Integer>();
     for (int i = 0; i < variables.size(); i++) current.add(0);
-    MutableSubstitution subst = new MutableSubstitution();
-    for (int pos = 0; pos >= 0; ) {
-      if (pos == variables.size()) {
-        if (findFirstOrderInstance(l, r, c, subst)) return subst;
-        pos--;
-      }
-      int k = current.get(pos);
-      if (k == instances.get(pos).size()) {
-        subst.delete(variables.get(pos));
-        current.set(pos, 0);
-        pos--;
-        continue;
-      }
-      subst.replace(variables.get(pos), instances.get(pos).get(k));
-      current.set(pos, k+1);
-      pos++;
-    }
+    MutableSubstitution subst =
+      trySuitableSubstitutionRecurse(l, r, c, 0, variables, instances, current);
+    if (subst != null) return subst;
 
     module.ifPresent(o -> o.println("No substitution could be found that makes %a true and " +
       "%a %{distinct} %a.  If such a substitution does exist, please supply it manually.",
       Printer.makePrintable(c, renaming), Printer.makePrintable(l, renaming),
       Printer.makePrintable(r, renaming)));
     return null;
+  }
+
+  /**
+   * Given that:
+   * - variables is a list [x1, ..., xm]
+   * - instances is a list [lst1, ..., lstm] of non-empty lists
+   * - 0 ≤ n ≤ m
+   * - current is a list [j1,...,jn,dummy,...,dummy] with 0 ≤ ji ≤ |lsti| for all i ∈ {1..n}
+   * this function iterates over all possible extensions [j1,...,jn,...,jm] and tests if this
+   * combination of choices yields a substitution γ so that c γ ∧ l γ != r γ is satisfiable.
+   *
+   * If successful, the substitution is returned.  If not, null is returned.
+   */
+  private static MutableSubstitution trySuitableSubstitutionRecurse(Term l, Term r, Term c, int n,
+                                                                    ArrayList<Variable> variables,
+                                                             ArrayList<ArrayList<Term>> instances,
+                                                                       ArrayList<Integer> current) {
+    if (n == variables.size()) {
+      return tryContradictionWith(l, r, c, variables, instances, current);
+    }
+    for (int i = 0; i < instances.get(n).size(); i++) {
+      current.set(n, i);
+      MutableSubstitution ret =
+        trySuitableSubstitutionRecurse(l, r, c, n+1, variables, instances, current);
+      if (ret != null) return ret;
+    }
+    return null;
+  }
+
+  /**
+   * Given that:
+   * - variables is a list [x1, ..., xm]
+   * - instances is a list [lst1, ..., lstm] of non-empty lists
+   * - current is a list [j1,...,jm] with 0 ≤ ji ≤ |lsti| for all i ∈ {1..m}
+   * This function checks if the substitution [ xi:=lsti[ji] | 1 ≤ i ≤ m ] can be instantiated
+   * (through first-order instantiations) to a substitution γ such that c γ ∧ l γ != r γ is 
+   * satisfiable.
+   *
+   * If successful, the substitution is returned.  If not, null is returned.
+   */
+  private static MutableSubstitution tryContradictionWith(Term l, Term r, Term c, 
+                                                   ArrayList<Variable> variables,
+                                            ArrayList<ArrayList<Term>> instances,
+                                                       ArrayList<Integer> current) {
+    MutableSubstitution start = new MutableSubstitution();
+    for (int i = 0; i < variables.size(); i++) {
+      start.extend(variables.get(i), instances.get(i).get(current.get(i)));
+    }
+    Term left = l.substitute(start);
+    Term right = r.substitute(start);
+    Substitution delta = findBaseSubstitution(left, right, c, Optional.empty(), null);
+    if (delta == null) return null;
+    // we have a match!
+    MutableSubstitution ret = new MutableSubstitution();
+    for (int i = 0; i < variables.size(); i++) {
+      ret.extend(variables.get(i), instances.get(i).get(current.get(i)).substitute(delta));
+    }
+    for (Replaceable x : delta.domain()) {
+      if (l.freeReplaceables().contains(x) || r.freeReplaceables().contains(x) ||
+          c.freeReplaceables().contains(x)) {
+        ret.extend(x, delta.get(x));
+      }
+    }
+    return ret;
   }
 
   /**
@@ -226,34 +276,6 @@ public final class AutoDisprover {
       ret.add(term);
     }
     return ret;
-  }
-
-  /**
-   * Given that all higher-order variables in left, right and constraint are instantiated by
-   * first-order theory terms in gamma, this function tries to find a substitution delta so that
-   * constraint gamma delta holds, and left gamma delta != right gamma delta.
-   *
-   * If successful, true is returned, and gamma updated to be the limitation of gamma delta whose
-   * domain only contains variables in left, right and constraint.
-   *
-   * If unsuccessful, false is returned, and gamma is not changed.
-   */
-  private static boolean findFirstOrderInstance(Term left, Term right, Term constraint,
-                                                MutableSubstitution gamma) {
-    Substitution delta = findBaseSubstitution(left.substitute(gamma), right.substitute(gamma),
-                                              constraint.substitute(gamma), Optional.empty(),
-                                              null);
-    if (delta == null) return false;
-    gamma.combine(delta);
-    ArrayList<Replaceable> remove = new ArrayList<Replaceable>();
-    for (Replaceable x : gamma.domain()) {
-      if (!left.freeReplaceables().contains(x) && !right.freeReplaceables().contains(x) &&
-          !constraint.freeReplaceables().contains(x)) {
-        remove.add(x);
-      }
-    }
-    for (Replaceable x : remove) gamma.delete(x);
-    return true;
   }
 }
 

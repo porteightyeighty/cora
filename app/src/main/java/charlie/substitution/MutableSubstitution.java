@@ -389,21 +389,4 @@ public class MutableSubstitution implements Substitution {
 
     return true;
   }
-
-  // TODO: change
-  /**
-   * This replaces each mapping [x:=s] by [x := s delta], and moreover extends the substitution
-   * with all mappings [y:=t] in delta where y does not yet occur in our domain.  That is, if we
-   * are γ, then this results in the substitution γ δ.
-   */
-  public void combine(Substitution delta) {
-    for (Replaceable x : _mapping.keySet()) {
-      _mapping.put(x, delta.applySubstitution(_mapping.get(x)));
-    }
-    for (Replaceable y : delta.domain()) {
-      if (!_mapping.containsKey(y)) {
-        _mapping.put(y, delta.get(y));
-      }
-    }
-  }
 }
