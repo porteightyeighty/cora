@@ -23,15 +23,14 @@ import charlie.terms.Term;
 
 /**
  * An ImmutableSubstitution is a Substitution that cannot be altered by objects that it is given to.
- * The underlying Substitution can still be altered by its owner (if it is mutable or extendable),
- * but by using an immutability wrapper, one may ensure that other objects can only use it as
- * intended.
+ * The underlying MutableSubstitution can still be altered by its owner, but by using an
+ * immutability wrapper, one may ensure that other objects can only use it as intended.
  */
 public class ImmutableSubstitution implements Substitution {
-  private Substitution _wrapped;
+  private MutableSubstitution _wrapped;
 
   /** the constructor is not public, since we should be created through makeImmutable() */
-  ImmutableSubstitution(Substitution wrapme) { _wrapped = wrapme; }
+  ImmutableSubstitution(MutableSubstitution wrapme) { _wrapped = wrapme; }
   
   public Term get(Replaceable x) { return _wrapped.get(x); }
   public Type get(TVar alpha) { return _wrapped.get(alpha); }
@@ -41,7 +40,7 @@ public class ImmutableSubstitution implements Substitution {
   public Type applySubstitution(Type type) { return _wrapped.applySubstitution(type); }
   public Set<Replaceable> domain() { return _wrapped.domain(); }
   public Set<TVar> typeDomain() { return _wrapped.typeDomain(); }
-  public ExtendableSubstitution copy() { return _wrapped.copy(); }
+  public MutableSubstitution copy() { return _wrapped.copy(); }
   public Substitution makeImmutable() { return this; }
   public String toString() { return _wrapped.toString(); }
 }

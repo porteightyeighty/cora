@@ -38,8 +38,8 @@ public class Matcher {
    * substitution exists; if it does not, then null is returned instead.
    * The substitution is fresh, and may be changed at the caller's leisure.
    */
-  public static ExtendableSubstitution match(Term pattern, Term instance) {
-    ExtendableSubstitution ret = new ExtendableSubstitution();
+  public static MutableSubstitution match(Term pattern, Term instance) {
+    MutableSubstitution ret = new MutableSubstitution();
     if (extendMatch(pattern, instance, ret) == null) return ret;
     return null;
   }
@@ -49,7 +49,7 @@ public class Matcher {
    * null is returned.
    * If it is not possible, then an appropriate FailureReason is returned.
    */
-  public static MatchFailure extendMatch(Term pattern, Term instance, ExtendableSubstitution subst) {
+  public static MatchFailure extendMatch(Term pattern, Term instance, MutableSubstitution subst) {
     if (pattern.isVariable()) {
       return extendMatchWithVariable(pattern.queryVariable(), instance, subst);
     }
@@ -73,7 +73,7 @@ public class Matcher {
   }
 
   private static MatchFailure extendMatchWithVariable(Variable x, Term instance,
-                                                      ExtendableSubstitution gamma) {
+                                                      MutableSubstitution gamma) {
     Term previous = gamma.get(x);
     if (previous == null) {
       if (!instance.queryType().equals(x.queryType())) {
@@ -88,7 +88,7 @@ public class Matcher {
   }
 
   private static MatchFailure extendMatchWithMeta(Term metaApp, Term instance,
-                                                  ExtendableSubstitution gamma) {
+                                                  MutableSubstitution gamma) {
     // get all the substituted arguments, and make sure they are distinct bound variables
     ArrayList<Variable> substitutedArgs = checkMetaPattern(metaApp, gamma);
     // create abstraction
@@ -149,7 +149,7 @@ public class Matcher {
   }
 
   private static MatchFailure extendMatchWithApplication(Term pattern, Term instance,
-                                                         ExtendableSubstitution gamma) {
+                                                         MutableSubstitution gamma) {
     if (!instance.isApplication()) {
       return new MatchFailure("The term ", instance, " does not instantiate ", pattern, " as it " +
         "is not an application.");
@@ -170,7 +170,7 @@ public class Matcher {
   }
 
   private static MatchFailure extendMatchWithTuple(Term tuple, Term instance,
-                                                   ExtendableSubstitution gamma) {
+                                                   MutableSubstitution gamma) {
     if (!instance.isTuple()) {
       return new MatchFailure("The term ", instance, " does not instantiate ", tuple,
         " as it is not a tuple term.");
@@ -199,7 +199,7 @@ public class Matcher {
    * - s ([x:=y] ∪ (γ \ {x})) =α t'
    */
   public static MatchFailure extendMatchWithAbstraction(Term pattern, Term instance,
-                                                        ExtendableSubstitution gamma) {
+                                                        MutableSubstitution gamma) {
     if (!instance.isAbstraction()) {
       return new MatchFailure("Abstraction ", pattern, " is not instantiated by ", instance, ".");
     }

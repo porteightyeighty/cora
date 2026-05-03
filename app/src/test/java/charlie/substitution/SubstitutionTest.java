@@ -169,7 +169,7 @@ public class SubstitutionTest {
     Variable x = TermFactory.createVar("x", type("Int"));
     Term xterm = constantTerm("37", type("Int"));
     Substitution gamma = new MutableSubstitution(x, xterm);
-    ExtendableSubstitution delta = gamma.copy();
+    MutableSubstitution delta = gamma.copy();
     Variable y = TermFactory.createVar("y", type("o"));
     Term yterm = TermFactory.createVar("z", type("o"));
     delta.extend(y, yterm);
@@ -199,7 +199,7 @@ public class SubstitutionTest {
 
     MutableSubstitution gamma = new MutableSubstitution(x, xterm);
 
-    assertFalse(gamma.extend(x, xxterm));
+    assertThrows(DuplicateMappingInSubstitutionException.class, () -> gamma.extend(x, xxterm));
     assertTrue(gamma.getReplacement(x).equals(xterm));
   }
 
@@ -547,7 +547,8 @@ public class SubstitutionTest {
     MutableSubstitution subst = new MutableSubstitution();
     assertTrue(subst.extend(beta, osort));
     // ensure that trying to override an existing type mapping won't work
-    assertFalse(subst.extend(beta, gamma));
+    assertFalse(subst.extend(beta, type("o")));
+    assertThrows(DuplicateMappingInSubstitutionException.class, () -> subst.extend(beta, gamma));
     assertTrue(subst.typeDomain().size() == 1);
     assertTrue(subst.get(beta) == osort);
     // create Z :: ⟨meh⟩ → α
