@@ -303,7 +303,7 @@ public class MutableSubstitution implements Substitution {
   /**
    * This returns get(x), or x itself if x is not substituted.
    *
-   * POLYMORPHISM NOTE: if x is not substituted, but does have type variables which are substituted,
+   * POLYMORPHISM NOTE: if x is not substituted, but does have type variables which are substituted
    * this will throw a PolymorphicSubstitutionException because it is not possible to apply the
    * substitution properly.  For a substitution applied on a non-monomorphic term, it is mandatory
    * that all polymorphic variables should be in the domain of the substitution.
@@ -346,9 +346,10 @@ public class MutableSubstitution implements Substitution {
     }
     // if Z is mapped to λx1...xn.t, then create t[x1:=args1,...,xn:=argsn]
     MutableSubstitution delta = new MutableSubstitution();
+    Term origvalue = value;
     for (int i = 0; i < args.size(); i++) {
       if (!value.isAbstraction()) {
-        throw new TypingException("Arity error when trying to substitute ", z, " by ", value,
+        throw new TypingException("Arity error when trying to substitute ", z, " by ", origvalue,
           ": meta-variable takes " + args.size() + " arguments, so there should be at least " +
           "this many abstractions!");
       }
@@ -365,9 +366,10 @@ public class MutableSubstitution implements Substitution {
     return head.apply(args);
   }
 
-  /** TODO: ensure that all type variables in binder are already substituted */
   private Term substituteAbstraction(Variable binder, Term subterm) {
-    Variable freshvar = TermFactory.createBinder(binder.queryName(), binder.queryType());
+    Type t = binder.queryType();
+    if (!binder.isMonomorphic()) t = t.substitute(_unmodifiableTypeMapping);
+    Variable freshvar = TermFactory.createBinder(binder.queryName(), t);
     Term previous = _mapping.get(binder);
     _mapping.put(binder, freshvar);
     Term subtermSubstitute = null;

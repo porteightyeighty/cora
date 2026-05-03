@@ -685,10 +685,90 @@ public class SubstitutionTest {
 
   @Test
   public void testMissingPolymorphicMetaVariableWithAcceptableTypeVariable() {
+    // Z_{α → h(β) → α}[x,c]
+    TVar alpha = typevar("alpha");
+    TVar beta = typevar("beta");
+    Type ztype = type("$alpha -> h($beta) -> $alpha");
+    Variable x = TermFactory.createVar("x", alpha);
+    Term c = constantTerm("c", type("h($beta)"));
+    MetaVariable z = TermFactory.createMetaVar("Z", ztype, 2);
+    Term term = TermFactory.createMeta(z, x, c);
+    // substitution [α:=α,x:=y]
+    Variable y = TermFactory.createVar("y", alpha);
+    MutableSubstitution subst = new MutableSubstitution(x, y);
+    // apply it!
+    Term result = subst.applySubstitution(term);
+    assertTrue(result.queryType().equals(alpha));
+    assertTrue(result.toString().equals("Z⟨y, c⟩"));
   }
 
   @Test
   public void testMissingPolymorphicMetaVariableWithBadTypeVariable() {
+    // Z_{α → h(β) → α}[x,c]
+    TVar alpha = typevar("alpha");
+    TVar beta = typevar("beta");
+    Type ztype = type("$alpha -> h($beta) -> $alpha");
+    Variable x = TermFactory.createVar("x", alpha);
+    Term c = constantTerm("c", type("h($beta)"));
+    MetaVariable z = TermFactory.createMetaVar("Z", ztype, 2);
+    Term term = TermFactory.createMeta(z, x, c);
+    // substitution [α:=α,β:=γ,x:=y]
+    Variable y = TermFactory.createVar("y", alpha);
+    MutableSubstitution subst = new MutableSubstitution(x, y);
+    TVar gamma = typevar("gamma");
+    subst.extend(beta, gamma);
+    // apply it!
+    assertThrows(PolymorphicSubstitutionException.class, () -> subst.applySubstitution(term));
+  }
+
+  @Test
+  public void testSubstitutePolymorphicApplication() {
+    TVar alpha = typevar("alpha");
+    TVar beta = typevar("beta");
+    TVar gamma = typevar("gamma");
+    Type xtype = type("$alpha -> $beta");
+    Variable x = TermFactory.createVar("x", xtype);
+    Type ztype = type("($gamma -> Int) -> $beta -> $gamma");
+    Variable z = TermFactory.createVar("z", ztype);
+    Term a = constantTerm("a", alpha);
+    Term appl = x.apply(a);
+    MutableSubstitution subst = new MutableSubstitution(x, z);
+    Term substituted = subst.applySubstitution(appl);
+    assertTrue(substituted.toString().equals("z(a)"));
+    assertTrue(substituted.equals(z.apply(constantTerm("a", type("$gamma -> Int")))));
+  }
+
+  @Test
+  public void testSubstitutePolymorphicAbstraction() {
+    TVar alpha = typevar("alpha");
+    TVar beta = typevar("beta");
+    Variable x = TermFactory.createBinder("x", type("$alpha -> $beta"));
+    Variable z = TermFactory.createVar("z", type("$gamma"));
+    Term f = constantTerm("f", type("($alpha -> $beta) -> $gamma -> A"));
+    Term abs = TermFactory.createAbstraction(x, f.apply(x).apply(z));
+      // λx_{α → β}.f(x_{α → β}, z_γ)
+
+    Term bb = constantTerm("BB", type("Bool -> Bool"));
+    MutableSubstitution subst = new MutableSubstitution(z, bb);
+    subst.extend(alpha, type("Int"));
+      // [α := Int, γ := Bool →  Bool, z := BB]
+
+    Term substituted = subst.applySubstitution(abs);
+
+    // did we get λy_{Int → β}.f(y_{Int → β}, BB) out?
+    Variable y = TermFactory.createBinder("y", type("Int -> $beta"));
+    Term ff = constantTerm("f", type("(Int -> $beta) -> (Bool -> Bool) -> A"));
+    Term newabs = TermFactory.createAbstraction(y, ff.apply(y).apply(bb));
+    assertTrue(substituted.equals(newabs));
+
+    // is the substitution unmodified?
+    assertTrue(subst.domain().size() == 1);
+    assertTrue(subst.typeDomain().size() == 2);
+    assertTrue(subst.get(alpha).equals(type("Int")));
+    assertFalse(subst.typeDomain().contains(beta));
+    assertTrue(subst.get(typevar("gamma")).equals(type("Bool -> Bool")));
+    assertTrue(subst.get(y) == null);
+    assertTrue(subst.get(z) == bb);
   }
 
   @Test
