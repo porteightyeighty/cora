@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -24,6 +24,7 @@ import charlie.types.Type;
 import charlie.types.TVar;
 import charlie.types.TypeFactory;
 import charlie.terms.position.*;
+import charlie.types.TestSubstitution;
 
 public class ValueTest extends TermTestFoundation {
   @Test
@@ -71,8 +72,8 @@ public class ValueTest extends TermTestFoundation {
     assertTrue(s.toString().equals("\"Hello\\nworld\""));
     assertTrue(b.renameAndRefreshBinders(new TreeMap<Variable,Variable>()) == b);
     assertTrue(v.apply(new ArrayList<Term>()) == v);
-    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
-    map.put(TypeFactory.createVariable("alpha"), TypeFactory.intSort);
+    TestSubstitution map = new TestSubstitution();
+    map.extend(TypeFactory.createVariable("alpha"), TypeFactory.intSort);
     assertTrue(v.substituteType(map) == v);
   }
 
@@ -118,6 +119,17 @@ public class ValueTest extends TermTestFoundation {
     assertFalse(ss.equals(s));
     assertTrue(s.hashCode() == (new StringValue("test")).hashCode());
     assertTrue(s.hashCode() != ss.hashCode());
+  }
+
+  @Test
+  public void testMatch() {
+    Value n = new IntegerValue(42);
+    Value m = new IntegerValue(24);
+    TestSubstitution subst = new TestSubstitution();
+    assertTrue(n.match(n, subst));
+    assertTrue(subst.size() == 0);
+    assertFalse(n.match(m, subst));
+    assertTrue(subst.size() == 0);
   }
 
   @Test

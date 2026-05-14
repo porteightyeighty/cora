@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -65,9 +65,6 @@ public abstract class ValueInherit extends LeafTermInherit implements Value {
   /** @return null, since a value is not a calculation symbol */
   public CalculationSymbol toCalculationSymbol() { return null; }
 
-  /** @return this, since a value is not polymorphic, so substituting has no effect */
-  public FunctionSymbol substituteType(Map<TVar,Type> typeMapping) { return this; }
-
   public boolean isIntegerValue() { return queryType().equals(TypeFactory.intSort); }
 
   public boolean isBooleanValue() { return queryType().equals(TypeFactory.boolSort); }
@@ -95,6 +92,17 @@ public abstract class ValueInherit extends LeafTermInherit implements Value {
   public boolean alphaEquals(Term term, Map<Variable,Integer> mu, Map<Variable,Integer> xi, int k) {
     if (!term.isValue()) return false;
     return equals(term.queryRoot());
+  }
+
+  /** @return this, since a value is not polymorphic, so substituting has no effect */
+  public FunctionSymbol substituteType(Type.ISubstitution typeMapping) { return this; }
+
+  /**
+   * @return true if and only if the given instance is the same value, and does not change
+   * typeMapping since values are not polymorphic
+   */
+  public boolean match(FunctionSymbol instance, Type.MSubstitution subst) {
+    return equals(instance);
   }
 }
 

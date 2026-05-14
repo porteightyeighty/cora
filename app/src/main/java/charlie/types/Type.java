@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2025 Cynthia Kop
+ Copyright 2019--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -16,12 +16,11 @@
 package charlie.types;
 
 import java.lang.Comparable;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Type ::= Base | Arrow(Type, Type) | Data(Type,...,Type) | TVar(name).
+ * Type ::= Base(String) | Arrow(Type, Type) | Data(String, Type, ..., Type) | TVar(String).
  *
  * Here, there are two kinds of sorts:
  * - base types: represented by a single name
@@ -63,7 +62,7 @@ public sealed interface Type extends Comparable<Type> permits
   boolean isSimple();
 
   /**
-   * Returns true if this type is a sort that is built exclusively from base types data type
+   * Returns true if this type is a sort that is built exclusively from base types and data type
    * constructors (so no arrows or type variables): a sort with type order 0.
    */
   boolean isZeroSort();
@@ -141,30 +140,43 @@ public sealed interface Type extends Comparable<Type> permits
     return set;
   }
 
+  /** Instantiated by Substitution (used to avoid a two-way dependency between packages). */
+  public interface ISubstitution {
+    /** Returns null for type variables not in the domain and a Type for variables in the domain. */
+    public Type get(TVar alpha);
+  }
+
+  /** Instantiated by MutableSubstitution (used to avoid a two-way dependency between packages). */
+  public interface MSubstitution extends ISubstitution {
+    /**
+     * If key is not in the domain, adds key:=v to the domain and returns true.
+     * (It does not matter what happens if key *is* in the domain.)
+     */
+    public boolean extend(TVar key, Type v);
+  }
+
   /**
    * ONLY RELEVANT FOR POLYMORPHIC TYPES: this function returns the type that is obtained by
-   * replacing each occurrence of a type variable var in this type, by typeSubstitution[var].
-   * Type variables that do not occur in the domain of typeSubstitution are left unaltered.
+   * replacing each occurrence of a type variable alpha in this type, by substitution[alpha].
+   * Type variables that do not occur in the domain of the substitution are left unaltered.
    *
    * (Since types are immutable, this does not affect the current type; it only computes and
    * returns the substituted type).
    *
-   * The given typeSubstitution will not be updated, so it is fine for the argument to be
+   * The given substitution will not be updated, so it is fine for the argument to be
    * immutable.
    *
    * (For non-polymorphic types, this just returns a copy of the type.)
    */
-  Type substitute(Map<TVar,Type> typeSubstitution);
+  Type substitute(ISubstitution substitution);
 
   /**
-   * ONLY RELEVANT FOR POLYMORPHIC TYPES: this function tries to extend typeSubstitution so that
-   * this.instantiate(typeSubstitution) equals instance.  If successful, true is returned (and
-   * typeSubstitution is fully updated as needed).  If unsuccessful, false is returned, but it is
-   * possible that typeSubstitution is still changed.
-   *
-   * Since the given map is meant to be updated, it should be a mutable map.
+   * ONLY RELEVANT FOR POLYMORPHIC TYPES: this function tries to extend substitution so that
+   * this.instantiate(substitution) equals instance.  If successful, true is returned (and
+   * substitution is fully updated as needed).  If unsuccessful, false is returned, but it is
+   * possible that the substitution is still changed.
    */
-  boolean match(Type instance, Map<TVar,Type> typeSubstitution);
+  boolean match(Type instance, MSubstitution substitution);
 
   /** Returns whether the given Type is equal to us. */
   boolean equals(Type type);

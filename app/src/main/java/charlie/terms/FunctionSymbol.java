@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -16,7 +16,6 @@
 package charlie.terms;
 
 import java.lang.Comparable;
-import java.util.Map;
 import charlie.types.Type;
 import charlie.types.TVar;
 
@@ -46,9 +45,6 @@ public interface FunctionSymbol extends Term, Comparable<FunctionSymbol> {
   /** Casts the symbol to a CalculationSymbol if it is one, otherwise returns null. */
   public CalculationSymbol toCalculationSymbol();
 
-  /** Returns a copy of this function symbol with the type substituted (for polymorphic systems) */
-  public FunctionSymbol substituteType(Map<TVar,Type> typeMapping);
-
   /**
    * Returns a string that uniquely identifies the function symbol (which just the name does not).
    */
@@ -65,5 +61,23 @@ public interface FunctionSymbol extends Term, Comparable<FunctionSymbol> {
   default int compareTo(FunctionSymbol symbol) {
     return toUniqueString().compareTo(symbol.toUniqueString());
   }
+
+  /**
+   * ONLY RELEVANT FOR POLYMORPHIC FUNCTION SYMBOLS: this function returns a copy of the current
+   * function symbol with the type substituted according to the given type mapping.
+   */
+  public FunctionSymbol substituteType(Type.ISubstitution typeMapping);
+
+  /**
+   * ONLY RELEVANT FOR POLYMORPHIC FUNCTION SYMBOLS: this function tries to extend typeMapping
+   * so that this.substituteType(typeSubstitution) equals instance.  If successful, true is
+   * returned (and typeMapping is fully updated as needed).  If unsuccessful, false is returned,
+   * but it is possible that typeMapping is still changed.
+   *
+   * Since the given map is meant to be updated, it should be a mutable map.  The map is guaranteed
+   * to only be extended (and only with type variables that occur inside the type of the current
+   * function symbol), not otherwise changed.
+   */
+  public boolean match(FunctionSymbol instance, Type.MSubstitution typeSubstitution);
 }
 

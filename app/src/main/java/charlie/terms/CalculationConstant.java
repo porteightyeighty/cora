@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024--2025 Cynthia Kop
+ Copyright 2024--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -84,7 +84,10 @@ public class CalculationConstant extends LeafTermInherit implements CalculationS
   public CalculationSymbol toCalculationSymbol() { return this; }
 
   /** @return this, since a calculation symbol is not polymorphic, so substituting has no effect */
-  public FunctionSymbol substituteType(Map<TVar,Type> typeMapping) { return this; }
+  public FunctionSymbol substituteType(Type.ISubstitution typeMapping) { return this; }
+
+  /** @return equals(other), since a calculation symbol is not polymorphic */
+  public boolean match(FunctionSymbol other, Type.MSubstitution subst) { return equals(other); }
 
   /** Throws an error, because a calculation symbol is not a variable (or associated with one). */
   public Variable queryVariable() {

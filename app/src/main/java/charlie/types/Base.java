@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,7 +15,6 @@
 
 package charlie.types;
 
-import java.util.Map;
 import java.util.Set;
 import charlie.util.NullStorageException;
 
@@ -63,10 +62,10 @@ public record Base(String name) implements Type {
   public void storeTypeVariables(Set<TVar> storage) { }
 
   @Override
-  public Type substitute(Map<TVar,Type> typeSubstitution) { return this; }
+  public Type substitute(ISubstitution typeSubstitution) { return this; }
 
   @Override
-  public boolean match(Type other, Map<TVar,Type> typeSubstitution) {
+  public boolean match(Type other, MSubstitution typeSubstitution) {
     return other instanceof Base(String x) && this.name.equals(x);
   }
 

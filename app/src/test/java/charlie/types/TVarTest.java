@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2025 Cynthia Kop
+ Copyright 2025--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -18,7 +18,6 @@ package charlie.types;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.TreeMap;
 import java.util.TreeSet;
 import charlie.util.NullStorageException;
 
@@ -74,23 +73,23 @@ class TVarTest {
   }
 
   @Test
-  public void testInstantiate() {
+  public void testSubstitute() {
     Type a = new TVar("alpha");
-    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
-    map.put(new TVar("beta"), new Base("a"));
+    TestSubstitution map = new TestSubstitution();
+    map.extend(new TVar("beta"), new Base("a"));
     assertTrue(a.substitute(map) == a);
-    map.put(new TVar("alpha"), null);
+    map.extend(new TVar("alpha"), null);
     assertTrue(a.substitute(map) == a);
     Base b = new Base("b");
-    map.put(new TVar("alpha"), b);
+    map.extend(new TVar("alpha"), b);
     assertTrue(a.substitute(map) == b);
   }
 
   @Test
   public void testMatch() {
-    Type a = new TVar("alpha");
-    Type b = new TVar("beta");
-    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
+    TVar a = new TVar("alpha");
+    TVar b = new TVar("beta");
+    TestSubstitution map = new TestSubstitution();
 
     assertTrue(a.match(new Base("b"), map));
     assertTrue(a.match(new Base("b"), map));

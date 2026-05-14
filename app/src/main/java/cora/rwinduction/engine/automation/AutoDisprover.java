@@ -140,8 +140,8 @@ public final class AutoDisprover {
     // variables[i] := instances[i][ji]
     ArrayList<Integer> current = new ArrayList<Integer>();
     for (int i = 0; i < variables.size(); i++) current.add(0);
-    MutableSubstitution subst =
-      trySuitableSubstitutionRecurse(l, r, c, 0, variables, instances, current);
+    MutableSubstitution subst = trySuitableSubstitutionRecurse(l, r, c, 0, variables,
+                                       instances, current, new MutableSubstitution());
     if (subst != null) return subst;
 
     module.ifPresent(o -> o.println("No substitution could be found that makes %a true and " +
@@ -157,6 +157,7 @@ public final class AutoDisprover {
    * - instances is a list [lst1, ..., lstm] of non-empty lists
    * - 0 ≤ n ≤ m
    * - current is a list [j1,...,jn,dummy,...,dummy] with 0 ≤ ji ≤ |lsti| for all i ∈ {1..n}
+   * - attempt is a substitution with domain ⊆ {x1,...,xm}, such that [xi:=lsti[ji]] for i ∈ {1..n}
    * this function iterates over all possible extensions [j1,...,jn,...,jm] and tests if this
    * combination of choices yields a substitution γ so that c γ ∧ l γ != r γ is satisfiable.
    *
@@ -165,46 +166,36 @@ public final class AutoDisprover {
   private static MutableSubstitution trySuitableSubstitutionRecurse(Term l, Term r, Term c, int n,
                                                                     ArrayList<Variable> variables,
                                                              ArrayList<ArrayList<Term>> instances,
-                                                                       ArrayList<Integer> current) {
+                                                                       ArrayList<Integer> current,
+                                                                      MutableSubstitution attempt) {
     if (n == variables.size()) {
-      return tryContradictionWith(l, r, c, variables, instances, current);
+      return tryContradictionWith(l, r, c, attempt);
     }
     for (int i = 0; i < instances.get(n).size(); i++) {
       current.set(n, i);
+      attempt.replace(variables.get(n), instances.get(n).get(i));
       MutableSubstitution ret =
-        trySuitableSubstitutionRecurse(l, r, c, n+1, variables, instances, current);
+        trySuitableSubstitutionRecurse(l, r, c, n+1, variables, instances, current, attempt);
       if (ret != null) return ret;
     }
     return null;
   }
 
   /**
-   * Given that:
-   * - variables is a list [x1, ..., xm]
-   * - instances is a list [lst1, ..., lstm] of non-empty lists
-   * - current is a list [j1,...,jm] with 0 ≤ ji ≤ |lsti| for all i ∈ {1..m}
-   * This function checks if the substitution [ xi:=lsti[ji] | 1 ≤ i ≤ m ] can be instantiated
-   * (through first-order instantiations) to a substitution γ such that c γ ∧ l γ != r γ is 
-   * satisfiable.
-   *
-   * If successful, the substitution is returned.  If not, null is returned.
+   * Given that domain(gamma) has no overlap with range(gamma), this function checks if
+   * c γ ∧ l γ != r γ is satisfiable, and if so, returns an extension δ = γ ζ so that
+   * c δ ∧ l δ != r δ is satisfied.  If not, null is returned.
    */
   private static MutableSubstitution tryContradictionWith(Term l, Term r, Term c, 
-                                                   ArrayList<Variable> variables,
-                                            ArrayList<ArrayList<Term>> instances,
-                                                       ArrayList<Integer> current) {
-    MutableSubstitution start = new MutableSubstitution();
-    for (int i = 0; i < variables.size(); i++) {
-      start.extend(variables.get(i), instances.get(i).get(current.get(i)));
-    }
-    Term left = l.substitute(start);
-    Term right = r.substitute(start);
+                                                      MutableSubstitution gamma) {
+    Term left = l.substitute(gamma);
+    Term right = r.substitute(gamma);
     Substitution delta = findBaseSubstitution(left, right, c, Optional.empty(), null);
     if (delta == null) return null;
     // we have a match!
     MutableSubstitution ret = new MutableSubstitution();
-    for (int i = 0; i < variables.size(); i++) {
-      ret.extend(variables.get(i), instances.get(i).get(current.get(i)).substitute(delta));
+    for (Replaceable x : gamma.domain()) {
+      ret.extend(x, gamma.get(x).substitute(delta));
     }
     for (Replaceable x : delta.domain()) {
       if (l.freeReplaceables().contains(x) || r.freeReplaceables().contains(x) ||

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2025 Cynthia Kop
+ Copyright 2019--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -18,7 +18,6 @@ package charlie.types;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.TreeMap;
 import charlie.util.NullStorageException;
 
 class BaseTest {
@@ -98,15 +97,15 @@ class BaseTest {
   @Test
   public void testInstantiate() {
     Type a = new Base("sort");
-    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
-    map.put(new TVar("sort"), new Base("a"));
+    TestSubstitution map = new TestSubstitution();
+    map.extend(new TVar("sort"), new Base("a"));
     assertTrue(a.substitute(map) == a);
   }
 
   @Test
   public void testMatch() {
     Type a = new Base("sort");
-    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
+    TestSubstitution map = new TestSubstitution();
     assertTrue(a.match(new Base("sort"), map));
     assertFalse(a.match(new Base("a"), map));
     assertFalse(a.match(new TVar("sort"), map));

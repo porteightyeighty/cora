@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2025 Cynthia Kop
+ Copyright 2019--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -212,7 +212,7 @@ public class SubstitutionTest {
     Term yterm = z;
 
     MutableSubstitution gamma = new MutableSubstitution(x, xterm);
-    assertFalse(gamma.replace(y, yterm));
+    gamma.replace(y, yterm);
     assertTrue(gamma.get(x).equals(xterm));
     assertTrue(gamma.get(y).equals(yterm));
     assertTrue(gamma.getReplacement(z).equals(z));
@@ -226,7 +226,7 @@ public class SubstitutionTest {
 
     MutableSubstitution gamma = new MutableSubstitution(x, xterm);
 
-    assertTrue(gamma.replace(x, xxterm));
+    gamma.replace(x, xxterm);
     assertTrue(gamma.get(x).equals(xxterm));
   }
 
@@ -268,7 +268,7 @@ public class SubstitutionTest {
     assertTrue(domain.contains(y));
     assertTrue(domain.size() == 2);
 
-    assertTrue(gamma.replace(y, y));
+    gamma.replace(y, y);
     domain = gamma.domain();
     assertTrue(domain.contains(x));
     assertTrue(domain.contains(y));
@@ -498,7 +498,7 @@ public class SubstitutionTest {
     // create subst2 = [α:=o], and add the same mapping
     MutableSubstitution subst2 = new MutableSubstitution();
     assertTrue(subst2.extend(alpha, o));
-    assertFalse(subst2.replace(z, abs));
+    subst2.replace(z, abs);
     assertTrue(subst2.get(z) == abs);
     assertTrue(subst2.domain().size() == 1);
     assertTrue(subst2.typeDomain().size() == 2);
@@ -559,8 +559,10 @@ public class SubstitutionTest {
     Variable y = TermFactory.createVar("y", beta);
     Variable z = TermFactory.createBinder("z", beta);
     MutableSubstitution subst = new MutableSubstitution(x, y);
-    assertTrue(subst.replace(x, z));
-    assertTrue(subst.replace(x, y));
+    subst.replace(x, z);
+    assertTrue(subst.get(x) == z);
+    subst.replace(x, y);
+    assertTrue(subst.get(x) == y);
   }
 
   @Test
@@ -741,10 +743,7 @@ public class SubstitutionTest {
     assertTrue(subst.get(z) == bb);
   }
 
-  @Test
-  public void testPolymorphicCombine() {
-  }
-
+  // if I should ever want to implement "combine":
   // α := β, γ := δ → α combined with α := A, β := B, becomes α := B, γ := δ → A
   // if X_γ is added to that, mapped to f_{δ → α}, then it becomes f_{δ →  A}
   // if Y_{α → β} is mapped to Z_{β → β}, and Z does not occur in the other mapping => exception

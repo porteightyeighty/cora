@@ -19,10 +19,7 @@ import java.util.ArrayList;
 import java.util.TreeSet;
 import charlie.util.UserException;
 import charlie.terms.replaceable.Replaceable;
-import charlie.terms.MetaVariable;
-import charlie.terms.Term;
-import charlie.terms.Variable;
-import charlie.terms.TermFactory;
+import charlie.terms.*;
 
 /**
  * The matcher is a static class that is used to match a pattern against another term.
@@ -50,20 +47,17 @@ public class Matcher {
    * If it is not possible, then an appropriate FailureReason is returned.
    */
   public static MatchFailure extendMatch(Term pattern, Term instance, MutableSubstitution subst) {
+    if (pattern.isConstant()) {
+      return extendMatchWithConstant(pattern.queryRoot(), instance, subst);
+    }
     if (pattern.isVariable()) {
       return extendMatchWithVariable(pattern.queryVariable(), instance, subst);
     }
     else if (pattern.isMetaApplication()) {
       return extendMatchWithMeta(pattern, instance, subst);
     }
-    else if (pattern.isConstant()) {
-      return checkMatchWithConstant(pattern, instance);
-    }
     else if (pattern.isApplication()) {
       return extendMatchWithApplication(pattern, instance, subst);
-    }   
-    else if (pattern.isTuple()) {
-      return extendMatchWithTuple(pattern, instance, subst);
     }   
     else if (pattern.isAbstraction()) {
       return extendMatchWithAbstraction(pattern, instance, subst);
@@ -71,6 +65,22 @@ public class Matcher {
     else throw new IllegalArgumentException("Matcher::extendMatch called with a term that does " +
       "not have any of the standard term shapes!");
   }
+
+  private static MatchFailure extendMatchWithConstant(FunctionSymbol symbol, Term instance,
+                                                      MutableSubstitution gamma) {
+    // monomorphic symbols can only be substituted to themselves, so in this case symbol = instance
+    // is required
+    if (symbol.isMonomorphic()) {
+      if (symbol.equals(instance)) return null;
+    }
+    // for polymorphic symbols, we need the version with substituted types to be equal to instance
+    else {
+      if (instance.isConstant() && symbol.match(instance.queryRoot(), gamma)) return null;
+    }
+    // fall-through for both cases
+    return new MatchFailure("Constant ", symbol, " is not instantiated by ", instance, ".");
+  }
+
 
   private static MatchFailure extendMatchWithVariable(Variable x, Term instance,
                                                       MutableSubstitution gamma) {
@@ -141,11 +151,6 @@ public class Matcher {
       sofar.add(y);
     }
     return ret;
-  }
-
-  private static MatchFailure checkMatchWithConstant(Term symbol, Term instance) {
-    if (symbol.equals(instance)) return null;
-    return new MatchFailure("Constant ", symbol, " is not instantiated by ", instance, ".");
   }
 
   private static MatchFailure extendMatchWithApplication(Term pattern, Term instance,

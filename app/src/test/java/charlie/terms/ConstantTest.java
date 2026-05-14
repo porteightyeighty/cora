@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2025 Cynthia Kop
+ Copyright 2019--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -25,6 +25,7 @@ import charlie.util.NullStorageException;
 import charlie.types.Type;
 import charlie.types.TVar;
 import charlie.types.TypeFactory;
+import charlie.types.TestSubstitution;
 import charlie.terms.position.*;
 
 public class ConstantTest extends TermTestFoundation {
@@ -273,11 +274,53 @@ public class ConstantTest extends TermTestFoundation {
     Type mytype = TypeFactory.createArrow(TypeFactory.createVariable("α"), tuple);
     FunctionSymbol f = TermFactory.createConstant("f", mytype);
     // create [β := c(β,β)]
-    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
-    map.put(beta, TypeFactory.createSort("c", beta, beta));
+    TestSubstitution map = new TestSubstitution();
+    map.extend(beta, TypeFactory.createSort("c", beta, beta));
     // substitute!
     FunctionSymbol g = f.substituteType(map);
     assertTrue(f.queryType() == mytype);
     assertTrue(g.queryType().toString().equals("$α → c(c($β, $β), Int)"));
+  }
+
+  @Test
+  public void testMatch() {
+    TVar alpha = TypeFactory.createVariable("alpha");
+    TVar beta = TypeFactory.createVariable("beta");
+    TVar eta = TypeFactory.createVariable("eta");
+    Type it = TypeFactory.intSort;
+    Type itb = TypeFactory.createArrow(baseType("Bool"), it);
+    Type ab = TypeFactory.createArrow(alpha, beta);
+    Type result = TypeFactory.createArrow(it, itb);
+    FunctionSymbol f1 = TermFactory.createConstant("f", ab);
+    FunctionSymbol f2 = TermFactory.createConstant("f", result);
+    FunctionSymbol g1 = TermFactory.createConstant("g", eta);
+
+    // empty substitution: f1 match against f2
+    TestSubstitution subst = new TestSubstitution();
+    assertTrue(f1.match(f2, subst));
+    assertTrue(subst.size() == 2); 
+    assertTrue(subst.get(alpha).equals(it));
+    assertTrue(subst.get(beta).equals(itb));
+
+    // empty substitution: g1 match against f2
+    subst = new TestSubstitution();
+    assertFalse(g1.match(f2, subst));
+    assertTrue(subst.size() == 0); 
+    assertTrue(subst.get(eta) == null);
+
+    // non-empty substitution: f1 match successfully against f2
+    subst = new TestSubstitution();
+    subst.extend(alpha, it);
+    assertTrue(f1.match(f2, subst));
+    assertTrue(subst.size() == 2); 
+    assertTrue(subst.get(alpha).equals(it));
+    assertTrue(subst.get(beta).equals(itb));
+
+    // non-empty substitution where variables are set to that f1 does not match against f2
+    subst = new TestSubstitution();
+    subst.extend(beta, it);
+    assertFalse(f1.match(f2, subst));
+    assertTrue(subst.size() <= 2); 
+    assertTrue(subst.get(beta).equals(it));
   }
 }

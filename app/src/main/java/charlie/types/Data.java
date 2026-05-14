@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2025 Cynthia Kop
+ Copyright 2025--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,7 +15,6 @@
 
 package charlie.types;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import charlie.util.NullStorageException;
@@ -90,14 +89,14 @@ public record Data(String name, FixedList<Type> args) implements Type {
   }
 
   @Override
-  public Type substitute(Map<TVar,Type> typeSubstitution) {
+  public Type substitute(ISubstitution typeSubstitution) {
     FixedList.Builder<Type> argsBuilder = new FixedList.Builder<Type>();
     for (Type arg : this.args) argsBuilder.add(arg.substitute(typeSubstitution));
     return new Data(this.name, argsBuilder.build());
   }
 
   @Override
-  public boolean match(Type other, Map<TVar,Type> typeSubstitution) {
+  public boolean match(Type other, MSubstitution typeSubstitution) {
     if (other instanceof Data(String n, FixedList<Type> l)) {
       if (!this.name.equals(n) || this.args.size() != l.size()) return false;
       for (int i = 0; i < this.args.size(); i++) {

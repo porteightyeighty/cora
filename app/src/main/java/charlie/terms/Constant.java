@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2024 Cynthia Kop
+ Copyright 2019--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -106,8 +106,20 @@ class Constant extends LeafTermInherit implements FunctionSymbol {
   }
 
   /** @return a new constant, with the current constant's type substituted */
-  public FunctionSymbol substituteType(Map<TVar,Type> typeMapping) {
+  public FunctionSymbol substituteType(Type.ISubstitution typeMapping) {
     return new Constant(_name, queryType().substitute(typeMapping));
+  }
+
+  /**
+   * @return true if the symbol's type can be instantiated so that we become equal to other, and in
+   * this case also updates the typeMapping accordingly.
+   * When false is returned, there may still be some updates to the typeMapping!
+   */
+  public boolean match(FunctionSymbol other, Type.MSubstitution typeMapping) {
+    if (other == null) return false;
+    if (!_name.equals(other.queryName())) return false;
+    if (other.isTheorySymbol()) return false;
+    return queryType().match(other.queryType(), typeMapping);
   }
 
   /** Returns the current symbol f, which is the root of the corresponding term f(). */

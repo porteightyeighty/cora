@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -15,7 +15,6 @@
 
 package charlie.types;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import charlie.util.NullStorageException;
@@ -98,12 +97,12 @@ public record Arrow(Type left, Type right) implements Type {
   }
 
   @Override
-  public Type substitute(Map<TVar,Type> typeSubst) {
+  public Type substitute(ISubstitution typeSubst) {
     return new Arrow(this.left.substitute(typeSubst), this.right.substitute(typeSubst));
   }
 
   @Override
-  public boolean match(Type other, Map<TVar,Type> typeSubstitution) {
+  public boolean match(Type other, MSubstitution typeSubstitution) {
     if (other instanceof Arrow(Type l, Type r)) {
       return this.left.match(l, typeSubstitution) && this.right.match(r, typeSubstitution);
     }

@@ -16,7 +16,6 @@
 package charlie.substitution;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
@@ -27,17 +26,18 @@ import charlie.terms.replaceable.Replaceable;
 import charlie.terms.*;
 
 /**
- * A MutableSubstitution is a substitution that can have mappings added over time, though
- * not replaced or removed (except by things inside the substitution package itself).
+ * A MutableSubstitution is a substitution that can have mappings added over time.
+ * This includes both (meta-)variable and type-variable mappings.
+ * For meta-variable mappings (but not for type variables), existing mappings may also be replaced
+ * and deleted.
  *
- * This includes both (meta-)variable and type-variable mappings.  The substitution always
- * maintains the invariant that if a variable occurs in the domain, then so does every type
- * variable in its type,
+ * POLYMORPHISM NOTE: The substitution always maintains the invariant that if a variable occurs in
+ * the domain, then so does every type variable in its type.  This is why replacement of existing
+ * mappings cannot be done for type variables, as it would interfere with this property.
  */
-public class MutableSubstitution implements Substitution {
+public class MutableSubstitution implements Substitution, Type.MSubstitution {
   private HashMap<Replaceable,Term> _mapping;
   private final HashMap<TVar,Type> _typeMapping;
-  private final Map<TVar,Type> _unmodifiableTypeMapping;
 
   /**
    * Creates an empty mutable substitution, with neither variables nor type variables in its
@@ -46,7 +46,6 @@ public class MutableSubstitution implements Substitution {
   public MutableSubstitution() {
     _mapping = new HashMap<Replaceable,Term>();
     _typeMapping = new HashMap<TVar,Type>();
-    _unmodifiableTypeMapping = Collections.unmodifiableMap(_typeMapping);
   }
 
   /**
@@ -60,7 +59,6 @@ public class MutableSubstitution implements Substitution {
   public MutableSubstitution(Replaceable x, Term s) {
     _mapping = new HashMap<Replaceable,Term>();
     _typeMapping = new HashMap<TVar,Type>();
-    _unmodifiableTypeMapping = Collections.unmodifiableMap(_typeMapping);
     extend(x, s);
   }
 
@@ -68,7 +66,6 @@ public class MutableSubstitution implements Substitution {
   private MutableSubstitution(MutableSubstitution copyme) {
     _mapping = new HashMap<Replaceable,Term>(copyme._mapping);
     _typeMapping = new HashMap<TVar,Type>(copyme._typeMapping);
-    _unmodifiableTypeMapping = Collections.unmodifiableMap(_typeMapping);
   }
 
   /** Returns a copy of the current substitution */
@@ -177,6 +174,38 @@ public class MutableSubstitution implements Substitution {
   }
 
   /**
+   * Adds the key/value pair to the substitution, replacing the mapping that is currently there.
+   *
+   * If the key is not yet in the domain, then this operates like extend.
+   * If the key is in the domain, then the given value overrides its value.
+   *
+   * In both cases an appropriate type- and aritycheck is done.
+   *
+   * POLYMORPHISM NOTE: if the key already exists in the domain, then necessarily all type variables
+   * in its type are also mapped.  These are NOT replaced by changing the value; hence, value should
+   * have the same type as the existing mapping for key.
+   */
+  public void replace(Replaceable key, Term value) {
+    if (key == null) throw new NullStorageException("MutableSubstitution", "key");
+    if (_mapping.get(key) == null) {
+      extend(key, value);
+      return;
+    }
+
+    if (value == null) throw new NullStorageException("MutableSubstitution", "value");
+
+    arityCheck(key, value);
+
+    if (!value.queryType().equals(_mapping.get(key).queryType())) {
+      throw new TypingException("Cannot replace mapping for ", key,
+        key.isMonomorphic() ? " (of type " : " (of instantiated type ",
+        _mapping.get(key).queryType(), ") to value ", value, " (of type ", value.queryType(),
+        ") in substitution.");
+    }
+    _mapping.put(key, value);
+  }
+
+  /**
    * Helper function for extend: given that key has arity n, this checks if the given term value
    * has a shape λx_1...x_n.sub (where sub is still allowed to be an abstraction).
    *
@@ -208,9 +237,9 @@ public class MutableSubstitution implements Substitution {
       if (key.queryType().equals(value.queryType())) return;  // they're equal, nothing to extend
     }
     else {
-      HashMap<TVar,Type> newtypes = new HashMap<TVar,Type>();
+      MutableSubstitution newtypes = new MutableSubstitution();
       if (key.queryType().match(value.queryType(), newtypes)) {
-        for (TVar alpha : newtypes.keySet()) {
+        for (TVar alpha : newtypes.typeDomain()) {
           Type t = _typeMapping.get(alpha);
           if (t != null && !t.equals(newtypes.get(alpha))) {
             throw new TypingException("Cannot instantiate the type ", key.queryType(), " of key ",
@@ -219,7 +248,7 @@ public class MutableSubstitution implements Substitution {
               newtypes.get(alpha), ".");
           }
         }
-        for (TVar alpha : newtypes.keySet()) {
+        for (TVar alpha : newtypes.typeDomain()) {
           _typeMapping.put(alpha, newtypes.get(alpha));
         }
         return; // we've finished extending
@@ -232,7 +261,7 @@ public class MutableSubstitution implements Substitution {
 
   /** Applies the current substitution to the given type and returns the result. */
   public Type applySubstitution(Type type) {
-    return type.substitute(_typeMapping);
+    return type.substitute(this);
   }
 
   /** Applies the current substitution to the given term and returns the result. */
@@ -270,6 +299,21 @@ public class MutableSubstitution implements Substitution {
   }
 
   /**
+   * This function deletes the given variable or meta-variable from the domain.
+   *
+   * This function is primarily provided to allow for temporarily adding mappings to *monomorphic*
+   * substitutions, or to handle abstractions in various settings, where it is sometimes necessary
+   * to temporarily add the binder to the substitution.
+   *
+   * POLYMORPHISM NOTE: in a polymorphic system, the combination of extend/delete works somewhat
+   * counterintuitive: deleting a variable x does not remove any type variable in the type of x,
+   * even if those type variables were only added because x was added to the substitution!
+   */
+  public void delete(Variable x) {
+    _mapping.remove(x);
+  }
+
+  /**
    * This returns get(x), or x itself if x is not substituted.
    *
    * POLYMORPHISM NOTE: if x is not substituted, but does have type variables which are substituted
@@ -292,7 +336,7 @@ public class MutableSubstitution implements Substitution {
    */
   private Term substituteConstant(FunctionSymbol f) {
     if (f.isMonomorphic()) return f;
-    return f.substituteType(_unmodifiableTypeMapping);
+    return f.substituteType(this);
   }
 
   /**
@@ -337,7 +381,7 @@ public class MutableSubstitution implements Substitution {
 
   private Term substituteAbstraction(Variable binder, Term subterm) {
     Type t = binder.queryType();
-    if (!binder.isMonomorphic()) t = t.substitute(_unmodifiableTypeMapping);
+    if (!binder.isMonomorphic()) t = t.substitute(this);
     Variable freshvar = TermFactory.createBinder(binder.queryName(), t);
     Term previous = _mapping.get(binder);
     _mapping.put(binder, freshvar);
@@ -364,29 +408,5 @@ public class MutableSubstitution implements Substitution {
   public String toString() {
     if (_typeMapping.isEmpty()) return _mapping.toString();
     else return _typeMapping.toString() + "\n" + _mapping.toString();
-  }
-
-  // TODO: remove
-  public void delete(Replaceable key) {
-    _mapping.remove(key);
-  }
-
-  // TODO: remove
-  public boolean replace(Replaceable key, Term value) {
-    if (key == null) throw new NullStorageException("MutableSubstitution", "key");
-    if (value == null) throw new NullStorageException("MutableSubstitution", "value");
-    if (_mapping.get(key) == null) return !extend(key, value);
-
-    arityCheck(key, value);
-
-    if (!value.queryType().equals(_mapping.get(key).queryType())) {
-      throw new TypingException("Cannot replace mapping for ", key,
-        key.isMonomorphic() ? " (of type " : " (of instantiated type ",
-        _mapping.get(key).queryType(), ") to value ", value, " (of type ", value.queryType(),
-        ") in substitution.");
-    }
-    _mapping.put(key, value);
-
-    return true;
   }
 }

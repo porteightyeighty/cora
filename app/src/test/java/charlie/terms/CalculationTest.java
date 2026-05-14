@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -77,6 +77,22 @@ public class CalculationTest extends TermTestFoundation {
   }
 
   @Test
+  public void testMatch() {
+    CalculationSymbol p = TheoryFactory.plusSymbol;
+    CalculationSymbol p2 = new CalculationConstant("+",
+      TypeFactory.createArrow(TypeFactory.intSort,TypeFactory.createArrow(TypeFactory.intSort,
+                                                                          TypeFactory.intSort)),
+      CalculationSymbol.Kind.PLUS, CalculationSymbol.Associativity.ASSOC_LEFT,
+      CalculationSymbol.INFIX_PLUS);
+    CalculationSymbol t = TheoryFactory.timesSymbol;
+    TestSubstitution subst = new TestSubstitution();
+    assertFalse(p.match(t, subst));
+    assertTrue(subst.size() == 0);
+    assertTrue(p.match(p2, subst));
+    assertTrue(subst.size() == 0);
+  }
+
+  @Test
   public void testStore() {
     TreeSet<FunctionSymbol> set = new TreeSet<FunctionSymbol>();
     CalculationSymbol d = TheoryFactory.divSymbol;
@@ -120,8 +136,8 @@ public class CalculationTest extends TermTestFoundation {
   @Test
   public void testSubstituteType() {
     FunctionSymbol equal = TheoryFactory.intEqualSymbol;
-    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
-    map.put(TypeFactory.createVariable("alpha"), TypeFactory.intSort);
+    TestSubstitution map = new TestSubstitution();
+    map.extend(TypeFactory.createVariable("alpha"), TypeFactory.intSort);
     assertTrue(equal.substituteType(map) == equal);
   }
 }

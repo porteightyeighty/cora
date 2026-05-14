@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2023--2025 Cynthia Kop
+ Copyright 2023--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -17,7 +17,6 @@ package charlie.types;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 import charlie.util.NullStorageException;
@@ -178,9 +177,9 @@ class ArrowTest {
   public void testInstantiate() {
     Type arr = new Arrow(TypeFactory.createSort("c", new TVar("α"), new TVar("β")),
                          new TVar("β"));
-    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
-    map.put(new TVar("α"), new Base("b"));
-    map.put(new TVar("β"), new Base("a"));
+    TestSubstitution map = new TestSubstitution();
+    map.extend(new TVar("α"), new Base("b"));
+    map.extend(new TVar("β"), new Base("a"));
     assertTrue(arr.substitute(map).toString().equals("c(b, a) → a"));
     assertTrue(arr.toString().equals("c($α, $β) → $β"));  // unchanged by the call
   }
@@ -189,7 +188,7 @@ class ArrowTest {
   public void testMatch() {
     Type arr = new Arrow(new Arrow(new TVar("α"), new TVar("β")), new TVar("β"));
 
-    TreeMap<TVar,Type> map = new TreeMap<TVar,Type>();
+    TestSubstitution map = new TestSubstitution();
     Type lst = TypeFactory.createSort("list", new TVar("δ"));
     Type matches = new Arrow(new Arrow(lst, new Base("a")), new Base("a"));
     assertTrue(arr.match(matches, map));
@@ -197,12 +196,12 @@ class ArrowTest {
     assertTrue(map.get(new TVar("α")).toString().equals("list($δ)"));
     assertTrue(map.get(new TVar("β")).equals(new Base("a")));
 
-    map = new TreeMap<TVar,Type>();
+    map = new TestSubstitution();
     assertFalse(arr.match(lst, map));
     assertTrue(map.size() == 0);
     assertFalse(arr.match(new Arrow(new Base("base"), new Base("other")), map));
 
-    map = new TreeMap<TVar,Type>();
+    map = new TestSubstitution();
     assertFalse(arr.match(new Arrow(new Arrow(new Base("a"), new Base("b")), new TVar("δ")), map));
   }
 

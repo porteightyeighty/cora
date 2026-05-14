@@ -31,7 +31,7 @@ import charlie.terms.Term;
  * variable in the type of a replaceable without also substituting the replaceable itself.  (Doing
  * so will yield a PolymorphicSubstitutionException.)
  */
-public interface Substitution extends Term.ISubstitution {
+public interface Substitution extends Type.ISubstitution, Term.ISubstitution {
   /** This stores a fixed empty immutable substitution (also accessible through the of() method). */
   public static Substitution EMPTY = new MutableSubstitution().makeImmutable();
 
