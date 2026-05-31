@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2025 Cynthia Kop
+ Copyright 2025--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -236,7 +236,6 @@ public class TermPrinter {
       }
       else printFullTheoryTerm(term, freeNaming, boundNaming, builder);
     }
-    else if (term.isTuple()) printTuple(term, freeNaming, boundNaming, builder);
     else if (term.isAbstraction()) printAbstraction(term, freeNaming, boundNaming, builder);
     else if (term.isMetaApplication()) printMetaApplication(term, freeNaming, boundNaming, builder);
     else if (term.isApplication()) printApplication(term, freeNaming, boundNaming, builder);
@@ -496,23 +495,6 @@ public class TermPrinter {
   }
 
   /**
-   * Called by printRecursive() to print a tuple.
-   *
-   * The default functionality prints a shape ⦇s1,...,sn⦈ -- however, to print the opening and
-   * closing bracket, queryTupleOpenBracket() and queryTupleCloseBracket() are called.  To keep the
-   * default functionality but different brackets, override those two functions instead.
-   */
-  protected void printTuple(Term term, Renaming freeNaming, MutableRenaming boundNaming,
-                            StringBuilder builder) {
-    builder.append(queryTupleOpenBracket());
-    for (int i = 1; i <= term.numberTupleArguments(); i++){
-      if (i > 1) builder.append(", ");
-      printRecursive(term.queryTupleArgument(i), freeNaming, boundNaming, builder);
-    }   
-    builder.append(queryTupleCloseBracket());
-  }
-
-  /**
    * Called by printRecursive() to print an abstraction.
    *
    * The default functionality prints LAMBDA <varname>.subterm, where LAMBDA is the symbol given by
@@ -607,16 +589,6 @@ public class TermPrinter {
     builder.append(")");
   }
 
-  /**
-   * If the default printTuple() functionality is used, then you can override this to change the
-   * bracket that is used to open a tuple.
-   */
-  protected String queryTupleOpenBracket() { return "⦇"; }
-  /**
-   * If the default printTuple() functionality is used, then you can override this to change the
-   * bracket that is used to close a tuple.
-   */
-  protected String queryTupleCloseBracket() { return "⦈"; }
   /**
    * If the default printAbstraction() functionality is used, then you can override this to change
    * the lambda abstraction symbol.

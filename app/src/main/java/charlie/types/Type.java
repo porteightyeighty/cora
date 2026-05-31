@@ -132,7 +132,7 @@ public sealed interface Type extends Comparable<Type> permits
    *
    * Complexity: linear in the size of the type.
    *
-   * (For non-polymorphic types, this just doesn't do anything, but it does still cost linear time.)
+   * (For non-polymorphic types, this returns an empty set, but it does still cost linear time.)
    */
   default TreeSet<TVar> getTypeVariables() {
     TreeSet<TVar> set = new TreeSet<TVar>();
@@ -157,7 +157,7 @@ public sealed interface Type extends Comparable<Type> permits
 
   /**
    * ONLY RELEVANT FOR POLYMORPHIC TYPES: this function returns the type that is obtained by
-   * replacing each occurrence of a type variable alpha in this type, by substitution[alpha].
+   * replacing each occurrence of a type variable alpha in this type, by substitution.get(alpha).
    * Type variables that do not occur in the domain of the substitution are left unaltered.
    *
    * (Since types are immutable, this does not affect the current type; it only computes and

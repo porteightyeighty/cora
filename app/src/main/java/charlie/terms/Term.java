@@ -30,10 +30,9 @@ import charlie.terms.replaceable.ReplaceableSet;
 
 /**
  * Terms are the main object to be rewritten, or used to construct rules.  There are various kinds
- * of terms: functional terms f(s1,...,sn), var terms x(s1,...,xn), tuples ⦇s1,...,sn⦈,
- * abstractions λx.s and meta-applications Z⟨s1,...,sk⟩.  (The latter would traditionally be
- * considered a _meta_term rather than a term, but it is convenient to use the same interface for
- * it.)
+ * of terms: functional terms f(s1,...,sn), var terms x(s1,...,xn), abstractions λx.s and
+ * meta-applications Z⟨s1,...,sk⟩.  (The latter would traditionally be a considered a _meta_term
+ * rather than a term, but it is convenient to use the same interface for it.)
  *
  * Note: all instances of Term must (and can be expected to) be immutable.
  */
@@ -65,9 +64,6 @@ public interface Term {
    * Note that non-binder variables count as meta-variable applications, too.
    */
   boolean isMetaApplication();
-
-  /** Returns whether the current term is a tuple ⦇s1,...,sk⦈ with k ≥ 2. */
-  boolean isTuple();
 
   /** Returns whether the current term has the form (λx.t)(s1,...sn) with n > 0. */
   boolean isBetaRedex();
@@ -107,9 +103,6 @@ public interface Term {
   /** Returns the number of meta-arguments; that is, k for a term Z⟨t1,...,tk⟩(s1,...,sn). */
   int numberMetaArguments();
 
-  /** Returns the number of tuple arguments; that is, k for a term ⦇s1,...,sn⦈. */
-  int numberTupleArguments();
-
   /**
    * Returns the list of arguments; that is, [s1,...,sn] for a term h(s1,...,sn) with h not an
    * application.  Note that this is the empty list for any term that is not an application.
@@ -117,15 +110,6 @@ public interface Term {
    * iterate over the arguments in this way than using numberArguments() and queryArgument(int i).
    */
   ArrayList<Term> queryArguments();
-
-  /**
-   * Returns the list of components in a tuple term.
-   * Notice that tuple terms that are valid have at least two components.
-   * If the current term is not a tuple, the list returned is empty.
-   * Note also that this creates a copy of the actual tuple arguments, so it costs more memory to
-   * iterate over the arguments in this way than using numberTupleArguments and queryTupleArgument.
-   */
-  ArrayList<Term> queryTupleArguments();
 
   /**
    * For a term of the form Z⟨t1,...,tk⟩(s1,...,sn), returns the list [t1,...,tk.]
@@ -145,12 +129,6 @@ public interface Term {
    * application.  Otherwise, this results in an IndexOutOfBoundsException.
    */
   Term queryMetaArgument(int i);
-
-  /**
-   * If the current term is a tuple of length k, and 1 ≤ i ≤ k, this returns the thus indexed tuple
-   * component.  Otherwise, this results in an IndexOutOfBoundsException.
-   */
-  Term queryTupleArgument(int i);
 
   /**
    * If the present term is an abstraction λx.s or a beta-redex (λx.s)(t1,...,tn), this returns s.

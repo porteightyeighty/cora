@@ -42,10 +42,6 @@ public class ParseableTermPrinter extends TermPrinter {
   }
 
   @Override
-  protected String queryTupleOpenBracket() { return "(|"; }
-  @Override
-  protected String queryTupleCloseBracket() { return "|)"; }
-  @Override
   protected String queryLambda() { return "\\"; }
   @Override
   protected String queryMetaOpenBracket() { return "["; }

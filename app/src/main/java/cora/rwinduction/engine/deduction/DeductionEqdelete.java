@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2025 Cynthia Kop
+ Copyright 2025--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -139,18 +139,13 @@ public final class DeductionEqdelete extends DeductionStep {
   /**
    * Helper function for createStep: given a pair of terms that are not both leaf terms, this
    * verifies that they have the same outer shape; that is, they are both an application with
-   * the same head, or they are both a tuple with the same length.
+   * the same head.
    */
   private static boolean checkSameShape(Term left, Term right, Renaming renaming,
                                         Optional<OutputModule> module) {
     if (left.isApplication()) {
       if (right.isApplication() && left.numberArguments() == right.numberArguments() &&
           left.queryHead().equals(right.queryHead())) return true;
-    }
-    else if (left.isTuple()) {
-      if (right.isTuple() && left.numberTupleArguments() == right.numberTupleArguments()) {
-        return true;
-      }
     }
     else if (left.isVariable() || left.isConstant()) {
       module.ifPresent(o -> o.println("Subterm %a is a kind of term that is not currently " +

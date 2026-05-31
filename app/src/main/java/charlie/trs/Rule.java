@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2024--2025 Cynthia Kop
+ Copyright 2024--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -280,9 +280,6 @@ public class Rule {
       else if (t.isApplication()) {
         parts.add(t.queryHead());
         for (int i = 1; i <= t.numberArguments(); i++) parts.add(t.queryArgument(i));
-      }
-      else if (t.isTuple()) {
-        for (int i = 1; i <= t.numberTupleArguments(); i++) parts.add(t.queryTupleArgument(i));
       }
     }
     if (couldBeTheory) {
