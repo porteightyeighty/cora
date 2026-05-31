@@ -44,7 +44,7 @@ public class Matcher {
   /**
    * This method extends subst so that pattern subst = instance, if that is possible.  In this case,
    * null is returned.
-   * If it is not possible, then an appropriate FailureReason is returned.
+   * If it is not possible, then an appropriate MatchFailure is returned.
    */
   public static MatchFailure extendMatch(Term pattern, Term instance, MutableSubstitution subst) {
     if (pattern.isConstant()) {
@@ -68,16 +68,16 @@ public class Matcher {
 
   private static MatchFailure extendMatchWithConstant(FunctionSymbol symbol, Term instance,
                                                       MutableSubstitution gamma) {
-    // monomorphic symbols can only be substituted to themselves, so in this case symbol = instance
-    // is required
-    if (symbol.isMonomorphic()) {
-      if (symbol.equals(instance)) return null;
+    FunctionSymbol g = null;
+    if (instance.isConstant()) {
+      g = instance.queryRoot();
+      if (symbol.match(g, gamma)) return null;
+      else if (symbol.queryName().equals(g.queryName())) {
+        return new MatchFailure("Constant ", symbol, " (of type ", symbol.queryType(), ") is not " +
+          "instantiated by symbol ", g, " (of type ", g.queryType(), ").");
+      }
     }
-    // for polymorphic symbols, we need the version with substituted types to be equal to instance
-    else {
-      if (instance.isConstant() && symbol.match(instance.queryRoot(), gamma)) return null;
-    }
-    // fall-through for both cases
+    // fall-through for both the case that instance is not a symbol, and it has a different name
     return new MatchFailure("Constant ", symbol, " is not instantiated by ", instance, ".");
   }
 
@@ -85,16 +85,28 @@ public class Matcher {
   private static MatchFailure extendMatchWithVariable(Variable x, Term instance,
                                                       MutableSubstitution gamma) {
     Term previous = gamma.get(x);
-    if (previous == null) {
-      if (!instance.queryType().equals(x.queryType())) {
-        return new MatchFailure("Variable ", x, " has a different type from ", instance, ".");
-      }   
+
+    // if we have a previous mapping, x has to be mapped to the exact same thing now
+    if (previous != null) {
+      if (previous.equals(instance)) return null;
+      return new MatchFailure(x.isBinderVariable() ? "Binder variable " : "Variable ",
+                              x, " is mapped both to ", previous, " and to ", instance, ".");
+    }
+
+    // otherwise, we first see if the type matches, and then extend the variable
+    if (x.queryType().match(instance.queryType(), gamma)) {
       gamma.extend(x, instance);
       return null;
-    }   
-    if (previous.equals(instance)) return null;
-    return new MatchFailure(x.isBinderVariable() ? "Binder variable " : "Variable ",
-                            x, " is mapped both to ", previous, " and to ", instance, ".");
+    }
+
+    // if not, we return an appropriate error message
+    if (x.isMonomorphic()) {
+      return new MatchFailure("Variable ", x, " has a different type from ", instance, ".");
+    }
+    else {
+      return new MatchFailure("Type ", x.queryType(), " of variable ", x, " cannot be " +
+        "matched to type ", instance.queryType(), " of instance ", instance, ".");
+    }
   }
 
   private static MatchFailure extendMatchWithMeta(Term metaApp, Term instance,
@@ -106,20 +118,23 @@ public class Matcher {
     for (int i = substitutedArgs.size()-1; i >= 0; i--) {
       ret = TermFactory.createAbstraction(substitutedArgs.get(i), ret);
     }   
-    // check if the type matches (and perhaps a previous match), and add the mapping!
+    // if the meta-variable is already mapped in gamma, it must be to ret!
     MetaVariable metavar = metaApp.queryMetaVariable();
     Term previous = gamma.get(metavar);
-    if (previous == null) {
-      if (!instance.queryType().equals(metaApp.queryType())) {
-        return new MatchFailure("Cannot match ", metaApp, " against ", instance, 
-                                " as types do not match.");
-      }   
+    if (previous != null) {
+      if (previous.equals(ret)) return null;
+      return new MatchFailure("Meta-variable ", metavar, " is mapped to both " , previous, 
+                              " and to ", ret, ".");
+    }
+    // if the meta-variable is not yet mapped, check the type and add the mapping
+    if (metaApp.queryType().match(instance.queryType(), gamma)) {
       gamma.extend(metavar, ret);
       return null;
+    }
+    else {
+      return new MatchFailure("Cannot match ", metaApp, " against ", instance, 
+                              " as types do not match.");
     }   
-    if (previous.equals(ret)) return null;
-    return new MatchFailure("Meta-variable ", metavar, " is mapped to both " , previous, 
-                            " and to ", ret, ".");
   }
 
   /**
@@ -174,24 +189,6 @@ public class Matcher {
     return extendMatch(pattern.queryHead(), instance.queryImmediateHeadSubterm(i), gamma);
   }
 
-  private static MatchFailure extendMatchWithTuple(Term tuple, Term instance,
-                                                   MutableSubstitution gamma) {
-    if (!instance.isTuple()) {
-      return new MatchFailure("The term ", instance, " does not instantiate ", tuple,
-        " as it is not a tuple term.");
-    }
-    if (tuple.numberTupleArguments() != instance.numberTupleArguments()) {
-      return new MatchFailure("The term ", instance, " does not instantiate ", tuple,
-        " as the tuple sizes are not the same.");
-    }   
-    for (int i = 1; i <= tuple.numberTupleArguments(); i++) {
-      MatchFailure warning = extendMatch(tuple.queryTupleArgument(i),
-                                         instance.queryTupleArgument(i), gamma);
-      if (warning != null) return warning;
-    }
-    return null;
-  }
-
   /**
    * Updates γ so that abs gamma =α instance if possible, and returns a MatchFailure describing
    * the reason for impossibility if not.  Note that:
@@ -208,19 +205,33 @@ public class Matcher {
     if (!instance.isAbstraction()) {
       return new MatchFailure("Abstraction ", pattern, " is not instantiated by ", instance, ".");
     }
+    
+    // ensure that the type of x is mapped to the type of y, and replace γ by γ'=[x:=y] ∪ (γ \ {x})
     Variable x = pattern.queryVariable();
     Variable y = instance.queryVariable();
-
     Term backup = gamma.get(x);
-    if (backup == null) gamma.extend(x, y);
+    if (backup == null) {
+      if (!x.queryType().match(y.queryType(), gamma)) {
+        return new MatchFailure("Abstraction ", pattern, " is not instantiated by ", instance,
+          " because the types of the abstraction variables do not match (", x.queryType(),
+          " versus ", y.queryType(), ").");
+      }
+      gamma.extend(x, y);
+    }
     else gamma.replace(x, y);
+
+    // ensure that s γ' = t
     MatchFailure ret =
       extendMatch(pattern.queryAbstractionSubterm(), instance.queryAbstractionSubterm(), gamma);
+
+    // restore γ to what it was before (any type extension to ensure the type of x matches the type
+    // of y remain, and that is as it should be!
     if (backup == null) gamma.delete(x);
     else gamma.replace(x, backup);
 
     if (ret != null) return ret;
 
+    // if we have not failed yet, check that y ∉ FV( γ(a) ) for any a ∈ FV(s) \ {x} = FV(λx.s)
     for (Replaceable z : pattern.freeReplaceables()) {
       Term gammaz = gamma.get(z);
       if (gammaz != null && gammaz.freeReplaceables().contains(y)) {

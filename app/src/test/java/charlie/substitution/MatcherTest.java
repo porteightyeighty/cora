@@ -1,5 +1,5 @@
 /**************************************************************************************************
- Copyright 2019--2025 Cynthia Kop
+ Copyright 2019--2026 Cynthia Kop
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  in compliance with the License.
@@ -22,17 +22,10 @@ import java.util.List;
 import java.util.Set;
 
 import charlie.util.NullStorageException;
-import charlie.types.Type;
-import charlie.types.TypeFactory;
+import charlie.types.*;
 import charlie.parser.CoraParser;
 import charlie.terms.replaceable.Replaceable;
-import charlie.terms.MetaVariable;
-import charlie.terms.Term;
-import charlie.terms.Variable;
-import charlie.terms.FunctionSymbol;
-import charlie.terms.TypingException;
-import charlie.terms.TermFactory;
-import charlie.terms.TheoryFactory;
+import charlie.terms.*;
 
 public class MatcherTest {
   private Type type(String str) {
@@ -379,6 +372,19 @@ public class MatcherTest {
   }
 
   @Test
+  public void testTypeFail() {
+    Variable x = TermFactory.createBinder("x", type("A"));
+    Variable y = TermFactory.createBinder("y", type("B"));
+    Term sub = TermFactory.createConstant("c", type("C"));
+    Term original = TermFactory.createAbstraction(x, sub);
+    Term instance = TermFactory.createAbstraction(y, sub);
+    MutableSubstitution subst = new MutableSubstitution();
+    assertTrue(Matcher.extendMatch(original, instance, subst).toString().equals(
+      "Abstraction λx.c is not instantiated by λy.c because the types of the abstraction " +
+      "variables do not match (A versus B)."));
+  }
+
+  @Test
   public void testNonLinearMetaOccurrence() {
     // λx.λy.g(F⟨x⟩, F⟨y⟩) against λa.λb.g(h(z,a), h(z,b))
     Variable x = TermFactory.createBinder("x", type("o"));
@@ -609,6 +615,138 @@ public class MatcherTest {
 
     assertNotNull(Matcher.match(term, m1));
     assertNull(Matcher.match(term, m2));
+  }
+
+  @Test
+  public void testPolymorphicConstant() {
+    TVar alpha = TypeFactory.createVariable("α");
+    TVar beta = TypeFactory.createVariable("β");
+    Term s = TermFactory.createConstant("f", type("$α -> $β -> $α"));
+    Term a = TermFactory.createConstant("f", type("Int -> (Bool → $α) → Int"));
+    Term b = TermFactory.createConstant("f", type("Int -> (Bool → $α) → Bool"));
+    Term c = TermFactory.createConstant("g", type("Int -> (Bool → $α) → Int"));
+
+    MutableSubstitution subst = Matcher.match(s, a);
+    assertTrue(subst.domain().isEmpty());
+    assertTrue(subst.typeDomain().size() == 2);
+    assertTrue(subst.get(alpha).equals(type("Int")));
+    assertTrue(subst.get(beta).equals(type("Bool → $α")));
+
+    subst = new MutableSubstitution();
+    subst.extend(alpha, type("Int"));
+    assertTrue(Matcher.extendMatch(s, a, subst) == null);
+
+    subst = new MutableSubstitution();
+    subst.extend(beta, type("Int"));
+    assertTrue(Matcher.extendMatch(s, a, subst).toString().equals("Constant f (of type " +
+      "$α → $β → $α) is not instantiated by symbol f (of type Int → (Bool → $α) → Int)."));
+
+    assertTrue(Matcher.match(s, b) == null);
+
+    subst = new MutableSubstitution();
+    assertTrue(Matcher.extendMatch(s, c, subst).toString().equals(
+      "Constant f is not instantiated by g."));
+
+    subst = Matcher.match(s, s);
+    assertTrue(subst.domain().isEmpty());
+    assertTrue(subst.typeDomain().size() == 2);
+    assertTrue(subst.get(alpha).equals(alpha));
+  }
+
+  @Test
+  public void testPolymorphicVariable() {
+    TVar alpha = TypeFactory.createVariable("α");
+    TVar beta = TypeFactory.createVariable("β");
+    Variable x = TermFactory.createVar("x", type("$α -> $β -> $γ"));
+    Term f = TermFactory.createConstant("f", type("Int -> (Bool → $α) → Int → Int"));
+    Term fa = f.apply(TermFactory.createConstant("a", type("Int")));
+    Term fab = fa.apply(TermFactory.createConstant("b", type("Bool -> $α")));
+
+    MutableSubstitution subst = Matcher.match(x, f);
+    assertTrue(subst.domain().size() == 1);
+    assertTrue(subst.get(x) == f);
+    assertTrue(subst.typeDomain().size() == 3);
+    assertTrue(subst.get(beta).equals(type("Bool → $α")));
+
+    subst = Matcher.match(x, fa);
+    assertTrue(subst.domain().size() == 1);
+    assertTrue(subst.get(x) == fa);
+    assertTrue(subst.typeDomain().size() == 3);
+    assertTrue(subst.get(beta).equals(type("Int")));
+
+    subst = Matcher.match(x, fab);
+    assertTrue(subst == null);
+  }
+
+  @Test
+  public void testPolymorphicAbstractionBinderAlreadyKnown() {
+    // f(x_α, h_{($α → $α) → A}(λx_α.g_{α → α}(x_α)))
+    TVar alpha = TypeFactory.createVariable("α");
+    Variable x = TermFactory.createBinder("x", alpha);
+    Term g1 = TermFactory.createConstant("g", type("$α → $α"));
+    Term h1 = TermFactory.createConstant("h", type("($α → $α) → A"));
+    Term f1 = TermFactory.createConstant("f", type("$α → A → c($α)"));
+    Term abs = TermFactory.createAbstraction(x, g1.apply(x));
+    Term pattern = f1.apply(x).apply(h1.apply(abs));
+    // f(a_{Int}, h(λy_{Int}.g_{Int → Int}(y_{Int})))
+    Type itype = type("Int");
+    Variable y = TermFactory.createBinder("y", itype);
+    Term g2 = TermFactory.createConstant("g", type("Int → Int"));
+    Term h2 = TermFactory.createConstant("h", type("(Int → Int) → A"));
+    Term f2 = TermFactory.createConstant("f", type("Int → A → c(Int)"));
+    Term a = TermFactory.createConstant("a", itype);
+    Term hterm = h2.apply(TermFactory.createAbstraction(y, g2.apply(y)));
+    Term instance = f2.apply(a).apply(hterm);
+
+    MutableSubstitution subst = Matcher.match(pattern, instance);
+    assertTrue(subst.get(alpha).equals(itype));
+    assertTrue(subst.get(x).equals(a));
+    assertTrue(subst.domain().size() == 1);
+
+    // f(b_{Bool}, h(λy_{Int}.g_{Int → Int}(y_{Int}))) -- this should not work
+    Term f3 = TermFactory.createConstant("f", type("Bool → A → c(Bool)"));
+    Term b = TermFactory.createConstant("b", type("Bool"));
+    instance = f3.apply(b).apply(hterm);
+    assertTrue(Matcher.match(pattern, instance) == null);
+  }
+
+  @Test
+  public void testPolymorphicAbstractionMatch() {
+    // ( λx::α, y::β.f(A[x,y], B) ) C
+    TVar alpha = TypeFactory.createVariable("α");
+    TVar beta = TypeFactory.createVariable("β");
+    Variable x = TermFactory.createBinder("x", alpha);
+    Variable y = TermFactory.createBinder("y", beta);
+    MetaVariable a = TermFactory.createMetaVar("A", type("$α -> $β -> c($α, $β)"), 2);
+    Variable b = TermFactory.createVar("B", beta);
+    Variable c = TermFactory.createVar("C", alpha);
+    Term axy = TermFactory.createMeta(a, x, y);
+    Term f = TermFactory.createConstant("f", type("c($α, $β) -> $β -> $α"));
+    Term fterm = f.apply(axy).apply(b);
+    Term abs = TermFactory.createAbstraction(x, TermFactory.createAbstraction(y, fterm));
+    Term semipattern = abs.apply(c);
+    // ( λv::Int -> Int, w::Int.f(g(3, v), 14) (λz.12 + z)
+    Variable v = TermFactory.createBinder("v", type("Int -> Int"));
+    Term g = TermFactory.createConstant("g", type("Int -> (Int -> Int) -> c(Int -> Int, Int)"));
+    Term gterm = g.apply(TheoryFactory.createValue(3)).apply(v);
+    Term f2 = TermFactory.createConstant("f", type("c(Int -> Int, Int) -> Int -> Int -> Int"));
+    Term fterm2 = f2.apply(gterm).apply(TheoryFactory.createValue(3));
+    Variable w = TermFactory.createBinder("w", type("Int"));
+    Term abs1 = TermFactory.createAbstraction(v, TermFactory.createAbstraction(w, fterm2));
+    Variable z = TermFactory.createBinder("z", type("Int"));
+    Term twelve = TheoryFactory.createValue(12);
+    Term abs2 = TermFactory.createAbstraction(z, TheoryFactory.plusSymbol.apply(twelve).apply(z));
+    Term term = abs1.apply(abs2);
+
+    MutableSubstitution subst = Matcher.match(semipattern, term);
+    assertTrue(subst != null);
+    assertTrue(subst.get(alpha).equals(type("Int -> Int")));
+    assertTrue(subst.get(beta).equals(type("Int")));
+    assertTrue(subst.get(x) == null);
+    assertTrue(subst.get(a).equals(
+      TermFactory.createAbstraction(v, TermFactory.createAbstraction(w, gterm))));
+    assertTrue(subst.get(b).equals(TheoryFactory.createValue(3)));
+    assertTrue(subst.get(c).equals(abs2));
   }
 }
 
