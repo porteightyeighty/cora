@@ -946,7 +946,7 @@ public class CoraParser {
       ParserRule rule = readRule();
       if (rule != null) rules.add(rule);
     }
-    return new ParserProgram(sorts.build(), symbols.build(), rules.build());
+    return new ParserProgram(sorts.build(), symbols.build(), rules.build(), TrsFormat.UNKNOWN);
   }
 
   // ====================================== PUBLIC FUNCTIONS ======================================
