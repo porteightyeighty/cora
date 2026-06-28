@@ -75,14 +75,14 @@ class HorpoResult extends ReductionPairProofObject {
   public int precedence(FunctionSymbol f, FunctionSymbol g) {
     int fi, gi;
     if (_valuation == null) return 0;
-    int k = _parameters.getPrecedence(f).evaluate(_valuation) -
-            _parameters.getPrecedence(g).evaluate(_valuation);
+    int k = _parameters.getPrecedence(f).evaluate(_valuation).subtract(
+            _parameters.getPrecedence(g).evaluate(_valuation)).intValue();
     return k;
   }
 
   public int permutation(FunctionSymbol f, int index) {
     if (_valuation == null) return 0;
-    return _parameters.getPermutation(f, index).evaluate(_valuation);
+    return _parameters.getPermutation(f, index).evaluate(_valuation).intValueExact();
   }
 
   /** Returns whether the ordering is inherently strict. */

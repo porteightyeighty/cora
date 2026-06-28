@@ -188,12 +188,12 @@ class HorpoParameters {
   public ArrayList<SymbolData> getSymbolData(Valuation valuation) {
     ArrayList<SymbolData> info = new ArrayList<SymbolData>();
     for (FunctionSymbol symbol : _precedence.keySet()) {
-      int p = valuation.queryAssignment(_precedence.get(symbol));
+      int p = valuation.queryAssignment(_precedence.get(symbol)).intValueExact();
       TreeSet<Integer> one = new TreeSet<Integer>();
       TreeMap<Integer,Integer> other = new TreeMap<Integer,Integer>();
       for (int i = 1; i <= symbol.queryArity(); i++) {
         IVar x = _permutation.get(symbol).get(i);
-        int value = valuation.queryAssignment(x);
+        int value = valuation.queryAssignment(x).intValueExact();
         if (value == 1) one.add(i);
         else if (value > 1) other.put(value, i);
       }
