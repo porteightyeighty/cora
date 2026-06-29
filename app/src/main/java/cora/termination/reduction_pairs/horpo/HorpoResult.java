@@ -15,6 +15,7 @@
 
 package cora.termination.reduction_pairs.horpo;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.Set;
@@ -94,9 +95,9 @@ class HorpoResult extends ReductionPairProofObject {
   private void printIntegerOrdering(OutputModule module) {
     module.print("{(x,y) | ");
     boolean down = _parameters.getDirectionIsDownVariable().evaluate(_valuation);
-    int bound = _parameters.queryIntegerBound();
-    if (down) module.print("x %{greater} -%a %{and} x %{greater} y }", bound);
-    else module.print("x %{smaller} %a %{and} x %{smaller} y }", bound);
+    BigInteger bound = _parameters.queryIntegerBound();
+    if (down) module.print("x %{greater} -%a %{and} x %{greater} y }", bound.toString());
+    else module.print("x %{smaller} %a %{and} x %{smaller} y }", bound.toString());
   }
 
   /** Returns the set of all function symbols in the requirements we oriented. */

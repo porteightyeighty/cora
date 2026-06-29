@@ -15,6 +15,7 @@
 
 package cora.termination.reduction_pairs.horpo;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.TreeMap;
@@ -35,7 +36,7 @@ class HorpoParameters {
   private final TreeMap<FunctionSymbol,IVar> _precedence;
   private final TreeMap<FunctionSymbol,TreeMap<Integer,IVar>> _permutation;
   private final BVar _down;
-  private final int _M;
+  private final BigInteger _M;
 
   /**
    * This sets up a set of HorpoParameters by generating boolean and integer variables in the SMT
@@ -43,13 +44,13 @@ class HorpoParameters {
    * for N_f, because we implicitly assume that N_f is the maximum arity of any function symbol,
    * and since the set is finite, such number always exists.
    */
-  HorpoParameters(int bound, TreeSet<FunctionSymbol> allsymbols, ArgumentFilter regards,
+  HorpoParameters(BigInteger bound, TreeSet<FunctionSymbol> allsymbols, ArgumentFilter regards,
                   SmtProblem problem) {
     _problem = problem;
     _precedence = new TreeMap<FunctionSymbol,IVar>();
     _permutation = new TreeMap<FunctionSymbol,TreeMap<Integer,IVar>>();
     _down = _problem.createBooleanVariable("down");
-    _M = bound > 0 ? bound : 1;
+    _M = bound.signum() > 0 ? bound : BigInteger.ONE;
     setupPrecedence(allsymbols);
     setupPermutation(allsymbols, regards);
   }
@@ -159,7 +160,7 @@ class HorpoParameters {
    *
    * This is the value the HorpoParameters were initialised with.
    */
-  int queryIntegerBound() {
+  BigInteger queryIntegerBound() {
     return _M;
   }
 

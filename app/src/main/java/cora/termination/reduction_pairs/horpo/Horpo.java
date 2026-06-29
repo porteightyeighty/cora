@@ -73,7 +73,7 @@ public class Horpo implements ReductionPair {
 
   /** Main access function: start a HORPO proof to generate a suitable reduction pair. */
   public ReductionPairProofObject solve(OrderingProblem problem, SmtProblem smt) {
-    int bound = computeIntegerVariableBound(problem);
+    BigInteger bound = computeIntegerVariableBound(problem);
     TreeSet<FunctionSymbol> symbols = getFunctionSymbols(problem);
     ArgumentFilter filter = problem.queryArgumentFilter();
     HorpoParameters param = new HorpoParameters(bound, symbols, filter, smt);
@@ -135,11 +135,9 @@ public class Horpo implements ReductionPair {
 
   /**
    * Returns twice the largest absolute integer value occurring in the given OrderingProblem, or
-   * 1000 if that is bigger.  Since the Int sort is unbounded, a value may exceed the int range; as
-   * the bound only sizes the (int-bounded) SMT search space, an astronomically large constant just
-   * saturates it at Integer.MAX_VALUE rather than overflowing or throwing.
+   * 1000 if that is bigger.
    */
-  private int computeIntegerVariableBound(OrderingProblem problem) {
+  private BigInteger computeIntegerVariableBound(OrderingProblem problem) {
     BigWrapper wrapper = new BigWrapper(BigInteger.valueOf(500));
     for (Term term : getAllTerms(problem)) {
       term.visitSubterms( (s,p) -> {
@@ -149,10 +147,7 @@ public class Horpo implements ReductionPair {
         }
       });
     }
-    // Saturating only costs completeness, never soundness; widening the SMT bound to BigInteger
-    // would be the upgrade path for larger constants.
-    return wrapper.num.multiply(BigInteger.TWO).min(BigInteger.valueOf(Integer.MAX_VALUE))
-                      .intValueExact();
+    return wrapper.num.multiply(BigInteger.TWO);
   }
 
   /**
