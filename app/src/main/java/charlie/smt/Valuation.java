@@ -44,7 +44,9 @@ public class Valuation {
   /** Returns the valuation for the integer variable with the given index */
   public BigInteger queryIntAssignment(int index) {
     if (_iVarValues.containsKey(index)) return _iVarValues.get(index);
-    else return BigInteger.valueOf(4242);
+    else {
+      return BigInteger.valueOf(4242);
+    }
   }
 
   /** Returns the valuation for the string variable with the given index */

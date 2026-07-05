@@ -508,8 +508,12 @@ class TermTyper {
     if (args.size() == 2) {
       Term a = targs.get(0);
       Term b = targs.get(1);
-      if (b.isValue()) b = TheoryFactory.createValue(b.toValue().getInteger().negate());
-      else b = TheoryFactory.minusSymbol.apply(b);
+      if (b.isValue()) {
+        b = TheoryFactory.createValue(b.toValue().getInteger().negate());
+      }
+      else {
+        b = TheoryFactory.minusSymbol.apply(b);
+      }
       return confirmType(token, TermFactory.createApp(TheoryFactory.plusSymbol, a, b), expected);
     }
     storeError(token, "Arity error: [-] can be used either with 1 or 2 arguments, but here it " +

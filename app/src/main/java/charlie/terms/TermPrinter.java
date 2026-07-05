@@ -406,7 +406,9 @@ public class TermPrinter {
     boolean brackets = arg.isFunctionalTerm() && arg.queryRoot().toCalculationSymbol() != null;
     if (!brackets && arg.isValue()) {
       Value v = arg.toValue();
-      if (v.isIntegerValue() && v.getInteger().signum() < 0) brackets = true;
+      if (v.isIntegerValue() && v.getInteger().signum() < 0) {
+        brackets = true;
+      }
     }
     builder.append(queryCalculationName(rootsymb.queryKind(), rootsymb.queryName(),
                                         rootsymb.queryType()));

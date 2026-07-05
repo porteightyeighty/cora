@@ -143,7 +143,9 @@ public class Horpo implements ReductionPair {
       term.visitSubterms( (s,p) -> {
         if (s.isValue() && s.queryType().equals(TypeFactory.intSort)) {
           BigInteger abs = s.toValue().getInteger().abs();
-          if (abs.compareTo(wrapper.num) > 0) wrapper.num = abs;
+          if (abs.compareTo(wrapper.num) > 0) {
+            wrapper.num = abs;
+          }
         }
       });
     }

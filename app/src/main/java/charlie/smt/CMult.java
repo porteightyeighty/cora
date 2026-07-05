@@ -50,23 +50,39 @@ public final class CMult extends IntegerExpression {
 
   public IntegerExpression simplify() {
     if (_simplified) return this;
-    if (_constant.signum() == 0) return new IValue(BigInteger.ZERO);
-    if (_constant.equals(BigInteger.ONE)) return _main.simplify();
+    if (_constant.signum() == 0) {
+      return new IValue(BigInteger.ZERO);
+    }
+    if (_constant.equals(BigInteger.ONE)) {
+      return _main.simplify();
+    }
     return _main.simplify().multiply(_constant);
   }
 
   public IntegerExpression multiply(BigInteger constant) {
     BigInteger newconstant = _constant.multiply(constant);
-    if (newconstant.signum() == 0) return new IValue(BigInteger.ZERO);
-    if (newconstant.equals(BigInteger.ONE)) return _main;
-    if (constant.equals(BigInteger.ONE)) return this;
+    if (newconstant.signum() == 0) {
+      return new IValue(BigInteger.ZERO);
+    }
+    if (newconstant.equals(BigInteger.ONE)) {
+      return _main;
+    }
+    if (constant.equals(BigInteger.ONE)) {
+      return this;
+    }
     return new CMult(newconstant, _main);
   }
 
   public void addToSmtString(StringBuilder builder) {
-    if (_constant.equals(BigInteger.valueOf(-1))) builder.append("(- ");
-    else if (_constant.signum() < 0) builder.append("(* (- " + _constant.negate() + ") ");
-    else builder.append("(* " + _constant + " ");
+    if (_constant.equals(BigInteger.valueOf(-1))) {
+      builder.append("(- ");
+    }
+    else if (_constant.signum() < 0) {
+      builder.append("(* (- " + _constant.negate() + ") ");
+    }
+    else {
+      builder.append("(* " + _constant + " ");
+    }
     _main.addToSmtString(builder);
     builder.append(")");
   }
@@ -77,7 +93,9 @@ public final class CMult extends IntegerExpression {
       case CMult cm -> {
         int c = _main.compareTo(cm.queryChild());
         if (c != 0) yield c;
-        else yield _constant.compareTo(cm.queryConstant());
+        else {
+          yield _constant.compareTo(cm.queryConstant());
+        }
       }
       default -> _main.compareTo(other) >= 0 ? 1 : -1;
     };

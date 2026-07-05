@@ -52,8 +52,12 @@ public final class IValue extends IntegerExpression {
   }
 
   public void addToSmtString(StringBuilder builder) {
-    if (_k.signum() >= 0) builder.append(_k.toString());
-    else builder.append("(- " + _k.negate() + ")");
+    if (_k.signum() >= 0) {
+      builder.append(_k.toString());
+    }
+    else {
+      builder.append("(- " + _k.negate() + ")");
+    }
   }
 
   public int compareTo(IntegerExpression other) {
