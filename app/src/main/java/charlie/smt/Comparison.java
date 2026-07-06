@@ -74,9 +74,7 @@ abstract sealed class Comparison extends Constraint permits Geq0, Is0, Neq0 {
   public Constraint simplify() {
     if (_simplified) return this;
     IntegerExpression e = _expr;
-    if (e instanceof CMult c && c.queryConstant().signum() != 0) {
-      e = c.queryChild();
-    }
+    if (e instanceof CMult c && c.queryConstant().signum() != 0) e = c.queryChild();
     if (e instanceof Multiplication m) return simplifyMultiplication(m);
     e = e.simplify();
     if (e instanceof CMult c) e = c.queryChild();
@@ -90,12 +88,8 @@ abstract sealed class Comparison extends Constraint permits Geq0, Is0, Neq0 {
       if (k.remainder(c.queryConstant()).signum() == 0) {
         e = c.queryChild().add(k.divide(c.queryConstant()));
       }
-      else if (this instanceof Is0) {
-        return new Falsehood();
-      }
-      else {
-        return new Truth();
-      }
+      else if (this instanceof Is0) return new Falsehood();
+      else return new Truth();
     }
     if (this instanceof Is0) return new Is0(e);
     else return new Neq0(e);

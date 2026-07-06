@@ -46,36 +46,24 @@ public final class Geq0 extends Comparison {
     // we apply removeCMult both before and after simplifying, because the simplify step might
     // destroy an earlier CMult (or create one from a more complex expression)
     IntegerExpression e = removeCMult(removeCMult(_expr).simplify());
-    if (e instanceof IValue v) {
-      return v.queryValue().signum() >= 0 ? new Truth() : new Falsehood();
-    }
+    if (e instanceof IValue v) { return v.queryValue().signum() >= 0 ? new Truth() : new Falsehood(); }
     if (e instanceof Addition ad && ad.numChildren() == 2 && ad.queryChild(1) instanceof IValue k &&
         ad.queryChild(2) instanceof CMult c && !c.queryConstant().equals(BigInteger.valueOf(-1))) {
       BigInteger a = c.queryConstant();
       BigInteger b = k.queryValue();
       if (a.compareTo(BigInteger.ONE) > 0) {
         // a x ≥ -b <==> x ≥ CEIL(-b/a)
-        BigInteger v = b.signum() < 0
-          ? b.negate().add(a).subtract(BigInteger.ONE).divide(a).negate()
-          : b.divide(a);
-        if (v.signum() == 0) {
-          e = c.queryChild();
-        }
-        else {
-          e = new Addition(new IValue(v), c.queryChild());
-        }
+        BigInteger v = b.signum() < 0 ? b.negate().add(a).subtract(BigInteger.ONE).divide(a).negate()
+                                      : b.divide(a);
+        if (v.signum() == 0) e = c.queryChild();
+        else e = new Addition(new IValue(v), c.queryChild());
       }
       else {  // a < -1
         // b ≥ -a x <==> x ≤ FLOOR(b/-a)
-        BigInteger v = b.signum() > 0
-          ? b.divide(a.negate())
-          : b.negate().subtract(a).subtract(BigInteger.ONE).divide(a.negate()).negate();
-        if (v.signum() == 0) {
-          e = new CMult(-1, c.queryChild());
-        }
-        else {
-          e = new Addition(new IValue(v), new CMult(-1, c.queryChild()));
-        }
+        BigInteger v = b.signum() > 0 ? b.divide(a.negate())
+                       : b.negate().subtract(a).subtract(BigInteger.ONE).divide(a.negate()).negate();
+        if (v.signum() == 0) e = new CMult(-1, c.queryChild());
+        else e = new Addition(new IValue(v), new CMult(-1, c.queryChild()));
       }
     }
     return new Geq0(e);
@@ -85,12 +73,8 @@ public final class Geq0 extends Comparison {
   protected IntegerExpression removeCMult(IntegerExpression e) {
     if (e instanceof CMult c) {
       BigInteger k = c.queryConstant();
-      if (k.signum() > 0) {
-        return c.queryChild();
-      }
-      if (k.compareTo(BigInteger.valueOf(-1)) < 0) {
-        return new CMult(-1, c.queryChild());
-      }
+      if (k.signum() > 0) return c.queryChild();
+      if (k.compareTo(BigInteger.valueOf(-1)) < 0) return new CMult(-1, c.queryChild());
     }
     return e;
   }

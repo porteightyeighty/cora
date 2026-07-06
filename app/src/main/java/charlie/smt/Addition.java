@@ -58,9 +58,7 @@ public final class Addition extends IntegerExpression {
    * so is the result.
    */
   public IntegerExpression add(BigInteger constant) {
-    if (constant.signum() == 0) {
-      return this;
-    }
+    if (constant.signum() == 0) return this;
     if (_children.size() == 0) return new IValue(constant);
     if (_children.get(0) instanceof IValue k) {
       if (k.queryValue().equals(constant.negate())) {
@@ -105,28 +103,18 @@ public final class Addition extends IntegerExpression {
 
     BigInteger constant = BigInteger.ZERO;
     for (IntegerExpression e : _children) {
-      if (e instanceof IValue k) {
-        constant = constant.add(k.queryValue());
-      }
+      if (e instanceof IValue k) constant = constant.add(k.queryValue());
     }
 
-    if (constant.signum() > 0) {
-      pos.add(new IValue(constant));
-    }
-    else if (constant.signum() < 0) {
-      neg.add(new IValue(constant.negate()));
-    }
+    if (constant.signum() > 0) pos.add(new IValue(constant));
+    else if (constant.signum() < 0) neg.add(new IValue(constant.negate()));
 
     for (int i = 0; i < _children.size(); i++) {
       switch (_children.get(i)) {
         case IValue k: continue;
         case CMult cm:
-          if (cm.queryConstant().signum() >= 0) {
-            pos.add(cm);
-          }
-          else {
-            neg.add(cm.multiply(-1));
-          }
+          if (cm.queryConstant().signum() >= 0) pos.add(cm);
+          else neg.add(cm.multiply(-1));
           break;
         default:
           pos.add(_children.get(i));
@@ -146,9 +134,7 @@ public final class Addition extends IntegerExpression {
 
   public BigInteger evaluate(Valuation val) {
     BigInteger ret = BigInteger.ZERO;
-    for (int i = 0; i < _children.size(); i++) {
-      ret = ret.add(_children.get(i).evaluate(val));
-    }
+    for (int i = 0; i < _children.size(); i++) ret = ret.add(_children.get(i).evaluate(val));
     return ret;
   }
 
@@ -157,9 +143,7 @@ public final class Addition extends IntegerExpression {
     for (int i = 0; i < _children.size(); i++) {
       IntegerExpression child = _children.get(i);
       if (!child.isSimplified()) return;
-      if (child instanceof IValue k && k.queryValue().signum() == 0) {
-        return;
-      }
+      if (child instanceof IValue k && k.queryValue().signum() == 0) return;
       if (i == 0) continue;
       IntegerExpression childmain = switch(child) {
         case IValue k -> new IValue(1);
@@ -199,39 +183,25 @@ public final class Addition extends IntegerExpression {
       else { main = c; num = BigInteger.ONE; }
       BigInteger current = counts.get(main);
       if (current == null) counts.put(main, num);
-      else {
-        counts.put(main, num.add(current));
-      }
+      else counts.put(main, num.add(current));
     }
     // read them out
     ArrayList<IntegerExpression> ret = new ArrayList<IntegerExpression>();
-    if (constant.signum() != 0) {
-      ret.add(new IValue(constant));
-    }
+    if (constant.signum() != 0) ret.add(new IValue(constant));
     for (Map.Entry<IntegerExpression,BigInteger> entry : counts.entrySet()) {
       BigInteger k = entry.getValue();
-      if (k.equals(BigInteger.ONE)) {
-        ret.add(entry.getKey());
-      }
-      else if (k.signum() != 0) {
-        ret.add(new CMult(k, entry.getKey()));
-      }
+      if (k.equals(BigInteger.ONE)) ret.add(entry.getKey());
+      else if (k.signum() != 0) ret.add(new CMult(k, entry.getKey()));
     }
     // return the result
-    if (ret.size() == 0) {
-      return new IValue(BigInteger.ZERO);
-    }
+    if (ret.size() == 0) return new IValue(BigInteger.ZERO);
     if (ret.size() == 1) return ret.get(0);
     return new Addition(ret, true);
   }
 
   public IntegerExpression multiply(BigInteger constant) {
-    if (constant.signum() == 0) {
-      return new IValue(BigInteger.ZERO);
-    }
-    if (constant.equals(BigInteger.ONE)) {
-      return this;
-    }
+    if (constant.signum() == 0) return new IValue(BigInteger.ZERO);
+    if (constant.equals(BigInteger.ONE)) return this;
     ArrayList<IntegerExpression> cs = new ArrayList<IntegerExpression>();
     for (int i = 0; i < _children.size(); i++) cs.add(_children.get(i).multiply(constant));
     return new Addition(cs, _simplified);

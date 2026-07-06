@@ -51,9 +51,7 @@ public final class Modulo extends IntegerExpression {
     BigInteger abs_n = n.abs();
     BigInteger abs_d = d.abs();
     BigInteger ret = abs_n.remainder(abs_d);
-    if (n.signum() >= 0 || ret.signum() == 0) {
-      return ret;
-    }
+    if (n.signum() >= 0 || ret.signum() == 0) return ret;
     return abs_d.subtract(ret);
   }
 

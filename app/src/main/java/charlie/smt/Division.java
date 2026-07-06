@@ -51,15 +51,9 @@ public final class Division extends IntegerExpression {
                       ? BigInteger.ONE : BigInteger.valueOf(-1);
     BigInteger abs_n = n.abs();
     BigInteger abs_d = d.abs();
-    if (n.signum() >= 0) {
-      return sign.multiply(abs_n.divide(abs_d));
-    }
-    else if (abs_n.remainder(abs_d).signum() == 0) {
-      return sign.multiply(abs_n.divide(abs_d));
-    }
-    else {
-      return sign.multiply(abs_n.divide(abs_d).add(BigInteger.ONE));
-    }
+    if (n.signum() >= 0) return sign.multiply(abs_n.divide(abs_d));
+    else if (abs_n.remainder(abs_d).signum() == 0) return sign.multiply(abs_n.divide(abs_d));
+    else return sign.multiply(abs_n.divide(abs_d).add(BigInteger.ONE));
   }
 
   /**
@@ -85,13 +79,8 @@ public final class Division extends IntegerExpression {
     switch (_denominator) {
       case IValue k:
         if (n instanceof IValue i) return new IValue(evaluateFor(i.queryValue(), k.queryValue()));
-        if (k.queryValue().equals(BigInteger.ONE)) {
-          return _numerator;
-        }
-        // a div -1 = -a
-        if (k.queryValue().equals(BigInteger.valueOf(-1))) {
-          return _numerator.multiply(-1);
-        }
+        if (k.queryValue().equals(BigInteger.ONE)) return _numerator;
+        if (k.queryValue().equals(BigInteger.valueOf(-1))) return _numerator.multiply(-1); // a div -1 = -a
         if (k.queryValue().signum() < 0) { // a div -b = - (a div b)
           IntegerExpression ret = new CMult(-1, new Division(n, k.multiply(-1)));
           return ret.simplify();

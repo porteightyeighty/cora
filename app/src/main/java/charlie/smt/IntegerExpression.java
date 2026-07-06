@@ -87,9 +87,7 @@ public sealed abstract class IntegerExpression implements Comparable<IntegerExpr
    * expression.  If the current IntegerExpression is in simplifed form, then so is the result.
    */
   public IntegerExpression add(BigInteger constant) {
-    if (constant.signum() == 0) {
-      return this;
-    }
+    if (constant.signum() == 0) return this;
     return new Addition(new IValue(constant), this);
   }
 
@@ -103,12 +101,8 @@ public sealed abstract class IntegerExpression implements Comparable<IntegerExpr
    * constant.  If the current IntegerExpression is in simplified form, then so is the result.
    */
   public IntegerExpression multiply(BigInteger constant) {
-    if (constant.signum() == 0) {
-      return new IValue(BigInteger.ZERO);
-    }
-    if (constant.equals(BigInteger.ONE)) {
-      return this;
-    }
+    if (constant.signum() == 0) return new IValue(BigInteger.ZERO);
+    if (constant.equals(BigInteger.ONE)) return this;
     return new CMult(constant, this);
   }
 

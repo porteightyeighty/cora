@@ -308,9 +308,7 @@ public class CoraParser {
     if ((token = _status.readNextIf(CoraTokenData.MINUS)) != null) {
       ParserTerm child = readMainTerm();
       if (child == null) return new CalcSymbol(token, MINUS);
-      if (child instanceof IntVal(Token t, BigInteger v)) {
-        return new IntVal(token, v.negate());
-      }
+      if (child instanceof IntVal(Token t, BigInteger v)) return new IntVal(token, v.negate());
       return new Application(token, new CalcSymbol(token, MINUS), FixedList.of(child));
     }
 

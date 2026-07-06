@@ -98,9 +98,7 @@ public final class Multiplication extends IntegerExpression {
     BigInteger constant = BigInteger.ONE;
     for (IntegerExpression child : from) {
       IntegerExpression c = child.simplify();
-      if (c instanceof IValue k) {
-        constant = constant.multiply(k.queryValue());
-      }
+      if (c instanceof IValue k) constant = constant.multiply(k.queryValue());
       else if (c instanceof CMult cm) {
         constant = constant.multiply(cm.queryConstant());
         to.add(cm.queryChild());

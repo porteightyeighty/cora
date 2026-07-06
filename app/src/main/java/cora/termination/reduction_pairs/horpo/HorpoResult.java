@@ -96,12 +96,8 @@ class HorpoResult extends ReductionPairProofObject {
     module.print("{(x,y) | ");
     boolean down = _parameters.getDirectionIsDownVariable().evaluate(_valuation);
     BigInteger bound = _parameters.queryIntegerBound();
-    if (down) {
-      module.print("x %{greater} -%a %{and} x %{greater} y }", bound.toString());
-    }
-    else {
-      module.print("x %{smaller} %a %{and} x %{smaller} y }", bound.toString());
-    }
+    if (down) module.print("x %{greater} -%a %{and} x %{greater} y }", bound.toString());
+    else module.print("x %{smaller} %a %{and} x %{smaller} y }", bound.toString());
   }
 
   /** Returns the set of all function symbols in the requirements we oriented. */
